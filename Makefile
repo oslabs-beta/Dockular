@@ -1,4 +1,4 @@
-IMAGE?=my/awesome-extension
+IMAGE?=app/dockular
 TAG?=latest
 
 BUILDER=buildx-multi-arch
