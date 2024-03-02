@@ -1,7 +1,10 @@
 import React from 'react';
 import Button from '@mui/material/Button';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
-import { Stack, TextField, Typography } from '@mui/material';
+import { Divider, Stack, TextField, Typography } from '@mui/material';
+import { Link } from "react-router-dom"
+import { Route, Routes } from "react-router"
+import { Metrics } from "./metrics/components/cpu-ram"
 
 // Note: This line relies on Docker Desktop's presence as a host application.
 // If you're running this React app in a browser, it won't work properly.
@@ -54,7 +57,34 @@ export function App() {
 
   return (
     <>
-      <Typography variant="h3">Docker extension demo</Typography>
+      <Stack
+        direction="row"
+        justifyContent="center"
+        alignItems="center"
+        spacing={8}
+        sx= {{ pt : 4, pb : 8}}
+      >
+        <Typography variant="h3">Dockular</Typography>
+        <Button>Home</Button>
+
+          <Button>
+          <Link to = {'/metrics'}> 
+            {'Metrics'}
+          </Link>
+          </Button>
+
+        <Button>
+          <Link to = {'/prune'}> 
+            {'Prune'}
+          </Link>
+        </Button>
+
+      </Stack>
+      <Routes>
+        <Route path ="/metrics" element = {<Metrics />}/>
+        {/* <Route path ="/prune" element = {< />}/> */}
+      </Routes>
+
       <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
         This is a basic page rendered with MUI, using Docker's theme. Read the
         MUI documentation to learn more. Using MUI in a conventional way and
