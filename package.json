@@ -3,6 +3,11 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.15.11",
-    "@mui/x-data-grid": "^6.19.6"
+    "@mui/x-data-grid": "^6.19.6",
+    "chart.js": "^4.4.2",
+    "react-chartjs-2": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/chart.js": "^2.9.41"
   }
 }
