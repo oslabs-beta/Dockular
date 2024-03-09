@@ -15,49 +15,53 @@ function useDockerDesktopClient() {
 
 
 export function Metrics() {
-  const [response, setResponse1] = React.useState<string>();
-  const ddClient = useDockerDesktopClient();
-  
-  const data = [
+  const [dataCPU, setCPU] = React.useState<any>([
     {
       id: 'Sample Dataset',
       data: [
-        { x: 'January', y: 65 },
-        { x: 'February', y: 59 },
-        { x: 'March', y: 80 },
-        { x: 'April', y: 81 },
-        { x: 'May', y: 56 },
-        { x: 'June', y: 55 },
-        { x: 'July', y: 40 },
+        { x: 0, y: 0 }
+      ],
+    },
+  ]);
+  const ddClient = useDockerDesktopClient();
+  
+  let data : any = [
+    {
+      id: 'Sample Dataset',
+      data: [
+        { x: 0, y: 0 }
       ],
     },
   ];
-
-
-
 
   const fetchAndDisplayResponse1 = async () => {
 
     const result = await ddClient.docker.cli.exec("stats", [
       "--all",
       "--no-stream",
-      // "--no-trunc",
       "--format",
-      '" json .}}"',
+      '"{{json .}}"',
     ]);
     
 
     const statsData = result.parseJsonLines();
-    let dataString = ""
+    let dataPoint
 
     for (const key in statsData) {
       const value = statsData[key];
-      dataString += 'Container Name: ' + value.Name + '\n' + 'CPU Usage: ' + value.CPUPerc + '\n' + 'Memory Usage: ' + value.MemPerc + '\n';
+      dataPoint = value.CPUPerc
     }
-      setResponse1(dataString)
+    data[0].data.push({ x: 1 , y: dataPoint})
+    setCPU(data)
+
   };
 
+  const handleClick = async () => {
 
+    setInterval(fetchAndDisplayResponse1, 1000);
+    
+  };
+  
   // {"stdout":"{\"BlockIO\":\"7.33MB / 4.1kB\",\"CPUPerc\":\"0.00%\",\"Container\":\"772867bb9f60\",\"ID\":\"772867bb9f60\",\"MemPerc\":\"0.19%\",\"MemUsage\":\"14.9MiB / 7.657GiB\",\"Name\":\"gallant_banzai\",\"NetIO\":\"9.5kB / 0B\",\"PIDs\":\"11\"}\n{\"BlockIO\":\"94.7MB / 21.2MB\",\"CPUPerc\":\"0.51%\",\"Container\":\"f5acb0c87304\",\"ID\":\"f5acb0c87304\",\"MemPerc\":\"2.64%\",\"MemUsage\":\"206.7MiB / 7.657GiB\",\"Name\":\"jovial_mccarthy\",\"NetIO\":\"9.19kB / 0B\",\"PIDs\":\"32\"}\n","stderr":""}
 
   return (
@@ -69,7 +73,7 @@ export function Metrics() {
     <Paper style={{ width: '700px', height: '600px', padding: '20px' }} sx={{ ml: 2}}>
       <h2>Line Chart</h2>
       <ResponsiveLine
-          data={data}
+          data={dataCPU}
           margin={{ top: 0, right: 100, bottom: 100, left: 100 }}
           xScale={{ type: 'point' }}
           yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: true, reverse: false }}
@@ -88,19 +92,10 @@ export function Metrics() {
     </Stack>
       
       <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 4 }}>
-        <Button variant="contained" onClick={fetchAndDisplayResponse1}>
+        <Button variant="contained" onClick={handleClick}>
           Call backend
         </Button>
 
-        <TextField
-          label="Backend response"
-          sx={{ width: 480 }}
-          disabled
-          multiline
-          variant="outlined"
-          minRows={5}
-          value={response ?? ''}
-        />
       </Stack>
     
     </>

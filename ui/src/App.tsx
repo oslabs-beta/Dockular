@@ -17,16 +17,22 @@ function useDockerDesktopClient() {
 }
 
 export function App() {
-  const [response, setResponse] = React.useState<string>();
+  const [response, setResponse] = React.useState<any>();
   const ddClient = useDockerDesktopClient();
 
   let value1 = ""
 
-  const setReply = () => {
-    setResponse("howdy")
-  }
+  const setReply = async () => {
+    
+    // setResponse("howdy")
 
-  const fetchAndDisplayResponse = async () => {
+    // const result = await ddClient.docker.cli.exec("stats", [
+    //   "--format",
+    //   "{{.Container}}: {{.CPUPerc}}",
+    //   '"{{json .}}"',
+    // ]);
+    
+    // let result2 = (typeof result);
 
     const result = await ddClient.docker.cli.exec("stats", [
       "--all",
@@ -36,25 +42,28 @@ export function App() {
       '"{{json .}}"',
     ]);
     
-    // docker run --name <container_name> <image_name></image_name>
-    // start a container from the Docker image:
-
-    // docker exec <container_name> ls /
-
-
-    // const result1 = await ddClient.docker.cli.exec("system prune", [
-    //   "--all", 
-    //   "--force",
-    // ]);
-
-    const statsData = result.parseJsonLines();
+    // json strinfigy result
+    const statsData = await result.parseJsonLines();
     let dataString = ""
 
     for (const key in statsData) {
       const value = statsData[key];
       dataString += 'Container Name: ' + value.Name + '\n' + 'CPU Usage: ' + value.CPUPerc + '\n' + 'Memory Usage: ' + value.MemPerc + '\n';
     }
-    setResponse(JSON.stringify(result))
+    // setResponse(result)
+    // setResponse(JSON.stringify(dataString))
+    setResponse(dataString)
+
+  }
+
+
+
+
+
+  const fetchAndDisplayResponse = () => {
+
+    setResponse("hello")
+
   };
 
   // {"stdout":"{\"BlockIO\":\"7.33MB / 4.1kB\",\"CPUPerc\":\"0.00%\",\"Container\":\"772867bb9f60\",\"ID\":\"772867bb9f60\",\"MemPerc\":\"0.19%\",\"MemUsage\":\"14.9MiB / 7.657GiB\",\"Name\":\"gallant_banzai\",\"NetIO\":\"9.5kB / 0B\",\"PIDs\":\"11\"}\n{\"BlockIO\":\"94.7MB / 21.2MB\",\"CPUPerc\":\"0.51%\",\"Container\":\"f5acb0c87304\",\"ID\":\"f5acb0c87304\",\"MemPerc\":\"2.64%\",\"MemUsage\":\"206.7MiB / 7.657GiB\",\"Name\":\"jovial_mccarthy\",\"NetIO\":\"9.19kB / 0B\",\"PIDs\":\"32\"}\n","stderr":""}
@@ -104,11 +113,11 @@ export function App() {
       </Typography>
       <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 4 }}>
         <Button variant="contained" onClick={fetchAndDisplayResponse}>
-          Call backend
+          Call backend2
         </Button>
 
         <Button variant="contained" onClick={setReply}>
-          Call backend
+          Call backend1
         </Button>
 
         <TextField
