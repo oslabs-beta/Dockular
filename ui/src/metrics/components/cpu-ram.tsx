@@ -42,7 +42,9 @@ export function Metrics() {
       data: [],
     },
   ];
-
+  
+  const containerIDArray : any[] = []
+  let containerIDVariable
   
   useEffect(()=>{
     if (!containerList[0]) ddClient.docker.cli.exec("stats", [
@@ -56,16 +58,17 @@ export function Metrics() {
         for (const key in statsContainerData) {
           const value = statsContainerData[key];
           containerArray.push(value.Name)
+          containerIDArray.push(value.ID)
         }
         setContainerList(containerArray)
       });
  },[containerList])
 
+ let whatever: number 
 
   const fetchAndDisplayResponse1 = async () => {
 
-    const result = await ddClient.docker.cli.exec("stats", [
-      "--all",
+    const result = await ddClient.docker.cli.exec(`stats ${containerIDArray[whatever]}`, [
       "--no-stream",
       "--format",
       '"{{json .}}"',
@@ -99,19 +102,27 @@ export function Metrics() {
     }
     }, [isStarted]);
   
-  const handleClick = () => {
+  const handleClick = (index: number) => {
+    whatever = index
     setIsStarted(true);
   };
 
+  // {containerList.map((container, index) => (
+  //   <Button sx={{ mb: 2 }} key={index} onClick={() => handleClick(index)}>{container}</Button>
+  // ))}
 
+
+  // onclick=handleClick(index)
   return (
     <>
     <Stack direction="row">
     <Paper style={{ width: '250px', height: '400px', padding: '20px' }} sx={{ mt: 0, mr: 2}}>
       <h2>Container List</h2>
       {containerList.map((container, index) => (
-        <Button sx = {{mb:2}} key={index}>{container}</Button>
+        <Button sx = {{mb:2}} key={index} onClick={() => handleClick(index)}>{container}</Button>
       ))}
+
+      
     </Paper>
     <Paper style={{ width: '700px', height: '600px', padding: '20px' }} sx={{ ml: 2}}>
       <h2>Line Chart</h2>
@@ -141,9 +152,9 @@ export function Metrics() {
     </Stack>
       
       <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 4 }}>
-        <Button variant="contained" onClick={handleClick}>
+        {/* <Button variant="contained" onClick={handleClick}>
           Call backend
-        </Button>
+        </Button> */}
 
       </Stack>
     
