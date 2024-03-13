@@ -53,15 +53,15 @@ export function Test() {
   const rows: GridRowsProp = containers.map((image) => ({
     id:image.ID,
     col1:image.Size,
-    col2:image.CreatedSince,
-    col3:image.Tag
+    col2: response === 'dangling-images' ?image.CreatedSince : image.RunningFor,
+    col3: response === 'dangling-images' ? image.Tag : image.Status
   }));
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 150 },
     { field: 'col1', headerName: 'Size', width: 150 },
     { field: 'col2', headerName: 'Created', width: 150 },
-    { field: 'col3', headerName: 'Tag', width: 150 }
+    { field: 'col3', headerName: response === 'dangling-images'? 'Tag' : 'Status' , width: 150 }
   ];
   
   return (
@@ -150,19 +150,24 @@ export function Test() {
             borderRadius: 2,
             border:2,
             borderColor:'primary.main'
-          
-
         }}> 
           <Stack>
-                
-                <Button variant="contained" color='error' onClick={()=>{setPrune('prune')}} sx={{
+                <Button variant="contained" color='error' onClick={()=>{setPrune('prune-all')}} sx={{
                     m:2,
                     p: 1,
                     borderRadius: 2
                     }}>
-                    Prune
+                    Prune All
                 </Button>
-                <Button variant="contained" color='error' onClick={()=>{setPrune('scheduled')}} sx={{
+                
+                <Button variant="contained" color='error' onClick={()=>{setPrune('prune-selected')}} sx={{
+                    m:2,
+                    p: 1,
+                    borderRadius: 2
+                    }}>
+                    Prune Selected
+                </Button>
+                <Button variant="contained" color='error' onClick={()=>{setPrune('scheduled-prune')}} sx={{
                     m:2,
                     p: 1,
                     borderRadius: 2
