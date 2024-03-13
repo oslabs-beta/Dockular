@@ -115,9 +115,13 @@ export function Metrics() {
           axisBottom={{
             legend: 'Time',
             legendOffset: 60,
-            tickValues : 10, 
+            // tickValues : 10, 
             tickRotation: -45, 
             legendPosition: 'middle',
+            tickValues: dataCPU[0]?.data
+            .filter((_: any, index: number) => index % Math.ceil(dataCPU[0]?.data.length / 7) === 0)
+            .map((item: { x: any; }) => item.x),
+      
           }}
           axisLeft={{
             legend: 'Value',
