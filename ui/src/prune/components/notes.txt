@@ -1,0 +1,76 @@
+
+  // useEffect(() => {
+  //   // List all containers
+  //   ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"']).then((result) => {
+  //     // result.parseJsonLines() parses the output of the command into an array of objects
+  //     setContainers(result.parseJsonLines());
+  //   });
+  // }, []);
+
+  // useEffect(() => {
+  //   // List all containers
+  //   ddClient.docker.cli.exec('stats', ['--all', '--no-stream', '--format', '"{{json .}}"']).then((result) => {
+  //     // result.parseJsonLines() parses the output of the command into an array of objects
+  //     setContainers(result.parseJsonLines());
+  //   });
+  // }, []);
+
+  // ["--format", "{{ json . }}", "--filter", "container=my-container"],
+
+  // useEffect(() => {
+  //   // List all containers
+  //   ddClient.docker.cli.exec('ps', ["--all","--format", "{{ json . }}","--filter","status=running"]).then((result) => {
+  //     // result.parseJsonLines() parses the output of the command into an array of objects
+  //     setContainers(result.parseJsonLines());
+  //   });
+  // }, []);
+
+
+      // useEffect(() => {
+      //   ddClient.docker.listContainers({ "all": true, "filters": JSON.stringify({ status: ["exited"] })})
+      //   .then(data => {
+      //     setContainers(data.parseJsonLines())
+      //   })
+      // }, []);
+
+
+      //   useEffect(() => {
+      //   ddClient.docker.listContainers({filters: { status: ['exited'] } })
+      //   .then(data => {
+      //     setContainers((data as any).parseJsonLines())
+      //   })
+      // }, []);
+
+        
+       
+       //filter dangeling - true or false. 
+       //dangling image is unused? 
+     
+     
+
+
+  // const contain = await ddClient.docker.listContainers({ 
+  //   "all": true, 
+  //   "filters": JSON.stringify({ status: ["exited"] })
+  //  }
+  // );
+
+    // const getImage = async () => {
+  //   let options = { "all": true, "filters": JSON.stringify({ dangling: ["true"] }), "digests": true};
+  //     // const images = await ddClient.docker.listImages();
+  //     const images = await ddClient.docker.cli.exec("images", [
+  //       "ls",
+  //       "--filter",
+  //       "dangling=true"
+  //     ]);
+  //       const result = await images.parseJsonLines()
+  //       // const result = await images.parseJsonObject();
+  //       // alert(result);
+  //       setContainers(result)
+  // }
+
+  // useEffect(()=>{
+  //   getImage();
+  // },[])
+
+ 
