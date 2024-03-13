@@ -50,17 +50,17 @@ const fetchAndDisplayResponse = async () => {
 
 useEffect(() => {
   // List containers
-    ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
-  .then((result) => {
-    const jsonRes = JSON.stringify(result);
-      setResponse(jsonRes);
-  })
+  //   ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
+  // .then((result) => {
+  //   const jsonRes = JSON.stringify(result);
+  //     setResponse(jsonRes);
+  // })
 
   //list images
-  // ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"]).then((result) => {
-  //   // result.parseJsonLines() parses the output of the command into an array of objects
-  //   setContainers(result.parseJsonLines());
-  // });
+  ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"]).then((result) => {
+    // result.parseJsonLines() parses the output of the command into an array of objects
+    setContainers(result.parseJsonLines());
+  });
 }, []);
 
 
