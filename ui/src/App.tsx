@@ -24,8 +24,8 @@ const App = () => {
   
     const fetchAndDisplayResponse = async () => {
 
-    const result = await ddClient.docker.cli.exec("stats 47b1c424f4a6", [
-      "--no-stream",
+    const result = await ddClient.docker.cli.exec("ps", [
+      "--all",
       // "--no-trunc",
       "--format",
       '"{{json .}}"',

@@ -29,8 +29,18 @@ export function Metrics() {
       ],
     },
   ]);
+  const [dataRAM, setRAM] = React.useState<any>([
+    {
+      id: 'Sample Dataset',
+      data: [
+        { x: 0, y: 0 }
+      ],
+    },
+  ]);
+
   const [isStarted, setIsStarted] = useState(false);
   const [containerList, setContainerList] = useState<any[]>([]);
+  const [containerNamesList, setContainerNamesList] = useState<any[]>([]);
   
 
   const [selectedContainerIndex, setSelectedContainerIndex] = useState<number | null>(null); 
@@ -42,7 +52,14 @@ export function Metrics() {
   
   const ddClient = useDockerDesktopClient();
   
-  let data : any = [
+  let CPUData : any = [
+    {
+      id: 'Sample Dataset',
+      data: [],
+    },
+  ];
+
+  let RAMData : any = [
     {
       id: 'Sample Dataset',
       data: [],
@@ -51,9 +68,8 @@ export function Metrics() {
 
   
   useEffect(()=>{
-    if (!containerList[0]) ddClient.docker.cli.exec("stats", [
+    if (!containerList[0]) ddClient.docker.cli.exec("ps", [
       "--all",
-      "--no-stream",
       "--format",
       '"{{json .}}"',
     ]).then((result) => {
@@ -61,9 +77,11 @@ export function Metrics() {
       const containerArray = [];
       for (const key in statsContainerData) {
         const value = statsContainerData[key];
-        containerArray.push(value.Name)
+        containerArray.push(value.ID)
+        containerNamesList.push(value.Image)
       }
       setContainerList(containerArray)
+      setContainerNamesList(containerNamesList)
     });
   },[containerList])
 
@@ -78,28 +96,42 @@ export function Metrics() {
       ]);
 
       const statsData = result.parseJsonLines();
-      let dataPoint: any;
+      let cpuPoint: any = 0;
+      let ramPoint: any = 0;
 
       for (const key in statsData) {
         const value = statsData[key];
-        dataPoint = value.CPUPerc;
+        cpuPoint = value.CPUPerc;
+        ramPoint = value.MemPerc;
       }
 
       let timeNow = getCurrentDateTime();
 
-      data[0].data.push({ x: timeNow , y: dataPoint})
+      CPUData[0].data.push({ x: timeNow , y: cpuPoint})
+      
       setCPU((prevData: any[]) => [
         {
           ...prevData[0],
-          data: [...prevData[0].data, { x: timeNow, y: dataPoint }],
+          data: [...prevData[0].data, { x: timeNow, y: cpuPoint }],
         },
       ]);
+
+      RAMData[0].data.push({ x: timeNow , y: ramPoint})
+      
+      setRAM((prevData: any[]) => [
+        {
+          ...prevData[0],
+          data: [...prevData[0].data, { x: timeNow, y: ramPoint }],
+        },
+      ]);
+
+      
     }
   };
 
   useEffect(() => {
     if(isStarted) {
-      const intervalId = setInterval(fetchAndDisplayResponse1, 5000);
+      const intervalId = setInterval(fetchAndDisplayResponse1, 1000);
       return () => clearInterval(intervalId);
     }
   }, [isStarted, selectedContainerIndex]); // Adding selectedContainerIndex as a dependency in order to use this variable
@@ -109,24 +141,39 @@ export function Metrics() {
   
   // handleclick for container list
   const handleContainerClick = (index: number) => {
-    setIsStarted(true);
     setSelectedContainerIndex(index); // Set selected container index
+    setCPU([
+      {
+        id: 'Sample Dataset',
+        data: [],
+      },
+    ])
+    setRAM([
+      {
+        id: 'Sample Dataset',
+        data: [],
+      },
+    ])
+    setIsStarted(true);
   };
 
   return (
     <>
       <Stack direction="row">
-        <Paper style={{ width: '250px', height: '400px', padding: '20px' }} sx={{ mt: 0, mr: 2}}>
+        <Paper style={{ width: '300px', height: '800px', padding: '20px' }} sx={{ mt: 0, mr: 2}}>
           <h2>Container List</h2>
-          {containerList.map((container, index) => (
+          {containerNamesList.map((container, index) => (
             <Button sx = {{mb:2}} key={index} onClick={() => handleContainerClick(index)}>{container}</Button>
           ))} {/* addding handleContainerClick as onclick, passing in index */}
         </Paper>
-        <Paper style={{ width: '700px', height: '600px', padding: '20px' }} sx={{ ml: 2}}>
-          <h2>Line Chart</h2>
+        <Stack direction="column">
+        <Paper style={{ width: '700px', height: '400px', padding: '20px' }} sx={{ ml: 2}}>
+          <h2>CPU Percentage</h2>
+          {/* using boolean operator, if isStarted is true, what's after && will render */}
+          {isStarted && (
           <ResponsiveLine
             data={dataCPU}
-            margin={{ top: 0, right: 100, bottom: 100, left: 100 }}
+            margin={{ top: 0, right: 60, bottom: 125, left: 100 }}
             xScale={{ type: 'point' }}
             yScale={{ type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false }}
             axisBottom={{
@@ -144,13 +191,36 @@ export function Metrics() {
               legendPosition: 'middle',
             }}
           />
+          )}
         </Paper>
-      </Stack>
-      
-      <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 4 }}>
-        {/* <Button variant="contained" onClick={handleClick}>
-          Call backend
-        </Button> */}
+          
+        <Paper style={{ width: '700px', height: '400px', padding: '20px' }} sx={{ ml: 2}}>
+          <h2>Memory Percentage</h2>
+          {/* using boolean operator, if isStarted is true, what's after && will render */}
+          {isStarted && (
+          <ResponsiveLine
+            data={dataRAM}
+            margin={{ top: 0, right: 60, bottom: 125, left: 100 }}
+            xScale={{ type: 'point' }}
+            yScale={{ type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false }}
+            axisBottom={{
+              legend: 'Time',
+              legendOffset: 60,
+              tickRotation: -45, 
+              legendPosition: 'middle',
+              tickValues: dataRAM[0]?.data
+                .filter((_: any, index: number) => index % Math.ceil(dataRAM[0]?.data.length / 7) === 0)
+                .map((item: { x: any; }) => item.x),
+            }}
+            axisLeft={{
+              legend: 'Value',
+              legendOffset: -60,
+              legendPosition: 'middle',
+            }}
+          />
+          )}
+        </Paper> 
+        </Stack>
       </Stack>
     </>
   );
