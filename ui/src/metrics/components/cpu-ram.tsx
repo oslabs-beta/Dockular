@@ -104,12 +104,12 @@ export function Metrics() {
     }
   }, [isStarted, selectedContainerIndex]); // Adding selectedContainerIndex as a dependency in order to use this variable
   
-  const handleClick = () => {
-    setIsStarted(true);
-  };
-
+  // const handleClick = () => {
+  // };
+  
   // handleclick for container list
   const handleContainerClick = (index: number) => {
+    setIsStarted(true);
     setSelectedContainerIndex(index); // Set selected container index
   };
 
@@ -148,9 +148,9 @@ export function Metrics() {
       </Stack>
       
       <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 4 }}>
-        <Button variant="contained" onClick={handleClick}>
+        {/* <Button variant="contained" onClick={handleClick}>
           Call backend
-        </Button>
+        </Button> */}
       </Stack>
     </>
   );
