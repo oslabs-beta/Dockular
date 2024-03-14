@@ -9,7 +9,11 @@
     "@emotion/react": "11.10.4",
     "@emotion/styled": "11.10.4",
     "@mui/material": "5.10.8",
+    "@mui/x-data-grid": "^6.19.6",
+    "@nivo/line": "^0.84.0",
+    "chart.js": "^4.4.2",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.2"
   },
@@ -21,6 +25,7 @@
   "devDependencies": {
     "@docker/extension-api-client-types": "0.3.4",
     "@types/bytes": "^3.1.4",
+    "@types/chart.js": "^2.9.41",
     "@types/jest": "^29.1.2",
     "@types/node": "^18.7.18",
     "@types/react": "^18.0.17",
