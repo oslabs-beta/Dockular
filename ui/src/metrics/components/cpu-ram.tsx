@@ -3,7 +3,8 @@ import { Paper } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
 import Button from '@mui/material/Button';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
-import { Divider, Stack, TextField, Typography } from '@mui/material';
+import { Container, Stack, Typography } from '@mui/material';
+import { blueGrey, red} from '@mui/material/colors';
 
 const client = createDockerDesktopClient();
 
@@ -160,14 +161,27 @@ export function Metrics() {
   return (
     <>
       <Stack direction="row">
-        <Paper style={{ width: '300px', height: '800px', padding: '20px' }} sx={{ mt: 0, mr: 2}}>
+        <Container style={{ width: '300px', height: '800px', padding: '20px' }} sx={{ 
+          mt: 0, 
+          mr: 2,
+          bgcolor: blueGrey[50],
+          border:2,
+          borderColor:'primary.main',
+          borderRadius:2
+          }}>
           <h2>Container List</h2>
           {containerNamesList.map((container, index) => (
             <Button sx = {{mb:2}} key={index} onClick={() => handleContainerClick(index)}>{container}</Button>
           ))} {/* addding handleContainerClick as onclick, passing in index */}
-        </Paper>
+        </Container>
         <Stack direction="column">
-        <Paper style={{ width: '700px', height: '400px', padding: '20px' }} sx={{ ml: 2}}>
+        <Container style={{ width: '700px', height: '400px', padding: '20px' }} sx={{ 
+          ml: 2,
+          bgcolor: blueGrey[50],
+          border:2,
+          borderColor:'primary.main',
+          borderRadius:2,
+          }}>
           <h2>CPU Percentage</h2>
           {/* using boolean operator, if isStarted is true, what's after && will render */}
           {isStarted && (
@@ -192,9 +206,15 @@ export function Metrics() {
             }}
           />
           )}
-        </Paper>
+        </Container>
           
-        <Paper style={{ width: '700px', height: '400px', padding: '20px' }} sx={{ ml: 2}}>
+        <Container style={{ width: '700px', height: '400px', padding: '20px' }} sx={{ 
+          ml: 2,
+          bgcolor: blueGrey[50],
+          border:2,
+          borderColor:'primary.main',
+          borderRadius:2,
+          }}>
           <h2>Memory Percentage</h2>
           {/* using boolean operator, if isStarted is true, what's after && will render */}
           {isStarted && (
@@ -219,7 +239,7 @@ export function Metrics() {
             }}
           />
           )}
-        </Paper> 
+        </Container> 
         </Stack>
       </Stack>
     </>

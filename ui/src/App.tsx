@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { Divider, Stack, TextField, Typography } from '@mui/material';
 import { Metrics } from "./metrics/components/cpu-ram"
+import { Prune } from "./prune/prune"
 
 
 // Note: This line relies on Docker Desktop's presence as a host application.
@@ -61,7 +62,7 @@ const App = () => {
       </Stack>
       <Routes>
         <Route path ="/metrics" element = {<Metrics />}/>
-        {/* <Route path ="/prune" element = {< />}/> */}
+        <Route path ="/prune" element = {<Prune />}/>
       </Routes>
 
       <Button variant="contained" onClick={fetchAndDisplayResponse}>
