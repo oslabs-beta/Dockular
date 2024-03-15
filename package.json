@@ -4,6 +4,7 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.15.11",
+<<<<<<< HEAD
     "@mui/x-charts": "^6.19.5",
     "@mui/x-data-grid": "^6.19.6",
     "react-google-charts": "^4.0.1",
@@ -12,5 +13,13 @@
   },
   "devDependencies": {
     "@docker/extension-api-client-types": "^0.3.4"
+=======
+    "@mui/x-data-grid": "^6.19.6",
+    "chart.js": "^4.4.2",
+    "react-chartjs-2": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/chart.js": "^2.9.41"
+>>>>>>> dev
   }
 }
