@@ -161,7 +161,7 @@ export function Metrics() {
   return (
     <>
       <Stack direction="row">
-        <Container style={{ width: '30vw', height: '70vh', padding: '20px' }} sx={{ 
+        <Container style={{ width: '30vw', height: '80vh', padding: '20px' }} sx={{ 
           mt: 0, 
           mr: 2,
           bgcolor: blueGrey[50],

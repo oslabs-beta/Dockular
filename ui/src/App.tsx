@@ -10,6 +10,7 @@ import { Home } from './Home';
 import myIcon from './img/icon.png'
 import { Container, Box} from '@mui/material';
 import myImage from './img/logo.png';
+import { RouteProps } from 'react-router-dom'
 
 
 // Note: This line relies on Docker Desktop's presence as a host application.
@@ -44,20 +45,16 @@ const App = () => {
             {'Prune'}
           </Link>
         </Button>
-
       </Stack>
+      
 
-
+      
       <Routes>
-        <Route path ="/home" element = {<Home />}/>
+        <Route path ="/" element = {<Home />}/>
         <Route path ="/metrics" element = {<Metrics />}/>
         <Route path ="/prune" element = {<Prune />}/>
       </Routes>
-      <Container sx={{ width: '90vw', height: '90vh'}}>
-            <Box sx={{ maxWidth: '100%', height: 'auto'}}>
-                <img src={myImage} style={{width:'100%', height:'auto'}} />
-            </Box>
-        </Container>
+
     </>
   );
 }
