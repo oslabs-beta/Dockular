@@ -161,7 +161,7 @@ export function Metrics() {
   return (
     <>
       <Stack direction="row">
-        <Container style={{ width: '300px', height: '800px', padding: '20px' }} sx={{ 
+        <Container style={{ width: '30vw', height: '80vh', padding: '20px' }} sx={{ 
           mt: 0, 
           mr: 2,
           bgcolor: blueGrey[50],
@@ -175,7 +175,7 @@ export function Metrics() {
           ))} {/* addding handleContainerClick as onclick, passing in index */}
         </Container>
         <Stack direction="column">
-        <Container style={{ width: '700px', height: '400px', padding: '20px' }} sx={{ 
+        <Container style={{ width: '60vw', height: '40vh', padding: '20px' }} sx={{ 
           ml: 2,
           bgcolor: blueGrey[50],
           border:2,
@@ -208,7 +208,7 @@ export function Metrics() {
           )}
         </Container>
           
-        <Container style={{ width: '700px', height: '400px', padding: '20px' }} sx={{ 
+        <Container style={{ width: '60vw', height: '40vh', padding: '20px' }} sx={{ 
           ml: 2,
           bgcolor: blueGrey[50],
           border:2,

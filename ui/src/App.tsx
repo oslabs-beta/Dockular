@@ -6,6 +6,11 @@ import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { Divider, Stack, TextField, Typography } from '@mui/material';
 import { Metrics } from "./metrics/components/cpu-ram"
 import { Prune } from "./prune/prune"
+import { Home } from './Home';
+import myIcon from './img/icon.png'
+import { Container, Box} from '@mui/material';
+import myImage from './img/logo.png';
+import { RouteProps } from 'react-router-dom'
 
 
 // Note: This line relies on Docker Desktop's presence as a host application.
@@ -14,26 +19,6 @@ import { Prune } from "./prune/prune"
 
 
 const App = () => {
-  // {"stdout":"{\"BlockIO\":\"7.33MB / 4.1kB\",\"CPUPerc\":\"0.00%\",\"Container\":\"772867bb9f60\",\"ID\":\"772867bb9f60\",\"MemPerc\":\"0.19%\",\"MemUsage\":\"14.9MiB / 7.657GiB\",\"Name\":\"gallant_banzai\",\"NetIO\":\"9.5kB / 0B\",\"PIDs\":\"11\"}\n{\"BlockIO\":\"94.7MB / 21.2MB\",\"CPUPerc\":\"0.51%\",\"Container\":\"f5acb0c87304\",\"ID\":\"f5acb0c87304\",\"MemPerc\":\"2.64%\",\"MemUsage\":\"206.7MiB / 7.657GiB\",\"Name\":\"jovial_mccarthy\",\"NetIO\":\"9.19kB / 0B\",\"PIDs\":\"32\"}\n","stderr":""}
-  const client = createDockerDesktopClient();
-
-  function useDockerDesktopClient() {
-    return client;
-  }
-    const [response, setResponse] = React.useState<string>();
-    const ddClient = useDockerDesktopClient();
-  
-    const fetchAndDisplayResponse = async () => {
-
-    const result = await ddClient.docker.cli.exec("ps", [
-      "--all",
-      // "--no-trunc",
-      "--format",
-      '"{{json .}}"',
-    ]);
-
-      setResponse(JSON.stringify(result))
-  };
 
   return (
     <>
@@ -41,11 +26,13 @@ const App = () => {
         direction="row"
         justifyContent="center"
         alignItems="center"
-        spacing={8}
+        spacing={5}
         sx= {{ pt : 4, pb : 8}}
       >
-        <Typography variant="h3">Dockular</Typography>
-        <Button variant="contained">Home</Button>
+
+        <Link to="/" style={{ width: '4%', height: 'auto', marginTop: '5px' }}>
+          <img src={myIcon} style={{ width: '100%', height: 'auto' }} />
+        </Link>
 
         <Button variant="contained">
           <Link to = {'/metrics'}> 
@@ -58,26 +45,16 @@ const App = () => {
             {'Prune'}
           </Link>
         </Button>
-
       </Stack>
+      
+
+      
       <Routes>
+        <Route path ="/" element = {<Home />}/>
         <Route path ="/metrics" element = {<Metrics />}/>
         <Route path ="/prune" element = {<Prune />}/>
       </Routes>
 
-      <Button variant="contained" onClick={fetchAndDisplayResponse}>
-          Call backend
-        </Button>
-
-      <TextField
-          label="Backend response"
-          sx={{ width: 480 }}
-          disabled
-          multiline
-          variant="outlined"
-          minRows={5}
-          value={response ?? ''}
-          ></TextField>
     </>
   );
 }

@@ -5,6 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { DockerMuiThemeProvider } from "@docker/docker-mui-theme";
 
 import { App } from './App';
+import { Home } from './Home'
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
