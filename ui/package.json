@@ -11,6 +11,8 @@
     "@mui/material": "5.10.8",
     "@mui/x-data-grid": "^6.19.6",
     "@nivo/line": "^0.84.0",
+    "@toast-ui/chart": "^4.6.1",
+    "@toast-ui/react-chart": "^4.7.1",
     "chart.js": "^4.4.2",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
