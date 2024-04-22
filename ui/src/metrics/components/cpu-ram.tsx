@@ -98,18 +98,56 @@ export function Metrics() {
     setIsStarted(true);
   };
 
-
   // Define an event handler to update the selected memory value when the slider changes
   const handleMemoryChange = (event: any, newValue: any) => {
   setSelectedMemory(newValue); // Update the selected memory value
 };
 
 
+// Trying to change memory, not working so far
+// const updateContainerMemoryLimit = async (containerId: string, memoryLimitMb: number) => {
+//   const memoryLimit = `${memoryLimitMb}m`; // Convert memory limit to the format expected by Docker (e.g., "512m" for 512 MB)
+//   try {
+//     await ddClient.docker.cli.exec("update", ["--memory", memoryLimit, containerId]);
+//     console.log(`Memory limit updated to ${memoryLimit} for container ${containerId}`);
+//   } catch (error) {
+//     console.error("Failed to update container memory limit:", error);
+//   }
+// };
+
+// // Modify the handleMemoryChange function like so:
+
+// const handleMemoryChange = (event: any, newValue: any) => {
+//   setSelectedMemory(newValue); // Update the selected memory value
+
+//   if (selectedContainerIndex !== null) {
+//     // Call the update function with the selected container's ID and new memory limit
+//     const containerId = containerList[selectedContainerIndex];
+//     updateContainerMemoryLimit(containerId, newValue);
+//   }
+// };
+
+
+// We need to know how much ram the host machine has, try something like this: (this is system dependent, it's different for mac and linux)
+// const fetchHostTotalRam = async () => {
+//   // Example command for Linux. Adjust based on your target OS.
+//   const command = "free -m | awk '/^Mem:/ {print $2}'"; // This gets total RAM in MB
+//   try {
+//     const result = await ddClient.docker.cli.exec("run", ["--rm", "alpine", "sh", "-c", command]);
+//     const totalRamMb = parseInt(result.stdout, 10);
+//     console.log(`Total RAM on Host: ${totalRamMb} MB`);
+//     return totalRamMb;
+//   } catch (error) {
+//     console.error("Failed to fetch host total RAM:", error);
+//     return 0; // Return 0 or a default value in case of failure
+//   }
+// };
 
   // Render components
   return (
     <>
     <Slider
+    // could replace some of these vqriables with ones retrieved from commands, should work hopefully
       value={selectedMemory}
       onChange={handleMemoryChange}
       min={128} // Minimum memory value (in MB)
