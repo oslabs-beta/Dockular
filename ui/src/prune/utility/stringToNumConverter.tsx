@@ -1,3 +1,4 @@
+//UTILIZED BY: GetAllStorage component 
 
 export function stringToNumConverter(sizeString:string) {
     const isVirtual = sizeString.match(/virtual/g);
