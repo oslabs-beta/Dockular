@@ -1,4 +1,5 @@
 //UTILIZED BY: GetAllStorage component 
+import { roundThreeDecimalPlaces } from "../utilities/RoundThreeDecimalPlaces";
 
 export function totalStorageParser(output:any) {
 
@@ -13,7 +14,6 @@ export function totalStorageParser(output:any) {
       }
     })
 
-  
     // console.log("Line with Total:\n",totalLine[0].slice(8, totalLine[0].length));
   
     const builtCascheisGB =  totalLine[0].slice(8, totalLine[0].length).match(/GB/g);
