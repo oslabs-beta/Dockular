@@ -1,12 +1,11 @@
 //UTILIZED BY: GetAllStorage component 
-import { roundThreeDecimalPlaces } from "../utilities/RoundThreeDecimalPlaces";
 
 export function totalStorageParser(output:any) {
 
     const lines = output.split('\n');
     const entries = [];
   
-    console.log("All Lines -> totalStorageParser: \n",lines)
+    // console.log("All Lines -> totalStorageParser: \n",lines)
     let totalLine:any= [];
     lines.forEach((ele:any)=>{
       if(ele.match(/Total/g)){
