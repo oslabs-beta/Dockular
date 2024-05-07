@@ -39,6 +39,8 @@ export function Metrics() {
   const [containerNamesList, setContainerNamesList] = useState<any[]>([]);
   const [selectedContainerIndex, setSelectedContainerIndex] = useState<number | null>(null); 
   const [selectedMemory, setSelectedMemory] = useState(512); // Initial value is 512 MB
+  const [currentContainerName, setCurrentContainerName] = useState<any[]>([]);
+  const [containerImageList, setImageList] = useState<any[]>([]);
 
   // Docker desktop client
   const ddClient = useDockerDesktopClient();
@@ -50,13 +52,16 @@ export function Metrics() {
         const statsContainerData = result.parseJsonLines();
         const containerArray = [];
         const namesList = [];
+        const imageList = [];
         for (const key in statsContainerData) {
           const value = statsContainerData[key];
           containerArray.push(value.ID);
           namesList.push(value.Image);
+          imageList.push(value.Names);
         }
         setContainerList(containerArray);
         setContainerNamesList(namesList);
+        setImageList(imageList);
       });
     }
   }, [containerList]);
@@ -93,41 +98,38 @@ export function Metrics() {
   // Function to handle container click
   const handleContainerClick = (index: number) => {
     setSelectedContainerIndex(index);
+    setCurrentContainerName(containerNamesList[index])
     setCPU([{ id: 'Sample Dataset', data: [] }]);
     setRAM([{ id: 'Sample Dataset', data: [] }]);
     setIsStarted(true);
   };
 
   // Define an event handler to update the selected memory value when the slider changes
-  const handleMemoryChange = (event: any, newValue: any) => {
-  setSelectedMemory(newValue); // Update the selected memory value
-};
+//   const handleMemoryChange = (event: any, newValue: any) => {
+//   setSelectedMemory(newValue); // Update the selected memory value
+// };
 
 
 // Trying to change memory, not working so far
-// const updateContainerMemoryLimit = async (containerId: string, memoryLimitMb: number) => {
-//   const memoryLimit = `${memoryLimitMb}m`; // Convert memory limit to the format expected by Docker (e.g., "512m" for 512 MB)
-//   try {
-//     await ddClient.docker.cli.exec("update", ["--memory", memoryLimit, containerId]);
-//     console.log(`Memory limit updated to ${memoryLimit} for container ${containerId}`);
-//   } catch (error) {
-//     console.error("Failed to update container memory limit:", error);
-//   }
-// };
+const updateContainerMemoryLimit = async (memoryLimitMb: number) => {
+  const memoryLimit = `"${memoryLimitMb}m"`; // Convert memory limit to the format expected by Docker (e.g., "512m" for 512 MB)
+  if (selectedContainerIndex !== null) {
+    const containerId = containerNamesList[selectedContainerIndex];
+    await ddClient.docker.cli.exec(`run ${containerId}`, ['--memory="'+ memoryLimit + '"']);
+  }
+};
 
 // // Modify the handleMemoryChange function like so:
 
-// const handleMemoryChange = (event: any, newValue: any) => {
-//   setSelectedMemory(newValue); // Update the selected memory value
+const handleMemoryChange = (event: any, newValue: any) => {                                                                                                                        
+  setSelectedMemory(newValue); // Update the selected memory value
 
-//   if (selectedContainerIndex !== null) {
-//     // Call the update function with the selected container's ID and new memory limit
-//     const containerId = containerList[selectedContainerIndex];
-//     updateContainerMemoryLimit(containerId, newValue);
-//   }
-// };
-
-
+  // if (selectedContainerIndex !== null) {
+  //   // Call the update function with the selected container's ID and new memory limit
+  //   const containerId = containerList[selectedContainerIndex];
+  //   updateContainerMemoryLimit(containerId, newValue);
+  // }
+};
 // We need to know how much ram the host machine has, try something like this: (this is system dependent, it's different for mac and linux)
 // const fetchHostTotalRam = async () => {
 //   // Example command for Linux. Adjust based on your target OS.
@@ -146,21 +148,8 @@ export function Metrics() {
   // Render components
   return (
     <>
-    <Slider
-    // could replace some of these vqriables with ones retrieved from commands, should work hopefully
-      value={selectedMemory}
-      onChange={handleMemoryChange}
-      min={128} // Minimum memory value (in MB)
-      max={8192} // Maximum memory value (in MB)
-      step={128} // Memory increment step (in MB)
-      aria-labelledby="memory-slider"
-    />
-    <h1>{selectedMemory}</h1>
-
-
-
       <Stack direction="row">
-        <Container style={{ width: '30vw', height: '80vh', padding: '20px' }} sx={{ mt: 0, mr: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
+        <Container style={{ width: '30vw', height: '80vh', padding: '20px' }} sx={{ mb:2, mt: 0, mr: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
           <Typography variant="h2">Container List</Typography>
           {containerNamesList.map((container, index) => (
             <Button key={index} onClick={() => handleContainerClick(index)} sx={{ mb: 2 }}>{container}</Button>
@@ -168,29 +157,49 @@ export function Metrics() {
         </Container>
         <Stack direction="column">
           <Container style={{ width: '60vw', height: '40vh', padding: '20px' }} sx={{ ml: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
-            <Typography variant="h2">CPU Percentage</Typography>
+          <h2>{currentContainerName} - CPU Percentage</h2>
             {isStarted && (
               <ResponsiveLine
-                data={dataCPU}
-                margin={{ top: 0, right: 60, bottom: 125, left: 100 }}
-                xScale={{ type: 'point' }}
-                yScale={{ type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false }}
-                axisBottom={{ legend: 'Time', legendOffset: 60, tickRotation: -45, legendPosition: 'middle', tickValues: dataCPU[0]?.data.filter((_: any, index: number) => index % Math.ceil(dataCPU[0]?.data.length / 7) === 0).map((item: { x: any; }) => item.x) }}
-                axisLeft={{ legend: 'Value', legendOffset: -60, legendPosition: 'middle' }}
+              data={dataCPU}
+              margin={{ top: 0, right: 60, bottom: 125, left: 100 }}
+              xScale={{ type: 'point' }}
+              yScale={{ type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false }}
+              axisBottom={{ legend: 'Time', legendOffset: 60, tickRotation: -45, legendPosition: 'middle', tickValues: dataCPU[0]?.data.filter((_: any, index: number) => index % Math.ceil(dataCPU[0]?.data.length / 7) === 0).map((item: { x: any; }) => item.x) }}
+              axisLeft={{ legend: 'Value', legendOffset: -60, legendPosition: 'middle' }}
               />
             )}
           </Container>
-          <Container style={{ width: '60vw', height: '40vh', padding: '20px' }} sx={{ ml: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
-            <Typography variant="h2">Memory Percentage</Typography>
+          <Container style={{ width: '60vw', height: '60vh', padding: '20px' }} sx={{ ml: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
+            <h2>{currentContainerName} - Memory Percentage</h2>
             {isStarted && (
+              <>
+              <div style={{ width: '100%', height: '60%'}}>
               <ResponsiveLine
                 data={dataRAM}
-                margin={{ top: 0, right: 60, bottom: 125, left: 100 }}
+                margin={{ top: 10, right: 60, bottom: 50, left: 100 }}
                 xScale={{ type: 'point' }}
                 yScale={{ type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false }}
                 axisBottom={{ legend: 'Time', legendOffset: 60, tickRotation: -45, legendPosition: 'middle', tickValues: dataRAM[0]?.data.filter((_: any, index: number) => index % Math.ceil(dataRAM[0]?.data.length / 7) === 0).map((item: { x: any; }) => item.x) }}
-                axisLeft={{ legend: 'Value', legendOffset: -60, legendPosition: 'middle' }}
-              />
+                axisLeft={{ legend: 'Value', legendOffset: -60, legendPosition: 'middle' }} 
+                />
+              </div>
+              <hr style={{ border: 'none', borderBottom: '1px dashed #aaa' }} />
+              <div>
+                <h4>{selectedMemory}</h4>
+                <Slider
+                  // could replace some of these vqriables with ones retrieved from commands, should work hopefully
+                  value={selectedMemory}
+                  onChange={handleMemoryChange}
+                  min={128} // Minimum memory value (in MB)
+                  max={8192} // Maximum memory value (in MB)
+                  step={128} // Memory increment step (in MB)
+                  aria-labelledby="memory-slider" 
+                  />
+                  <Button onClick={()=> updateContainerMemoryLimit(selectedMemory)}>
+                    Set Memory Limit
+                  </Button>
+                </div>
+                  </>
             )}
           </Container> 
         </Stack>
