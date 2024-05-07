@@ -112,10 +112,10 @@ export function Metrics() {
 
 // Trying to change memory, not working so far
 const updateContainerMemoryLimit = async (memoryLimitMb: number) => {
-  const memoryLimit = `"${memoryLimitMb}m"`; // Convert memory limit to the format expected by Docker (e.g., "512m" for 512 MB)
+  const memoryLimit = '"'+memoryLimitMb+'m"'; // Convert memory limit to the format expected by Docker (e.g., "512m" for 512 MB)
   if (selectedContainerIndex !== null) {
     const containerId = containerNamesList[selectedContainerIndex];
-    await ddClient.docker.cli.exec(`run ${containerId}`, ['--memory="'+ memoryLimit + '"']);
+    await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerId}`, [])
   }
 };
 
