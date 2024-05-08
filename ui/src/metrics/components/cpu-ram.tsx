@@ -123,18 +123,67 @@ const handleClose = () => {
   setOpen(false);
 };
 
-// Trying to change memory, not working so far
 const updateContainerMemoryLimit = async (memoryLimitMb: number) => {
+
   setOpen(false)
   const memoryLimit = '"'+memoryLimitMb+'m"'; // Convert memory limit to the format expected by Docker (e.g., "512m" for 512 MB)
   if (selectedContainerIndex !== null) {
     const containerId = containerNamesList[selectedContainerIndex];
-    await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerId}`, [])
+
+    // very similar to Darren's logic, just nested his logic in a try catch block to add additonal commands to run
+    try {
+            // Stop the old container
+            await ddClient.docker.cli.exec("container", ["stop", containerId]);
+            
+            // Remove the old container
+            await ddClient.docker.cli.exec("container", ["rm", containerId]);
+
+            // Running new container with updated memory limit (Darren's original code)
+            await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerId}`, [])
+
+            // Refresh container list
+            triggerRefresh();
+    }
+
+    catch (error) {
+      console.error('Error updating container memory limit:', error);
+    }
   }
 };
 
-// // Modify the handleMemoryChange function like so:
 
+// state to refresh container list
+const [refreshTrigger, setRefreshTrigger] = useState(false);
+
+useEffect(() => {
+  const fetchContainerList = async () => {
+    const result = await ddClient.docker.cli.exec("ps", ["--all", "--format", '"{{json .}}"']);
+    const statsContainerData = result.parseJsonLines();
+    const containerArray = [];
+    const namesList = [];
+    const imageList = [];
+    for (const key in statsContainerData) {
+      const value = statsContainerData[key];
+      containerArray.push(value.ID);
+      namesList.push(value.Image);
+      imageList.push(value.Names);
+    }
+    setContainerList(containerArray);
+    setContainerNamesList(namesList);
+    setImageList(imageList);
+  };
+
+  fetchContainerList();
+}, [refreshTrigger]);
+
+// Triggering a refresh by altering state
+const triggerRefresh = () => {
+  setRefreshTrigger(!refreshTrigger);
+};
+
+
+
+// Modify the handleMemoryChange function like so:
 const handleMemoryChange = (event: any, newValue: any) => {                                                                                                                        
   setSelectedMemory(newValue); // Update the selected memory value
 
@@ -144,6 +193,7 @@ const handleMemoryChange = (event: any, newValue: any) => {
   //   updateContainerMemoryLimit(containerId, newValue);
   // }
 };
+
 // We need to know how much ram the host machine has, try something like this: (this is system dependent, it's different for mac and linux)
 // const fetchHostTotalRam = async () => {
 //   // Example command for Linux. Adjust based on your target OS.
