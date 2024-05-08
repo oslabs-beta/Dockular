@@ -5,6 +5,9 @@ import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { Box, Container } from '@mui/material';
 import { blueGrey, red} from '@mui/material/colors';
 import { Stack } from "@mui/material";
+import Typography from '@mui/material/Typography';
+import Modal from '@mui/material/Modal';
+
 
 //mui grid
 import { DataGrid, GridRowsProp, GridColDef, GridEventListener} from '@mui/x-data-grid';
@@ -13,15 +16,29 @@ import { useGridApiRef } from '@mui/x-data-grid';
 //components
 import { DataGridComponent } from './components/DataGridComponent';
 import { ProgressbarChartComponent } from './components/ProgressbarChartComponent';
+// import { PruneAllButtonComponent } from './components/PrunAllButtonComponent';
+// import { PruneAllButtonComponent } from './components/prunAllButtonComponent';
+import { PruneAllButtonComponent } from './components/PruneAll/PruneAllButtonComponent';
+import { ImageButtonComponent } from './components/ImageButtonComponent';
+import { ContainerButtonComponent } from './components/ContainerButtonComponent';
 
 //modules
-import GetAllStorage from './modules/GetAllStorage';
+import GetAllStorage from './modules/GetAllStorage/GetAllStorage';
+import GetRunningContainers from './modules/GetAllStorage/GetRunningContainers';
 import { BuiltCascheRowDataParser } from './modules/builtCascheRowDataParser';
 import { containerVirtualSizeConverterToString } from './modules/ContainerVirtualSizeConverterToString';
+import { containerStatus } from './modules/ContainerStatus';
+import { containerTestCreator } from './utilities/containerTestCreator';
+import { removeInUseDanglingImages } from './modules/removeInUseDanglingImages';
+import { dataGridTypeHeaderHelper } from './modules/dataGridTypeHeaderHelper';
 
+
+
+import AllImageAndContainerStorage from './modules/AllImageAndContainerStorage';
+import { rowColumnTypeHelper } from './modules/GetAllStorage/rowColumnTypeHelper';
 //utilities
 import { storageNumToStr } from './utilities/StorageNumtoStr';
-
+import { checkBytesAndConvertToNumber } from './utilities/ CheckBytesAndConvertToNumber';
 
 //Docker Desktop Client
 const client = createDockerDesktopClient();
@@ -33,118 +50,216 @@ function useDockerDesktopClient() {
 export function Prune() {
 
   const ddClient = useDockerDesktopClient();
+
+  
   //state for dataGrid
   const apiRef = useGridApiRef();
+
+  // const [pruningFuncSet, SetPruningFuncSet] = React.useState<string>('');
+
+  
   //state trackings whether we have clicked dangling-images, unsused containers or built-casche
   const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
   //state that manages a list of all the dangling images, unused containers, and builtCasche
   const [dataForGridRows, setDataForGridRows] = React.useState<any[]>([]);
   //initialize state for containers, images and builtCasche to be set to an empty object. Contains key of id and value of storage size. 
   const [storageSizeById, setStorageSizeById] = React.useState<{ [key: string]: any }>({
-    'unused-containers':{}, 
+    'running-containers':{},
+    'exited-containers':{},  
+    'paused-containers':{},
     'dangling-images': {}, 
-    'built-casche': {}
+    'in-use-images': {},
+    'unused-images':{},
+    'built-casche': {},
   })
 
   //state that manages the current amount of storage size used from each selected image/container/builtCasche from the Data Grid component
   //The storage you've selected within each category
   const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState<{ [key: string]: any }>({
-    'unused-containers': 0, 
+    'running-containers': 0,
+    'exited-containers': 0, 
+    'paused-containers':0,
     'dangling-images': 0, 
+    'in-use-images': 0,
+    'unused-images':0,
     'built-casche': 0,
     'selectedTotal': 0, 
   })
 
   //state that manages the total amount of storage being used by unused-containers, dangling-images, built-casche and the combined-total
   const [totalStorageTypes, setTotalStorageTypes] = React.useState<{ [key: string]: any }>({
-    'unused-containers': 0, 
+    'running-containers': 0,
+    'exited-containers': 0,  
+    'paused-containers':0,
     'dangling-images': 0,
+    'in-use-images': 0,
+    'unused-images':0,
     'built-casche': 0,
     'combinedTotal': 0
-  })
+  });
+
+  const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState<{ [key: string]: any }>({
+    'all-images': 0, 
+    'all-containers': 0
+  });
+
+
+
+ 
 
   useEffect(()=>{
+    AllImageAndContainerStorage(ddClient).
+    then(res => {    
+     // console.log('res in useEffect - GetAllStorage(ddClient).', res)
+     setAllImageAndContainerStorage({
+       'all-images': res['all-images'],
+       'all-containers' : res['all-containers'],
+     }) 
+    })
+
+
     //gets the total amount of storage being used by each category and the combined total
-       GetAllStorage(ddClient).
+       GetAllStorage(ddClient, 'storage').
        then(res => {    
-        console.log('res in useEffect - GetAllStorage(ddClient).', res)
+        // console.log('res in useEffect - GetAllStorage(ddClient).', res)
         setTotalStorageTypes({
-          'unused-containers':  res['unused-containers'], 
-          'dangling-images':  res['dangling-images'],
-          'built-casche':  res['built-casche'],
-          'combinedTotal': res['combinedTotal']
+          'running-containers': res.storage['running-containers'],
+          'exited-containers':  res.storage['exited-containers'],  
+          'paused-containers': res.storage['paused-containers'],
+          'dangling-images':  res.storage['dangling-images'],
+          'in-use-images': res.storage['in-use-images'],
+          'unused-images': res.storage['unused-images'], 
+          'built-casche': res.storage['built-casche'],
+          'combinedTotal':  res.storage['combinedTotal'], 
         }) 
-       })     
+       })
+       
   }, [])
 
-
+   
   
   //keeps track of state change in dataGridBlueButtonType and changes state in dataForGridRows state depending on selection of dangling-images,unused-container, or built casche
   useEffect(()=>{
+    
     //command populates all dangling images
      if (dataGridBlueButtonType === 'dangling-images'){
-        ddClient.docker.cli.exec('images', ['--format', '"{{json .}}"', '--filter', "dangling=true"])
-        .then((result) => {
-          console.log('parsed images in prune file', result.parseJsonLines())
-          setDataForGridRows(result.parseJsonLines());
-        });
-      //command populates all unused containers 
-    } else if(dataGridBlueButtonType === 'unused-containers'){
-        ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited", '--filter', "status=paused", '--filter', "status=created"])
+       
+      GetAllStorage(ddClient, 'data').
+      then(res => {    
+      setDataForGridRows(res.data['dangling-images'])
+      
+      }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (DANGLING IMAGES) - Docker command in: GetAllStorage module ${err}`}) 
+
+      //COMMAND POPULATES UNUSED IMAGES
+     } else if(dataGridBlueButtonType === 'unused-images') {
+      GetAllStorage(ddClient, 'data').
+      then(res => {    
+      setDataForGridRows(res.data['unused-images'])
+      }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (UNUSED IMAGES) - Docker command in: GetAllStorage module ${err}`})  
+
+    //command populates all 'in-use-images'
+    } else if(dataGridBlueButtonType === 'in-use-images'){
+
+      GetAllStorage(ddClient, 'data').
+      then(res => {    
+        // console.log(res)
+      setDataForGridRows(res.data['in-use-images'])
+      
+      }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (IN USE IMAGES) - Docker command in: GetAllStorage module${err}`})  
+
+      //EXITED CONTAINERS 
+    } else if(dataGridBlueButtonType === 'exited-containers'){
+        ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
         .then((result) => {
           // console.log('psAll',result.parseJsonLines())
           setDataForGridRows(result.parseJsonLines());
-        })
+          
+        }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (EXITED CONTAINERS) - command: ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"]) ${err}`})
 
+          //Paused Containers
+      } else if(dataGridBlueButtonType === 'paused-containers'){
+        ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=paused"])
+        .then((result) => {
+          // console.log('psAll',result.parseJsonLines())
+          setDataForGridRows(result.parseJsonLines());
+          
+        }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (PAUSED CONTAINERS) - command: ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"]) ${err}`})
+
+        //RUNNING CONTAINERS
+      }else if(dataGridBlueButtonType === 'running-containers'){
+        GetRunningContainers(ddClient).
+        then(res => { 
+          // console.log('running containers', res)   
+        setDataForGridRows(res)
+        }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (RUNNING CONTAINERS) Docker command in: GetRunningContainers module ${err}`})  
+       
         //command populates all built casche
-      } else if(dataGridBlueButtonType === 'built-casche'){
+      }else if(dataGridBlueButtonType === 'built-casche'){
         ddClient.docker.cli.exec('builder', ['du', '--verbose'])
         .then((result) => {
           // console.log('result.stdout within useEffect in prune file -->', result.stdout)
           // console.log('Parsed BuiltCascheRowDataParser(result) in prune useEffect', JSON.parse(BuiltCascheRowDataParser(result.stdout)))
           setDataForGridRows(JSON.parse(BuiltCascheRowDataParser(result.stdout)));
-        })
+        }).catch((err)=>{`Error in use Effect within prune.tsx for BUILD CACHE - command: ddClient.docker.cli.exec('builder', ['du', '--verbose']) ${err}`})
 
       }  
+      
   },[dataGridBlueButtonType])
 
 
   //This eventListener helps us keep track of the boxes selected/unselected in the grid by id and the size of each image based off id
   const handleRowClick: GridEventListener<'rowClick'> = (params) => {
- 
+    
     if(dataGridBlueButtonType === 'dangling-images'){
 
       //user has selected row in dangling-images
-      const imageSizeStr = params.row.size; //storage size
+      const imageStorageSize = params.row.size; //storage size
       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
-      const currImageCpu = Math.trunc(Number(imageSizeStr.slice(0, length-2))); 
+      const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
 
       //if image id is NOT in the object
       if(!storageSizeById['dangling-images'].hasOwnProperty(params.row.id)){
         //key is id and the value is the storage size 
         setStorageSizeById(storageSize => ({
-          'unused-containers': {...storageSize['unused-containers']},
-          'dangling-images': {...storageSize['dangling-images'], [params.row.id] : currImageCpu},
+          'running-containers': {...storageSize['running-containers']},
+          'exited-containers': {...storageSize['exited-containers']},
+          'paused-containers' : {...storageSize['paused-containers']},
+          'dangling-images': {...storageSize['dangling-images'], [params.row.id] : currImageSize},
+          'in-use-images' : {...storageSize['in-use-images']},
+          'unused-images' : {...storageSize['unused-images']},
           'built-casche' : {...storageSize['built-casche']},
         }))
+        
+        
 
         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
          that controls whether we SELECT the row. */
          setSelectedGridRowStorageSize(currSelectedStorage => ({
-          'unused-containers': currSelectedStorage['unused-containers'],
+          'running-containers': currSelectedStorage['running-containers'],
+          'exited-containers': currSelectedStorage['exited-containers'],
+          'paused-containers': currSelectedStorage['paused-containers'],
           'dangling-images': currSelectedStorage['dangling-images'],
+          'in-use-images': currSelectedStorage['in-use-images'],
+          'unused-images': currSelectedStorage['unused-images'],
           'built-casche': currSelectedStorage['built-casche'],
-          'selectedTotal': currSelectedStorage['selectedTotal'] + currImageCpu, 
+          'selectedTotal': currSelectedStorage['selectedTotal'] + currImageSize, 
         }))
-
+       
+        
+       
        
       } else {
         //else user has unselected row. Remove the key/value pair from storageSizeById.
         const copyOfImgCpuObj = {
-        'unused-containers': {...storageSizeById['unused-containers']}, 
+        'running-containers': {...storageSizeById['running-containers']}, 
+        'exited-containers': {...storageSizeById['exited-containers']}, 
+        'paused-containers': {...storageSizeById['paused-containers']}, 
         'dangling-images': {...storageSizeById['dangling-images']}, 
-        'built-casche': {...storageSizeById['built-casche']}};
-
+        'in-use-images': {...storageSizeById['in-use-images']}, 
+        'unused-images': {...storageSizeById['unused-images']}, 
+        'built-casche': {...storageSizeById['built-casche']}
+        };
+        
         delete copyOfImgCpuObj['dangling-images'][params.row.id]; 
 
         setStorageSizeById(imgStorageSize=>({
@@ -154,22 +269,387 @@ export function Prune() {
         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
          that controls whether we UNSELECT the row. */
          setSelectedGridRowStorageSize(currSelectedStorage => ({
-          'unused-containers': currSelectedStorage['unused-containers'],
+          'running-containers': currSelectedStorage['running-containers'],
+          'exited-containers': currSelectedStorage['exited-containers'],
+          'paused-containers': currSelectedStorage['paused-containers'],
           'dangling-images': currSelectedStorage['dangling-images'],
+          'in-use-images': currSelectedStorage['in-use-images'],
+          'unused-images': currSelectedStorage['unused-images'],
           'built-casche': currSelectedStorage['built-casche'],
-          'selectedTotal': currSelectedStorage['selectedTotal'] - currImageCpu, 
+          'selectedTotal': currSelectedStorage['selectedTotal'] - currImageSize, 
+        }))
+        
+       
+      }
+      
+ 
+    } else if(dataGridBlueButtonType === 'unused-images'){
+
+      //user has selected row in dangling-images
+      const imageStorageSize = params.row.size; //storage size
+      //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
+      const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
+
+      //if image id is NOT in the object
+      if(!storageSizeById['unused-images'].hasOwnProperty(params.row.id)){
+        //key is id and the value is the storage size 
+        setStorageSizeById(storageSize => ({
+          'running-containers': {...storageSize['running-containers']},
+          'exited-containers': {...storageSize['exited-containers']},
+          'paused-containers': {...storageSize['paused-containers']},
+          'dangling-images' : {...storageSize['dangling-images']},
+          'in-use-images' : {...storageSize['in-use-images']},
+          'unused-images': {...storageSize['unused-images'], [params.row.id] : currImageSize},
+          'built-casche' : {...storageSize['built-casche']},
+        }))
+
+        
+
+        
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we SELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage => ({
+          'running-containers': currSelectedStorage['running-containers'],
+          'exited-containers': currSelectedStorage['exited-containers'],
+          'paused-containers': currSelectedStorage['paused-containers'],
+          'dangling-images': currSelectedStorage['dangling-images'],
+          'in-use-images': currSelectedStorage['in-use-images'],
+          'unused-images': currSelectedStorage['unused-images'],
+          'built-casche': currSelectedStorage['built-casche'],
+          'selectedTotal': currSelectedStorage['selectedTotal'] + currImageSize, 
+        }))
+
+        
+        
+       
+       
+      } else {
+        //else user has unselected row. Remove the key/value pair from storageSizeById.
+        const copyOfImgCpuObj = {
+        'running-containers': {...storageSizeById['running-containers']}, 
+        'exited-containers': {...storageSizeById['exited-containers']}, 
+        'paused-containers': {...storageSizeById['paused-containers']}, 
+        'dangling-images': {...storageSizeById['dangling-images']}, 
+        'in-use-images': {...storageSizeById['in-use-images']}, 
+        'unused-images': {...storageSizeById['unused-images']}, 
+        'built-casche': {...storageSizeById['built-casche']}
+        };
+        
+
+        delete copyOfImgCpuObj['unused-images'][params.row.id]; 
+
+        setStorageSizeById(imgStorageSize=>({
+          ...copyOfImgCpuObj
+        }))
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we UNSELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage => ({
+          'running-containers': currSelectedStorage['running-containers'],
+          'exited-containers': currSelectedStorage['exited-containers'],
+          'paused-containers': currSelectedStorage['paused-containers'],
+          'dangling-images': currSelectedStorage['dangling-images'],
+          'in-use-images': currSelectedStorage['in-use-images'],
+          'unused-images': currSelectedStorage['unused-images'],
+          'built-casche': currSelectedStorage['built-casche'],
+          'selectedTotal': currSelectedStorage['selectedTotal'] - currImageSize, 
         }))
       }
+     
 
+    }
+    
+    else if(dataGridBlueButtonType === 'in-use-images'){
+
+      //user has selected row in dangling-images
+      const imageStorageSize = params.row.size; //storage size
+      //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
+      const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
+
+      //if image id is NOT in the object
+      if(!storageSizeById['in-use-images'].hasOwnProperty(params.row.id)){
+        //key is id and the value is the storage size 
+        setStorageSizeById(storageSize => ({
+          'running-containers': {...storageSize['running-containers']},
+          'exited-containers': {...storageSize['exited-containers']},
+          'paused-containers': {...storageSize['paused-containers']},
+          'dangling-images': {...storageSize['dangling-images']},
+          'in-use-images': {...storageSize['in-use-images'], [params.row.id] : currImageSize},
+          'unused-images': {...storageSize['unused-images']},
+          'built-casche' : {...storageSize['built-casche']},
+        }))
        
+        
+        
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we SELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage => ({
+          'running-containers': currSelectedStorage['running-containers'],
+          'exited-containers': currSelectedStorage['exited-containers'],
+          'paused-containers': currSelectedStorage['paused-containers'],
+          'dangling-images': currSelectedStorage['dangling-images'],
+          'in-use-images': currSelectedStorage['in-use-images'],
+          'unused-images': currSelectedStorage['unused-images'],
+          'built-casche': currSelectedStorage['built-casche'],
+          'selectedTotal': currSelectedStorage['selectedTotal'] + currImageSize, 
+        }))
+        
+       
+      } else {
+        //else user has unselected row. Remove the key/value pair from storageSizeById.
+        const copyOfImgCpuObj = {
+        'running-containers': {...storageSizeById['running-containers']}, 
+        'exited-containers': {...storageSizeById['exited-containers']}, 
+        'paused-containers': {...storageSizeById['paused-containers']}, 
+        'dangling-images': {...storageSizeById['dangling-images']}, 
+        'in-use-images': {...storageSizeById['in-use-images']}, 
+        'unused-images': {...storageSizeById['unused-images']}, 
+        'built-casche': {...storageSizeById['built-casche']}
+      
+      };
+      
+      
+        delete copyOfImgCpuObj[ 'in-use-images'][params.row.id]; 
 
-    } else if (dataGridBlueButtonType === 'unused-containers'){
+        setStorageSizeById(imgStorageSize=>({
+          ...copyOfImgCpuObj
+        }))
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we UNSELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage => ({
+          'running-containers': currSelectedStorage['running-containers'],
+          'exited-containers': currSelectedStorage['exited-containers'],
+          'paused-containers': currSelectedStorage['paused-containers'],
+          'dangling-images': currSelectedStorage['dangling-images'],
+          'in-use-images': currSelectedStorage['in-use-images'],
+          'unused-images': currSelectedStorage['unused-images'],
+          'built-casche': currSelectedStorage['built-casche'],
+          'selectedTotal': currSelectedStorage['selectedTotal'] - currImageSize, 
+        }))
+      } 
+      
+       
+    }  else if (dataGridBlueButtonType === 'exited-containers'){ //EXITED
       //user has selected row in unused-containers
-      console.log('selected unused-containers in Data Grid EventListener')
+      
+      const unusedContainerSizeStr = params.row.size; //storage size
+      // console.log('unusedContainerSizeStr', checkBytesAndConvertToNumber(unusedContainerSizeStr))
+      // const currbuiltCascheStorage = Math.trunc(Number(unusedContainerSizeStr.slice(0, length-2))); // storageSize converted to #
+      const currContainerStorage = checkBytesAndConvertToNumber(unusedContainerSizeStr)
 
-    } else if(dataGridBlueButtonType === 'built-casche'){
-      //user has selected row in 'built-casche'
+      //if image id is NOT in the object
+      if(!storageSizeById['exited-containers'].hasOwnProperty(params.row.id)){
+        //key is id and the value is the storage size 
+        setStorageSizeById(storageSize => ({
+          'running-containers': {...storageSize['running-containers']},
+          'exited-containers': {...storageSize['exited-containers'],[params.row.id] : currContainerStorage},
+          'paused-containers': {...storageSize['paused-containers']},
+          'dangling-images': {...storageSize['dangling-images']},
+          'in-use-images': {...storageSize['in-use-images']},
+          'unused-images': {...storageSize['unused-images']},
+          'built-casche' : {...storageSize['built-casche']}
+        }))
+        
+        
+        
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+        that controls whether we SELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage => ({
+           'running-containers': currSelectedStorage['running-containers'],
+           'exited-containers': currSelectedStorage['exited-containers'],
+           'paused-containers': currSelectedStorage['paused-containers'],
+           'dangling-images': currSelectedStorage['dangling-images'],
+           'in-use-images': currSelectedStorage['in-use-images'],
+           'unused-images': currSelectedStorage['unused-images'],
+           'built-casche': currSelectedStorage['built-casche'],
+           'selectedTotal': currSelectedStorage['selectedTotal'] + currContainerStorage
+         }))
+         
+        
+
+      } else {
+        //else user has unselected row. Remove the key/value pair from storageSizeById.
+        const copyForContainer = {
+        'running-containers': {...storageSizeById['running-containers']}, 
+        'exited-containers': {...storageSizeById['exited-containers']}, 
+        'paused-containers': {...storageSizeById['paused-containers']}, 
+        'dangling-images': {...storageSizeById['dangling-images']}, 
+        'in-use-images': {...storageSizeById['in-use-images']}, 
+        'unused-images': {...storageSizeById['unused-images']}, 
+        'built-casche': {...storageSizeById['built-casche']}
+       };
        
+       
+        delete copyForContainer['exited-containers'][params.row.id]; 
+
+        setStorageSizeById(imgStorageSize=>({
+          ...copyForContainer
+        }))
+
+         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+        that controls whether we UNSELECT the row. */
+        setSelectedGridRowStorageSize(currSelectedStorage => ({
+         'running-containers': currSelectedStorage['running-containers'],
+         'exited-containers': currSelectedStorage['exited-containers'],
+         'paused-containers': currSelectedStorage['paused-containers'],
+         'dangling-images': currSelectedStorage['dangling-images'],
+         'in-use-images': currSelectedStorage['in-use-images'],
+         'unused-images': currSelectedStorage['unused-images'],
+         'built-casche': currSelectedStorage['built-casche'],
+         'selectedTotal': currSelectedStorage['selectedTotal'] - currContainerStorage
+       }))
+      }
+      
+    } else if (dataGridBlueButtonType === 'paused-containers'){
+       //user has selected row in unused-containers
+      
+       const pausedContainerSizeStr = params.row.size; //storage size
+       // console.log('unusedContainerSizeStr', checkBytesAndConvertToNumber(unusedContainerSizeStr))
+       // const currbuiltCascheStorage = Math.trunc(Number(unusedContainerSizeStr.slice(0, length-2))); // storageSize converted to #
+       const currContainerStorage = checkBytesAndConvertToNumber(pausedContainerSizeStr)
+ 
+       //if image id is NOT in the object
+       if(!storageSizeById['paused-containers'].hasOwnProperty(params.row.id)){
+         //key is id and the value is the storage size 
+         setStorageSizeById(storageSize => ({
+           'running-containers': {...storageSize['running-containers']},
+           'exited-containers': {...storageSize['exited-containers']},
+           'paused-containers': {...storageSize['paused-containers'],[params.row.id] : currContainerStorage},
+           'dangling-images': {...storageSize['dangling-images']},
+           'in-use-images': {...storageSize['in-use-images']},
+           'unused-images': {...storageSize['unused-images']},
+           'built-casche' : {...storageSize['built-casche']}
+         }))
+
+         
+ 
+         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we SELECT the row. */
+          setSelectedGridRowStorageSize(currSelectedStorage => ({
+            'running-containers': currSelectedStorage['running-containers'],
+            'exited-containers': currSelectedStorage['exited-containers'],
+            'paused-containers': currSelectedStorage['paused-containers'],
+            'dangling-images': currSelectedStorage['dangling-images'],
+            'in-use-images': currSelectedStorage['in-use-images'],
+            'unused-images': currSelectedStorage['unused-images'],
+            'built-casche': currSelectedStorage['built-casche'],
+            'selectedTotal': currSelectedStorage['selectedTotal'] + currContainerStorage
+          }))
+          
+         
+ 
+       } else {
+         //else user has unselected row. Remove the key/value pair from storageSizeById.
+         const copyForContainer = {
+         'running-containers': {...storageSizeById['running-containers']}, 
+         'exited-containers': {...storageSizeById['exited-containers']}, 
+         'paused-containers': {...storageSizeById['paused-containers']}, 
+         'dangling-images': {...storageSizeById['dangling-images']}, 
+         'in-use-images': {...storageSizeById['in-use-images']}, 
+         'unused-images': {...storageSizeById['unused-images']}, 
+         'built-casche': {...storageSizeById['built-casche']}
+        };
+        
+        
+         delete copyForContainer['paused-containers'][params.row.id]; 
+ 
+         setStorageSizeById(imgStorageSize=>({
+           ...copyForContainer
+         }))
+ 
+          /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we UNSELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage => ({
+          'running-containers': currSelectedStorage['running-containers'],
+          'exited-containers': currSelectedStorage['exited-containers'],
+          'paused-containers': currSelectedStorage['paused-containers'],
+          'dangling-images': currSelectedStorage['dangling-images'],
+          'in-use-images': currSelectedStorage['in-use-images'],
+          'unused-images': currSelectedStorage['unused-images'],
+          'built-casche': currSelectedStorage['built-casche'],
+          'selectedTotal': currSelectedStorage['selectedTotal'] - currContainerStorage
+        }))
+       }
+       
+      
+      
+    }  else if (dataGridBlueButtonType === 'running-containers'){
+      //user has selected row in unused-containers
+     
+      const runningContainerSizeStr = params.row.size; //storage size
+      // console.log('unusedContainerSizeStr', checkBytesAndConvertToNumber(unusedContainerSizeStr))
+      // const currbuiltCascheStorage = Math.trunc(Number(unusedContainerSizeStr.slice(0, length-2))); // storageSize converted to #
+      const currContainerStorage = checkBytesAndConvertToNumber(runningContainerSizeStr)
+
+      //if image id is NOT in the object
+      if(!storageSizeById['running-containers'].hasOwnProperty(params.row.id)){
+        //key is id and the value is the storage size 
+        setStorageSizeById(storageSize => ({
+          'running-containers': {...storageSize['running-containers'],[params.row.id] : currContainerStorage},
+          'exited-containers': {...storageSize['exited-containers']},
+          'paused-containers': {...storageSize['paused-containers']},
+          'dangling-images': {...storageSize['dangling-images']},
+          'in-use-images': {...storageSize['in-use-images']},
+          'unused-images': {...storageSize['unused-images']},
+          'built-casche' : {...storageSize['built-casche']}
+        }))
+
+        
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+        that controls whether we SELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage => ({
+           'running-containers': currSelectedStorage['running-containers'],
+           'exited-containers': currSelectedStorage['exited-containers'],
+           'paused-containers': currSelectedStorage['paused-containers'],
+           'dangling-images': currSelectedStorage['dangling-images'],
+           'in-use-images': currSelectedStorage['in-use-images'],
+           'unused-images': currSelectedStorage['unused-images'],
+           'built-casche': currSelectedStorage['built-casche'],
+           'selectedTotal': currSelectedStorage['selectedTotal'] + currContainerStorage
+         }))
+         
+        
+
+      } else {
+        //else user has unselected row. Remove the key/value pair from storageSizeById.
+        const copyForContainer = {
+        'running-containers': {...storageSizeById['running-containers']}, 
+        'exited-containers': {...storageSizeById['exited-containers']}, 
+        'paused-containers': {...storageSizeById['paused-containers']}, 
+        'dangling-images': {...storageSizeById['dangling-images']}, 
+        'in-use-images': {...storageSizeById['in-use-images']}, 
+        'unused-images': {...storageSizeById['unused-images']}, 
+        'built-casche': {...storageSizeById['built-casche']}
+       };
+       
+       
+        delete copyForContainer['running-containers'][params.row.id]; 
+
+        setStorageSizeById(imgStorageSize=>({
+          ...copyForContainer
+        }))
+
+         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+        that controls whether we UNSELECT the row. */
+        setSelectedGridRowStorageSize(currSelectedStorage => ({
+         'running-containers': currSelectedStorage['running-containers'],
+         'exited-containers': currSelectedStorage['exited-containers'], 
+         'paused-containers': currSelectedStorage['paused-containers'],
+         'dangling-images': currSelectedStorage['dangling-images'],
+         'in-use-images': currSelectedStorage['in-use-images'],
+         'unused-images': currSelectedStorage['unused-images'],
+         'built-casche': currSelectedStorage['built-casche'],
+         'selectedTotal': currSelectedStorage['selectedTotal'] - currContainerStorage
+       }))
+      }
+      
+   }  else if(dataGridBlueButtonType === 'built-casche'){
+      //No NEED TO HAVE THIS CALC FOR BUILT-CASCHE? 
+
+      //user has selected row in 'built-casche'
        const builtCascheSizeStr = params.row.size; //storage size
        
        const currbuiltCascheStorage = Math.trunc(Number(builtCascheSizeStr.slice(0, length-2))); // storageSize converted to #
@@ -178,27 +658,43 @@ export function Prune() {
        if(!storageSizeById['built-casche'].hasOwnProperty(params.row.id)){
          //key is id and the value is the storage size 
          setStorageSizeById(storageSize => ({
-           'unused-containers': {...storageSize['unused-containers']},
+           'running-containers': {...storageSize['running-containers']},
+           'exited-containers': {...storageSize['exited-containers']},
+           'paused-containers': {...storageSize['paused-containers']},
            'dangling-images': {...storageSize['dangling-images']},
+           'in-use-images': {...storageSize['in-use-images']},
+           'unused-images': {...storageSize['unused-images']},
            'built-casche' : {...storageSize['built-casche'],[params.row.id] : currbuiltCascheStorage}
          }))
+         
+        
 
          /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
          that controls whether we SELECT the row. */
           setSelectedGridRowStorageSize(currSelectedStorage => ({
-            'unused-containers': currSelectedStorage['unused-containers'],
+            'running-containers': currSelectedStorage['running-containers'],
+            'exited-containers': currSelectedStorage['exited-containers'],
+            'paused-containers': currSelectedStorage['paused-containers'],
             'dangling-images': currSelectedStorage['dangling-images'],
+            'in-use-images': currSelectedStorage['in-use-images'],
+            'unused-images': currSelectedStorage['unused-images'],
             'built-casche': currSelectedStorage['built-casche'],
             'selectedTotal': currSelectedStorage['selectedTotal'] + currbuiltCascheStorage
           }))
-
+          
+          
        } else {
          //else user has unselected row. Remove the key/value pair from storageSizeById.
          const copyForBuiltCasche = {
-         'unused-containers': {...storageSizeById['unused-containers']}, 
-         'dangling-images': {...storageSizeById['dangling-images']}, 
-         'built-casche': {...storageSizeById['built-casche']}
+          'running-containers': {...storageSizeById['running-containers']}, 
+          'exited-containers': {...storageSizeById['exited-containers']}, 
+          'paused-containers': {...storageSizeById['paused-containers']}, 
+          'dangling-images': {...storageSizeById['dangling-images']}, 
+          'in-use-images': {...storageSizeById['in-use-images']}, 
+          'unused-images': {...storageSizeById['unused-images']}, 
+          'built-casche': {...storageSizeById['built-casche']}
         };
+        
  
          delete copyForBuiltCasche['built-casche'][params.row.id]; 
  
@@ -209,67 +705,216 @@ export function Prune() {
           /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
          that controls whether we UNSELECT the row. */
          setSelectedGridRowStorageSize(currSelectedStorage => ({
-          'unused-containers': currSelectedStorage['unused-containers'],
-          'dangling-images': currSelectedStorage['dangling-images'],
-          'built-casche': currSelectedStorage['built-casche'],
-          'selectedTotal': currSelectedStorage['selectedTotal'] - currbuiltCascheStorage
+         'running-containers': currSelectedStorage['running-containers'],
+         'exited-containers': currSelectedStorage['exited-containers'],
+         'paused-containers': currSelectedStorage['paused-containers'],
+         'dangling-images': currSelectedStorage['dangling-images'],
+         'in-use-images': currSelectedStorage['in-use-images'],
+         'unused-images': currSelectedStorage['unused-images'],
+         'built-casche': currSelectedStorage['built-casche'],
+         'selectedTotal': currSelectedStorage['selectedTotal'] - currbuiltCascheStorage
         }))
+        
        }
     }
   };
 
+  //Fires in general? Because the storage size is being filled.  YES IT DOES !!!
   //useEffect fires when we select or prune a dangling-image, unused-conatiner or built-casche
+  //This useEffect is utilized to update our circular chart.
+  //THIS MAY BE THE CONTAINER THAT HELPS US REFILL THE VALUES WITHIN THE DATA GRID? 
   useEffect(()=>{
-    //we set the totalStorageTypes state with the most updated amount of storage size utilized by each type, ex: unused-containers, dangling images, etc. 
-    //this shouldnt be called when we are only selecting but it is because everything is overlapping. 
-    GetAllStorage(ddClient).
+    // we set the totalStorageTypes state with the most updated amount of storage size utilized by each type, ex: unused-containers, dangling images, etc. 
+    // this shouldnt be called when we are only selecting but it is because everything is overlapping. Its also called everytime we render in general
+
+    AllImageAndContainerStorage(ddClient).
+    then(res => {    
+     // console.log('res in useEffect - GetAllStorage(ddClient).', res)
+     setAllImageAndContainerStorage({
+      'all-images': res['all-images'],
+      'all-containers' : res['all-containers'],
+    }) 
+   })
+
+    GetAllStorage(ddClient, 'storage').
        then(res => {
         setTotalStorageTypes({
-          'unused-containers':  res['unused-containers'], 
-          'dangling-images':  res['dangling-images'],
-          'built-casche': res['built-casche'],
-          'combinedTotal':  res['combinedTotal'], 
+          'running-containers': res.storage['running-containers'], 
+          'exited-containers':  res.storage['exited-containers'], //EXITED
+          'paused-containers': res.storage['paused-containers'], 
+          'dangling-images':  res.storage['dangling-images'],
+          'in-use-images': res.storage['in-use-images'],
+          'unused-images': res.storage['unused-images'],
+          'built-casche': res.storage['built-casche'],
+          'combinedTotal':  res.storage['combinedTotal'], 
         })
        })
 
+       
     //if the selected rows are within the dangling-images
     if(dataGridBlueButtonType === 'dangling-images'){
+   
       //we get all the number values from the storageSizeById object in an array format
       const selectedImageCpuSizeArray = Object.values(storageSizeById['dangling-images']); //Example: [14,14,30]
 
-      console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
+      // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
 
       //we sum up all these values using the reduce method
       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
 
       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
-        'unused-containers': selectedGridRowStorageSize['unused-containers'], 
+        'running-containers': selectedGridRowStorageSize['running-containers'], 
+        'exited-containers': selectedGridRowStorageSize['exited-containers'], //EXITED
+        'paused-containers': selectedGridRowStorageSize['paused-containers'], 
         'dangling-images': cpuUsageCalculation,
+        'in-use-images': selectedGridRowStorageSize['in-use-images'],
+        'unused-images': selectedGridRowStorageSize['unused-images'],
         'built-casche': selectedGridRowStorageSize['built-casche'],
         'selectedTotal': selectedGridRowStorageSize['selectedTotal']
       }) 
+      
+      
 
-    } else if(dataGridBlueButtonType === 'unused-containers'){
+    } else if(dataGridBlueButtonType === 'in-use-images'){
+      // console.log('in-use-images in useEffect tracking storageSizeById')
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedImageCpuSizeArray = Object.values(storageSizeById[ 'in-use-images']); //Example: [14,14,30]
 
-      console.log('selected unused-container in prune useEffect that follows storageSizeById')
+       // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+ 
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         'running-containers': selectedGridRowStorageSize['running-containers'], 
+         'exited-containers': selectedGridRowStorageSize['exited-containers'], 
+         'paused-containers': selectedGridRowStorageSize['paused-containers'], 
+         'dangling-images': selectedGridRowStorageSize['dangling-images'], 
+         'in-use-images': cpuUsageCalculation,
+         'unused-images': selectedGridRowStorageSize['unused-images'],
+         'built-casche': selectedGridRowStorageSize['built-casche'],
+         'selectedTotal': selectedGridRowStorageSize['selectedTotal']
+       }) 
+       
+       
+      
+    } else if (dataGridBlueButtonType === 'unused-images') {
 
+      // console.log('in-use-images in useEffect tracking storageSizeById')
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedImageCpuSizeArray = Object.values(storageSizeById['unused-images']); //Example: [14,14,30]
+
+       // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+ 
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         'running-containers': selectedGridRowStorageSize['running-containers'], 
+         'exited-containers': selectedGridRowStorageSize['exited-containers'], 
+         'paused-containers': selectedGridRowStorageSize['paused-containers'], 
+         'dangling-images': selectedGridRowStorageSize['dangling-images'], 
+         'in-use-images': selectedGridRowStorageSize['in-use-images'],
+         'unused-images': cpuUsageCalculation,
+         'built-casche': selectedGridRowStorageSize['built-casche'],
+         'selectedTotal': selectedGridRowStorageSize['selectedTotal']
+       }) 
+      
+       
+      
+    } else if(dataGridBlueButtonType === 'exited-containers'){
+
+      // console.log('selected unused-container in prune useEffect that follows storageSizeById')
+      // console.log('in-use-images in useEffect tracking storageSizeById')
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedContainerCpuSizeArray = Object.values(storageSizeById['exited-containers']); //Example: [14,14,30]
+
+       // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedContainerCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+ 
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         'running-containers': selectedGridRowStorageSize['running-containers'], 
+         'exited-containers': cpuUsageCalculation,
+         'paused-containers': selectedGridRowStorageSize['paused-containers'], 
+         'dangling-images': selectedGridRowStorageSize['dangling-images'], 
+         'in-use-images': selectedGridRowStorageSize['in-use-images'], 
+         'unused-images': selectedGridRowStorageSize['unused-images'], 
+         'built-casche': selectedGridRowStorageSize['built-casche'],
+         'selectedTotal': selectedGridRowStorageSize['selectedTotal']
+       }) 
+       
+       
+    } else if(dataGridBlueButtonType ===  'paused-containers'){
+       
+      // console.log('selected unused-container in prune useEffect that follows storageSizeById')
+      // console.log('in-use-images in useEffect tracking storageSizeById')
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedContainerCpuSizeArray = Object.values(storageSizeById[ 'paused-containers']); //Example: [14,14,30]
+
+       // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedContainerCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+ 
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         'running-containers': selectedGridRowStorageSize['running-containers'], 
+         'exited-containers': selectedGridRowStorageSize['exited-containers'], 
+         'paused-containers': cpuUsageCalculation,
+         'dangling-images': selectedGridRowStorageSize['dangling-images'], 
+         'in-use-images': selectedGridRowStorageSize['in-use-images'], 
+         'unused-images': selectedGridRowStorageSize['unused-images'], 
+         'built-casche': selectedGridRowStorageSize['built-casche'],
+         'selectedTotal': selectedGridRowStorageSize['selectedTotal']
+       }) 
+       
+       
+    } else if(dataGridBlueButtonType ===  'running-containers'){
+      
+      // console.log('selected unused-container in prune useEffect that follows storageSizeById')
+      // console.log('in-use-images in useEffect tracking storageSizeById')
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedContainerCpuSizeArray = Object.values(storageSizeById['running-containers']); //Example: [14,14,30]
+
+       // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedContainerCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+       
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         'running-containers': cpuUsageCalculation,
+         'exited-containers': selectedGridRowStorageSize['exited-containers'], 
+         'paused-containers': selectedGridRowStorageSize['paused-containers'], 
+         'dangling-images': selectedGridRowStorageSize['dangling-images'], 
+         'in-use-images': selectedGridRowStorageSize['in-use-images'], 
+         'unused-images': selectedGridRowStorageSize['unused-images'], 
+         'built-casche': selectedGridRowStorageSize['built-casche'],
+         'selectedTotal': selectedGridRowStorageSize['selectedTotal']
+       }) 
+       
+       
     } else if(dataGridBlueButtonType === 'built-casche'){
       //No NEED TO HAVE THIS CALC FOR BUILT-CASCHE? 
 
-      //  //we get all the number values from the storageSizeById object in an array format
-      //  const selectedImageCpuSizeArray = Object.values(storageSizeById['built-casche']); //Example: [14,14,30]
-      //  //we sum up all these values using the reduce method
-      //  //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
-      //  const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedImageCpuSizeArray = Object.values(storageSizeById['built-casche']); //Example: [14,14,30]
+       //we sum up all these values using the reduce method
+       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
+       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
  
 
-      // const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
-      //   'unused-containers': selectedGridRowStorageSize['unused-containers'], 
-      //   'dangling-images': selectedGridRowStorageSize['dangling-images'],
-      //   'built-casche': cpuUsageCalculation,
-      //   'selectedTotal': selectedGridRowStorageSize['selectedTotal']
-      // }) 
-
+      const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+        'running-containers': selectedGridRowStorageSize['running-containers'], 
+        'exited-containers': selectedGridRowStorageSize['exited-containers'], 
+        'paused-containers': selectedGridRowStorageSize['paused-containers'], 
+        'dangling-images': selectedGridRowStorageSize['dangling-images'],
+        'in-use-images': selectedGridRowStorageSize['in-use-images'],
+        'unused-images': selectedGridRowStorageSize['unused-images'],
+        'built-casche': cpuUsageCalculation,
+        'selectedTotal': selectedGridRowStorageSize['selectedTotal']
+      }) 
+      
       // console.log('selected built-casche in prune useEffect that follows storageSizeById', storageSizeById)
     }
   }, [storageSizeById]);
@@ -278,79 +923,229 @@ export function Prune() {
   
   //function does pruning commands depending on prune state
   const pruningFunc = async (prune:String, selectedStorageArray:any = apiRef.current.getSelectedRows()) => {
-
+ 
+    // console.log(selectedStorageArray)
+    
     //the selectedImageArray contains an array of objects.
     //ex: [{ key:id, value:{} }]
     //ex: [{"4012d2bb7317": {id: '4012d2bb7317', size: '14.1MB', created: '7 minutes ago', status: '<none>', type: 'Image'}}]
-    console.log('selectedStorageArray', selectedStorageArray)
-
+    // console.log('selectedStorageArray', selectedStorageArray)
+    
     if(prune === 'prune-all') {
 
     } else if(prune === 'prune-selected') {
       //we utilize the type field within the object to determine whether the key value pair represents and image, cache or container
       //we then split them up appropriately to be able to prune them with their associated commands. 
-     let imageIdsToRemove = [];
-     let containerIdsToRemove = [];
-     let cascheIdsToRemove = []; 
+     let danglingImageIdsToRemove:any = [];
+     let inUseImageIdsToRemove:any = [];
+     let unusedImageIdsToRemove:any = [];
+     let exitedContainerIdsToRemove:any = [];
+     let pausedContainerIdsToRemove:any = [];
+     let runningContainerIdsToRemove:any = [];
+     let cascheIdsToRemove:any = []; 
      
 
-      for(let el of selectedStorageArray){
-        //the selectedImageArray above that is passed in as an argument retains the information of the prior 
-        //selected rows with the value of undefined rather than a number. We utilized the conditional statement
-        //below to ensure that no undefined values are passed into imageIdsToSpread. 
-        if(el[1] !== undefined){
-          // console.log('el[1]', el[1]);
-          // console.log('el[0]', el[0]);
-          if(el[1].type === 'Image'){
-            // console.log('imageIdsToRemove.push(el[1].id); -->',el[1].id, el[1].type)
-            imageIdsToRemove.push(el[1].id);
-          } else if(el[1].type === 'Container'){
-            // console.log('containerIdsToRemove.push(el[1].id);-->', el[1].id, el[1].type)
-            containerIdsToRemove.push(el[1].id);
-          } else if(el[1].type === 'Cache'){
-            // console.log('cascheIdsToRemove.push(el[1].id); -->', el[1].id, el[1].type)
-            cascheIdsToRemove.push(el[1].id);
-          }
-        }
-      }
+    // console.log('storageSizeById image keys -> ids', Object.keys(storageSizeById['dangling-images']))
+    // console.log('storageSizeById container keys -> ids', Object.keys(storageSizeById['unused-containers']))
 
-
-      // console.log('cascheIdsToRemove', cascheIdsToRemove)
-
-      //There is a possibility that the user does not simultaneously prune a cache and image for example. 
-      //if they decide to prune one of the types and not the other we do not want to run a command to prune
-      //on the type that was not selected because it will throw an error due to not having any ids to prune. 
-
-      // prunes images based off ids passed into the image pruning command below. 
-      if(imageIdsToRemove.length > 0) await  ddClient.docker.cli.exec('rmi', [...imageIdsToRemove])
-        
-      // prunes images based off ids passed into the cache pruning command below. 
-      // if(cascheIdsToRemove.length >0) await  ddClient.docker.cli.exec('buildx', ['rm',...cascheIdsToRemove])
-    
-
-      //reset the values within the arrays above
-       imageIdsToRemove = [];
-       containerIdsToRemove = [];
-       cascheIdsToRemove = []; 
-
-        
-      //resets the storage size for images to an empty object once the rows for specifc types have been pruned
-      setStorageSizeById(storageSize => ({
-        'unused-containers': containerIdsToRemove.length > 0 ? {} : {...storageSize['unused-containers']},
-        'dangling-images': imageIdsToRemove.length > 0 ? {} : {...storageSize['dangling-images']},
-        'built-casche': cascheIdsToRemove.length > 0 ? {} : {...storageSize['built-casche']},
-      }))
+    /*we loop through the keys of the storageSizeId which are the id's of each image, container etc. 
+    by the time we are prune whatever selections we have made through clicking on rows would have filled
+    the storageSizeById state object with key value pairs for all the types... unusedcontainer, dangling images etc.
+    we want to be able to access each type and get an array of all the ids that are filled within them so we can
+    run the pruning command on the ids of each type category on the code below this for loop. */
+    for(let key in storageSizeById){
+    //  console.log(key, 'storageSizeById[key]',storageSizeById[key])
+     if(key === 'dangling-images'){
+      //  console.log('dangling-image keys', Object.keys(storageSizeById[key]))
+      danglingImageIdsToRemove = Object.keys(storageSizeById[key])
+    } else if(key === 'in-use-images'){
+      //  console.log('unused-contianer keys', Object.keys(storageSizeById[key]))
+      inUseImageIdsToRemove= Object.keys(storageSizeById[key])
+    } else if(key === 'unused-images'){
+      unusedImageIdsToRemove= Object.keys(storageSizeById[key])
+    } else if(key === 'exited-containers'){
+      //  console.log('unused-contianer keys', Object.keys(storageSizeById[key]))
+      exitedContainerIdsToRemove = Object.keys(storageSizeById[key])
+    } else if(key === 'paused-containers'){
+      //  console.log('unused-contianer keys', Object.keys(storageSizeById[key]))
+      pausedContainerIdsToRemove = Object.keys(storageSizeById[key])
+    } else if(key === 'running-containers'){
+      //  console.log('unused-contianer keys', Object.keys(storageSizeById[key]))
+      runningContainerIdsToRemove = Object.keys(storageSizeById[key])
+    } 
+    }
 
 
       
+     //DANGLING IMAGES
+     if(danglingImageIdsToRemove.length > 0){
+       /* We then check if  imageIdsToRemove, containerIdsToRemove (which are the arrays of selected id) have
+       a length greater than 1. If so we know to run the prunning commands on all the ids for each type*/
+        await  ddClient.docker.cli.exec('rmi', [...danglingImageIdsToRemove])
+       .catch((err)=>{
+        //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+        apiRef.current.setRowSelectionModel([])
+        console.log('error in dangling image prune command ... currently in use by container', 
+        alert(`Error in dangling image prune command ${err.stderr}`)) 
+        });
+        //dangling-images prune
+   
+        //if we having a dangling image that is in use we cant prune it... the containers using it will have to be pruned
+        //first. 
+    
+       danglingImageIdsToRemove = [];
+
+         setStorageSizeById(storageSize => ({
+          'running-containers':  {...storageSize['running-containers']},
+          'exited-containers':  {...storageSize['exited-containers']},
+          'paused-containers':  {...storageSize['paused-containers']},
+          'dangling-images': {},
+          'in-use-images':  {...storageSize[ 'in-use-images']},
+          'unused-images':  {...storageSize[ 'unused-images']},
+          'built-casche':  {...storageSize['built-casche']},
+        }))
+    } 
+
+    
+    //INUSE IMAGES
+    if(inUseImageIdsToRemove.length > 0){
+      await  ddClient.docker.cli.exec('rmi', [...inUseImageIdsToRemove])
+      .catch((err)=>{
+        //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+        apiRef.current.setRowSelectionModel([])
+        console.log('error in in-use image prune command ... image is in use', 
+        alert(`error in in-use image prune command ${err.stderr}`)) 
+      });
+       
+       inUseImageIdsToRemove = [];
+
+        setStorageSizeById(storageSize => ({
+         'running-containers':  {...storageSize['running-containers']},
+         'exited-containers':  {...storageSize['exited-containers']},
+         'paused-containers':  {...storageSize['paused-containers']},
+         'dangling-images':  {...storageSize['dangling-images']},
+         'in-use-images':  {},
+         'unused-images':  {...storageSize['unused-images']},
+         'built-casche':  {...storageSize['built-casche']},
+       }))
+       
+   }  
+
+   //UNUSED IMAGES 
+   if(unusedImageIdsToRemove.length > 0){
+    
+      await  ddClient.docker.cli.exec('rmi', [...unusedImageIdsToRemove])
+      .catch((err)=>{
+        //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+        apiRef.current.setRowSelectionModel([])
+        console.log('error in unused image prune command ... image in use by container',
+         alert(`error in in-use image prune command ${err.stderr}`)) 
+      });
+       
+   
+      unusedImageIdsToRemove = [];
+
+        setStorageSizeById(storageSize => ({
+         'running-containers':  {...storageSize['running-containers']},
+         'exited-containers':  {...storageSize['exited-containers']},
+         'paused-containers':  {...storageSize['paused-containers']},
+         'dangling-images':  {...storageSize['dangling-images']},
+         'in-use-images':  {...storageSize['in-use-images']},
+         'unused-images':  {},
+         'built-casche':  {...storageSize['built-casche']},
+       }))
+       
+   }
+
+   //EXITED CONTAINERS
+   if(exitedContainerIdsToRemove.length > 0){
+
+    await ddClient.docker.cli.exec('rm', [...exitedContainerIdsToRemove])
+    .catch((err)=>{
+      //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+      apiRef.current.setRowSelectionModel([])
+      alert(`Error in container prune command ${err.stderr}`)});
+    //unsued-container prune
+  
+    exitedContainerIdsToRemove = [];
+
+    setStorageSizeById(storageSize => ({
+      'running-containers':  {...storageSize['running-containers']},
+      'exited-containers': {},
+      'paused-containers':  {...storageSize['paused-containers']},
+      'in-use-images':  {...storageSize['in-use-images']},
+      'dangling-images': {...storageSize['dangling-images']},
+      'unused-images': {...storageSize['unused-images']},
+      'built-casche':  {...storageSize['built-casche']},
+    }))
+    
+ }
+  
+ //Paused CONTAINERS
+ if(pausedContainerIdsToRemove.length > 0){
+
+  await ddClient.docker.cli.exec('rm', [...pausedContainerIdsToRemove])
+  .catch((err)=>{
+    //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+    apiRef.current.setRowSelectionModel([])
+    console.log('Error in container prune command Error response from daemon: container is paused and must be unpaused first', 
+    alert(`Error in container prune command ${err.stderr}`))});
+  //unsued-container prune
+
+  pausedContainerIdsToRemove = [];
+
+  setStorageSizeById(storageSize => ({
+    'running-containers': {...storageSize['running-containers']},
+    'exited-containers': {...storageSize['exited-containers']},
+    'paused-containers':  {},
+    'in-use-images':  {...storageSize['in-use-images']},
+    'dangling-images': {...storageSize['dangling-images']},
+    'unused-images': {...storageSize['unused-images']},
+    'built-casche':  {...storageSize['built-casche']},
+  }))
+  
+}
+
+
+ //RUNNING CONTAINERS
+ if(runningContainerIdsToRemove.length > 0){
+
+  await ddClient.docker.cli.exec('rm', [...runningContainerIdsToRemove])
+  .catch((err)=>{
+    //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+    apiRef.current.setRowSelectionModel([])
+    console.log('Error in container prune command Error response from daemon: container is running: stop the container before removing or force remove', 
+    alert(`Error in container prune command ${err.stderr}`))
+  });
+  //unsued-container prune
+
+  runningContainerIdsToRemove = [];
+
+  setStorageSizeById(storageSize => ({
+    'running-containers':  {},
+    'exited-containers': {...storageSize['exited-containers']},
+    'paused-containers': {...storageSize['paused-containers']},
+    'in-use-images':  {...storageSize['in-use-images']},
+    'dangling-images': {...storageSize['dangling-images']},
+    'unused-images': {...storageSize['unused-images']},
+    'built-casche':  {...storageSize['built-casche']},
+  }))
+}
+ 
+    
       //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
       //all types - unused-containers, dangling-images and build-cache
         setSelectedGridRowStorageSize({
-          'unused-containers': selectedGridRowStorageSize['unused-containers'],
+          'running-containers': selectedGridRowStorageSize['running-containers'],
+          'exited-containers': selectedGridRowStorageSize['exited-containers'],
+          'paused-containers': selectedGridRowStorageSize['paused-containers'],
           'dangling-images': selectedGridRowStorageSize['dangling-images'],
+          'in-use-images': selectedGridRowStorageSize['in-use-images'],
+          'unused-images': selectedGridRowStorageSize['unused-images'],
           'built-casche': selectedGridRowStorageSize['built-casche'],
           'selectedTotal': 0,
         })
+      
 
 
       //resets the dataForGridRows state to an empty array
@@ -364,17 +1159,47 @@ export function Prune() {
       if(dataGridBlueButtonType === 'dangling-images'){
           //since we reset the dataForGridRows state above we want to refill this state with the remaining images
           //so the dataGrid could fill the rows with the remaining data from the images.
-       await ddClient.docker.cli.exec('images', ['--format', '"{{json .}}"', '--filter', "dangling=true"])
-        .then((result) => {
-          setDataForGridRows(result.parseJsonLines());
-        });
-      } else if(dataGridBlueButtonType === 'unused-containers'){
-       await ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited", '--filter', "status=paused", '--filter', "status=created"])
+     
+           await GetAllStorage(ddClient, 'data').
+           then(res => {    
+           //  console.log('res.data', res.data['in-use-images'])
+           setDataForGridRows(res.data['dangling-images'])
+      })
+
+      } else if(dataGridBlueButtonType === 'in-use-images'){
+
+        await GetAllStorage(ddClient, 'data').
+          then(res => {    
+          setDataForGridRows(res.data['in-use-images'])
+        }) 
+
+      } else if (dataGridBlueButtonType === 'unused-images') {
+
+        await GetAllStorage(ddClient, 'data').
+        then(res => {    
+        setDataForGridRows(res.data['unused-images'])
+        })
+
+      } else if(dataGridBlueButtonType === 'exited-containers'){ //EXITED Containers
+       await ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
         .then((result) => {
           setDataForGridRows(result.parseJsonLines());
         })
-        //command populates all built casche
-      } else if(dataGridBlueButtonType === 'built-casche'){
+
+      }  else if(dataGridBlueButtonType === 'running-containers'){ 
+        await GetRunningContainers(ddClient).
+        then(res => { 
+          // console.log('running containers', res)   
+        setDataForGridRows(res)
+        })
+ 
+       } else if(dataGridBlueButtonType === 'paused-containers'){ 
+        await ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=paused"])
+         .then((result) => {
+           setDataForGridRows(result.parseJsonLines());
+         })
+         //command populates all built casche
+       } else if(dataGridBlueButtonType === 'built-casche'){
          await ddClient.docker.cli.exec('builder', ['du', '--verbose'])
          .then((result) => {
           // console.log('result.stdout within useEffect in prune file -->', result.stdout)
@@ -383,59 +1208,73 @@ export function Prune() {
         })
       }  
 
-        
+     
+
    } else {
    }
+   
   }
- 
+
+  //We are utilizing the rowColumnTypeHelper module to have a seperation of concerns. It will essentially
+  //return the string we are looking for in the column or row of the datagrid. 
+
   //sets columns/headers in dataGrid 
   const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 150 },
-    { field: 'size', headerName: 'Size', width: 100},
-    { field: 'created', headerName: 'Created', width: 150 },
-    { field: 'status', headerName: 
-      dataGridBlueButtonType === 'dangling-images'? 'Tag' :
-      dataGridBlueButtonType === 'unused-containers'? 'Status' : 'Reclaimable', width: 150},
+    { field: 'id', headerName: 'ID', width: 130 },
+    { field: 'size', headerName: 'Size', width: 130},
+    { field: 'created', headerName: 'Created', width: 130 },
+    { field: 'status', headerName: rowColumnTypeHelper(dataGridBlueButtonType, 'col', '', {}),width: 130}, 
       //created a type field so we can utilize and be able to distinguish whether we are pruning 
       //a container, image or cache within the pruning function. The getSelectedRows() returns
       //an array of objects with these fields. We also need to distinguid because each type
       //has different pruning commands. 
+      
     { field: 'type', headerName: 'Type', width: 150 },
   ];
 
   //sets row data in dataGrid 
-  const rows: GridRowsProp = dataForGridRows.map((image) => ({
-    id:image.ID,
-    size: dataGridBlueButtonType === 'unused-containers' ? containerVirtualSizeConverterToString(image.Size): image.Size,
-    created: dataGridBlueButtonType === 'dangling-images' ? image.CreatedSince : 
-    dataGridBlueButtonType === 'unused-containers'? image.RunningFor : image.CreatedSince,
-    status: dataGridBlueButtonType === 'dangling-images' ? image.Tag : 
-    dataGridBlueButtonType === 'unused-containers'? image.Status : image.Reclaimable,
-    type: dataGridBlueButtonType === 'dangling-images' ? 'Image' : 
-    dataGridBlueButtonType === 'unused-containers'? 'Container' : 'Cache',
+  const rows: GridRowsProp =  dataForGridRows.map((type) => ({
+    id:type.ID,
+    size: dataGridBlueButtonType === 'exited-containers' ? containerVirtualSizeConverterToString(type.Size): 
+    dataGridBlueButtonType === 'paused-containers' ? containerVirtualSizeConverterToString(type.Size) :
+    dataGridBlueButtonType === 'running-containers' ? containerVirtualSizeConverterToString(type.Size): type.Size ,
+    created:  rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'created', type),
+    status:  rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'status', type),
+    type: rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'type', type)
 
   }));
+  
 
-
-  //Build cache is not selectable so we want to remove the checkboxes when we are in the rows of the buid cache
+  //Build cache, in use images and paused containers are not selectable so we want to remove the checkboxes when we are in the rows of the buid cache
   function selectDataGrid (strType:any) {
+    // console.log('strType', strType)
     if(strType === 'built-casche'){
         //NO CHECKBOX SELECTION
+        // return <DataGrid 
+        // rows={rows} 
+        // columns={columns} 
+        // apiRef={apiRef} 
+        // />
         return <DataGrid 
         rows={rows} 
         columns={columns} 
         apiRef={apiRef} 
         />
-    } else {
+    } 
+
+    else {
         return <DataGrid 
         rows={rows} 
         columns={columns} 
         checkboxSelection 
         apiRef={apiRef} 
         onRowClick={handleRowClick} 
-        keepNonExistentRowsSelected/>
+        keepNonExistentRowsSelected
+        />
     }
 }
+
+
 
   return (
     <>
@@ -470,25 +1309,11 @@ export function Prune() {
             }}
             >
             <Stack>
-            
-            <ButtonGroup variant="contained" aria-label="Basic button group" sx={{m:2}}>
-            <Button variant="contained" onClick={()=>{setDataGridBlueButtonType('dangling-images')}}>
-                    Dangling Images
-                </Button>
-                <Button variant="contained" onClick={()=>{setDataGridBlueButtonType('dangling-images')}} sx={{color: '#FFD700'}}>
-                {storageNumToStr(totalStorageTypes['dangling-images'])}
-                </Button>
-            </ButtonGroup>
-                
-            <ButtonGroup variant="contained" aria-label="Basic button group" sx={{m:2}}> 
-                <Button variant="contained" onClick={()=>{setDataGridBlueButtonType('unused-containers')}}>
-                    Unused Containers
-                </Button>
-                <Button variant="contained" onClick={()=>{setDataGridBlueButtonType('unused-containers')}} sx={{color: '#FFD700'}}>
-                {storageNumToStr(totalStorageTypes['unused-containers'])}
-                {/* {totalStorageTypes['unused-containers']} */}
-                </Button>
-                </ButtonGroup>
+
+        
+            <ImageButtonComponent setDataGridBlueButtonType={setDataGridBlueButtonType} allImageAndContainerStorage={allImageAndContainerStorage} totalStorageTypes={totalStorageTypes}/>
+           
+            <ContainerButtonComponent setDataGridBlueButtonType={setDataGridBlueButtonType} allImageAndContainerStorage={allImageAndContainerStorage} totalStorageTypes={totalStorageTypes}/>
 
                 <ButtonGroup variant="contained" aria-label="Basic button group" sx={{m:2}}> 
                 <Button variant="contained" onClick={()=>{setDataGridBlueButtonType('built-casche')}}>
@@ -508,7 +1333,10 @@ export function Prune() {
                 borderRadius: 2,
                 border:2,
                 borderColor:'primary.main',
-                overflow: 'auto'
+                overflow: 'auto',
+                // display: 'flex',
+                // flexDirection: 'column',
+                // alignItems: 'center'
                 }}>
 
                 {/* If we click on build casche we dont want the checkboxes to be visible since you cant prune a selected item.
@@ -518,7 +1346,17 @@ export function Prune() {
                 
                 {/* <DataGrid rows={rows} columns={columns} checkboxSelection apiRef={apiRef} onRowClick={handleRowClick} keepNonExistentRowsSelected/> */}
                
+                <Box sx={{
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  marginTop: 1,
+                }}
+                >{dataGridTypeHeaderHelper(dataGridBlueButtonType)}
+                </Box>
                 {selectDataGrid(dataGridBlueButtonType)}
+                
            </Box>
           </Box>
 
@@ -541,14 +1379,9 @@ export function Prune() {
         }}> 
 
           <Stack>
-                <Button variant="contained" color='error' onClick={()=>{pruningFunc('prune-all')}} sx={{
-                    m:2,
-                    p: 1,
-                    borderRadius: 2
-                    }}>
-                    Prune All
-                </Button>
-                
+            
+            <PruneAllButtonComponent apiRef={apiRef} CLI={ddClient} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} setDataForGridRows={setDataForGridRows} />
+                  
                 <Button variant="contained" color='error' onClick={()=>{pruningFunc('prune-selected')}} sx={{
                     m:2,
                     p: 1,
@@ -557,12 +1390,12 @@ export function Prune() {
                     Prune Selected
                 </Button>
 
-                <Button variant="contained" color='error' onClick={()=>{pruningFunc("scheduled-prune")}} sx={{
+                <Button variant="contained" color='secondary'sx={{
                     m:2,
                     p: 1,
                     borderRadius: 2
                 }}>
-                    Scheduled Prune
+                    Scheduled Prune - β
                 </Button>
             </Stack>
 
@@ -578,10 +1411,12 @@ export function Prune() {
             borderColor:'primary.main',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            
         }}> 
             <ProgressbarChartComponent selectedTotal={selectedGridRowStorageSize['selectedTotal']} combinedTotal={totalStorageTypes['combinedTotal']}/>
             {/* {` Selected Storage: ${storageNumToStr(selectedGridRowStorageSize['selectedTotal'])}  / Total Storage: ${storageNumToStr(totalStorageTypes['combinedTotal'])} ` }         */}
+            
             </Box>
           </Box>
         </Container>

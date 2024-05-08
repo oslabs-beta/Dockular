@@ -1,5 +1,5 @@
-//UTILIZED BY: GetAllStorage component 
-import { stringToNumConverter } from "../utilities/StringToNumConverter"
+ 
+import { stringToNumConverter } from "./StringToNumConverter"
 
 export function  checkBytesAndConvertToNumber(bytesStr:string) {
 

@@ -2,7 +2,7 @@ import { DataGrid } from '@mui/x-data-grid';
 
 
 export function DataGridComponent(props:any) {
-
+// console.log(console.log('type of option clicked in DataGridComponent',props.type))
 
 function selectDataGrid (strType:any) {
     if(strType === 'built-casche'){

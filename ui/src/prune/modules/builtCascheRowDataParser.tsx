@@ -60,7 +60,7 @@ export function BuiltCascheRowDataParser(output:any) {
      parsedBuiltCascheArray.push(parsedObj);
   })
 
-  console.log('parsedBuiltCascheArray from BuiltCascheRowDataParser', parsedBuiltCascheArray)
+  // console.log('parsedBuiltCascheArray from BuiltCascheRowDataParser', parsedBuiltCascheArray)
   return JSON.stringify(parsedBuiltCascheArray);
  
 }
