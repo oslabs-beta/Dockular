@@ -10,6 +10,12 @@ import { Paper, Button, Container, Stack, Typography } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { blueGrey } from '@mui/material/colors';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+
 
 // Create Docker client
 const client = createDockerDesktopClient();
@@ -41,6 +47,7 @@ export function Metrics() {
   const [selectedMemory, setSelectedMemory] = useState(512); // Initial value is 512 MB
   const [currentContainerName, setCurrentContainerName] = useState<any[]>([]);
   const [containerImageList, setImageList] = useState<any[]>([]);
+  const [open, setOpen] = useState(false)
 
   // Docker desktop client
   const ddClient = useDockerDesktopClient();
@@ -108,10 +115,17 @@ export function Metrics() {
 //   const handleMemoryChange = (event: any, newValue: any) => {
 //   setSelectedMemory(newValue); // Update the selected memory value
 // };
+const handleOpen = () => {
+  setOpen(true);
+};
 
+const handleClose = () => {
+  setOpen(false);
+};
 
 // Trying to change memory, not working so far
 const updateContainerMemoryLimit = async (memoryLimitMb: number) => {
+  setOpen(false)
   const memoryLimit = '"'+memoryLimitMb+'m"'; // Convert memory limit to the format expected by Docker (e.g., "512m" for 512 MB)
   if (selectedContainerIndex !== null) {
     const containerId = containerNamesList[selectedContainerIndex];
@@ -195,9 +209,25 @@ const handleMemoryChange = (event: any, newValue: any) => {
                   step={128} // Memory increment step (in MB)
                   aria-labelledby="memory-slider" 
                   />
-                  <Button onClick={()=> updateContainerMemoryLimit(selectedMemory)}>
+                  <Button onClick={handleOpen}>
                     Set Memory Limit
                   </Button>
+                  <Dialog open={open} onClose={handleClose}>
+                    <DialogTitle>Are you sure?</DialogTitle>
+                      <DialogContent>
+                        <DialogContentText>
+                          This action will terminate and prune the selected container/image. A new container/image will be pulled with the chosen memory limit. 
+                        </DialogContentText>
+                      </DialogContent>
+                    <DialogActions>
+                      <Button onClick={handleClose}>
+                        Cancel
+                      </Button>
+                      <Button onClick={()=> updateContainerMemoryLimit(selectedMemory)} autoFocus>
+                        Confirm
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
                 </div>
                   </>
             )}
