@@ -124,32 +124,51 @@ const handleClose = () => {
 };
 
 const updateContainerMemoryLimit = async (memoryLimitMb: number) => {
-
+  
   setOpen(false)
   const memoryLimit = '"'+memoryLimitMb+'m"'; // Convert memory limit to the format expected by Docker (e.g., "512m" for 512 MB)
-  if (selectedContainerIndex !== null) {
-    const containerId = containerNamesList[selectedContainerIndex];
 
-    // very similar to Darren's logic, just nested his logic in a try catch block to add additonal commands to run
-    try {
-            // Stop the old container
-            await ddClient.docker.cli.exec("container", ["stop", containerId]);
-            
-            // Remove the old container
-            await ddClient.docker.cli.exec("container", ["rm", containerId]);
-
-            // Running new container with updated memory limit (Darren's original code)
-            await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerId}`, [])
-
-            // Refresh container list
-            triggerRefresh();
-    }
-
-    catch (error) {
-      console.error('Error updating container memory limit:', error);
-    }
+    if (selectedContainerIndex !== null) {
+      let containerId = containerNamesList[selectedContainerIndex];
+      // await ddClient.docker.cli.exec(`container`, ['stop', containerId]);
+      // Step 1: Run new container with updated memory limit
+      await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerId}`, [])   
+      
+      // Step 2: Remove the original container
+      // await ddClient.docker.cli.exec(`stop ${containerId}`, [])   
+      // await ddClient.docker.cli.exec(`container rm ${containerId}`, [])   
+      // await ddClient.docker.cli.exec("stop", containerId);
+      // await ddClient.docker.cli.exec("stop", [containerId]);
+      // await ddClient.docker.cli.exec("container rm", [containerId]);
+      // await ddClient.docker.cli.exec("stop", containerId);
+      // await ddClient.docker.cli.exec(`stop`, [containerId]);
   }
+
 };
+
+
+// const testingfunction = async () => {
+//   setOpen(false)
+//   if (selectedContainerIndex !== null) {
+//     let containerId = containerNamesList[selectedContainerIndex];
+//     await ddClient.docker.cli.exec("container", ["stop", containerId]);
+//     // await ddClient.docker.cli.exec("container stop", [containerId]);
+//     // await ddClient.docker.cli.exec(`container stop ${containerId}`, []);
+//   }
+// }
+
+// Fetch container list function
+// const fetchContainerList = async () => {
+//   const result = await ddClient.docker.cli.exec("ps", ["--all", "--format", '{{json .}}']);
+//   const statsContainerData = result.parseJsonLines();
+//   const containerArray = statsContainerData.map(container => container.ID);
+//   const namesList = statsContainerData.map(container => container.Names);
+//   const imageList = statsContainerData.map(container => container.Image);
+
+//   setContainerList(containerArray);
+//   setContainerNamesList(namesList);
+//   setImageList(imageList);
+// };
 
 
 // state to refresh container list
@@ -172,14 +191,17 @@ useEffect(() => {
     setContainerNamesList(namesList);
     setImageList(imageList);
   };
+  fetchContainerList();  // Initial fetch
 
-  fetchContainerList();
-}, [refreshTrigger]);
+  const intervalId = setInterval(fetchContainerList, 1000);  // Refresh every 1000 ms
 
-// Triggering a refresh by altering state
-const triggerRefresh = () => {
-  setRefreshTrigger(!refreshTrigger);
-};
+  return () => clearInterval(intervalId);  // Clean up interval on component unmount
+}, []);
+
+// // Triggering a refresh by altering state
+// const triggerRefresh = () => {
+//   setRefreshTrigger(!refreshTrigger);
+// };
 
 
 
@@ -214,10 +236,12 @@ const handleMemoryChange = (event: any, newValue: any) => {
     <>
       <Stack direction="row">
         <Container style={{ width: '30vw', height: '80vh', padding: '20px' }} sx={{ mb:2, mt: 0, mr: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
+          {/* Maybe you can make this always refresh every 1 second? */}
           <Typography variant="h2">Container List</Typography>
           {containerNamesList.map((container, index) => (
             <Button key={index} onClick={() => handleContainerClick(index)} sx={{ mb: 2 }}>{container}</Button>
           ))}
+
         </Container>
         <Stack direction="column">
           <Container style={{ width: '60vw', height: '40vh', padding: '20px' }} sx={{ ml: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
@@ -262,6 +286,9 @@ const handleMemoryChange = (event: any, newValue: any) => {
                   <Button onClick={handleOpen}>
                     Set Memory Limit
                   </Button>
+                  {/* <Button onClick={()=> testingfunction}>
+                        testing
+                      </Button> */}
                   <Dialog open={open} onClose={handleClose}>
                     <DialogTitle>Are you sure?</DialogTitle>
                       <DialogContent>
