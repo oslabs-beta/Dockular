@@ -18,9 +18,10 @@ import { DataGridComponent } from './components/DataGridComponent';
 import { ProgressbarChartComponent } from './components/ProgressbarChartComponent';
 // import { PruneAllButtonComponent } from './components/PrunAllButtonComponent';
 // import { PruneAllButtonComponent } from './components/prunAllButtonComponent';
-import { PruneAllButtonComponent } from './components/PruneAll/PruneAllButtonComponent';
+import { PruneAllButtonComponent } from './components/PruneAllButtonComponent';
 import { ImageButtonComponent } from './components/ImageButtonComponent';
 import { ContainerButtonComponent } from './components/ContainerButtonComponent';
+ 
 
 //modules
 import GetAllStorage from './modules/GetAllStorage/GetAllStorage';
@@ -50,7 +51,6 @@ function useDockerDesktopClient() {
 export function Prune() {
 
   const ddClient = useDockerDesktopClient();
-
   
   //state for dataGrid
   const apiRef = useGridApiRef();
@@ -104,8 +104,6 @@ export function Prune() {
   });
 
 
-
- 
 
   useEffect(()=>{
     AllImageAndContainerStorage(ddClient).
@@ -1316,8 +1314,8 @@ export function Prune() {
             <ContainerButtonComponent setDataGridBlueButtonType={setDataGridBlueButtonType} allImageAndContainerStorage={allImageAndContainerStorage} totalStorageTypes={totalStorageTypes}/>
 
                 <ButtonGroup variant="contained" aria-label="Basic button group" sx={{m:2}}> 
-                <Button variant="contained" onClick={()=>{setDataGridBlueButtonType('built-casche')}}>
-                   Build Cache
+                <Button variant="contained"  onClick={()=>{setDataGridBlueButtonType('built-casche')}}>
+                   Build Cache - β
                 </Button>
                 <Button variant="contained" onClick={()=>{}} sx={{color: '#FFD700'}}>
                 {storageNumToStr(totalStorageTypes['built-casche'])}

@@ -6,8 +6,7 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import FormLabel from '@mui/material/FormLabel';
-import { BuiltCascheRowDataParser } from '../../modules/builtCascheRowDataParser';
-import GetAllStorage from '../../modules/GetAllStorage/GetAllStorage';
+import GetAllStorage from '../modules/GetAllStorage/GetAllStorage';
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -213,47 +212,6 @@ export function PruneAllButtonComponent(props:any) {
 
       //************************************************************************************************************************
 
-
-      if(key === 'built-casche'){
-        console.log('Selected KEY', key)
-        
-        await props.CLI.docker.cli.exec('builder', ['rm', '--all-inactive'])
-        .then((result:any) => {
-         console.log('build cache prune', result)
-       }).catch((err:any) => {alert(err.stderr)})
-
-        props.setStorageSizeById((storageSize:any) => ({
-          'running-containers':  {...storageSize['running-containers']},
-          'exited-containers': {...storageSize['running-containers']},
-          'paused-containers': {...storageSize['paused-containers']},
-          'in-use-images':  {...storageSize['in-use-images']},
-          'dangling-images': {...storageSize['dangling-images']},
-          'unused-images': {...storageSize['unused-images']},
-          'built-casche':  {},
-        }))
-        
-     
-        //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
-        //all types - unused-containers, dangling-images and build-cache
-            props.setSelectedGridRowStorageSize({
-              'running-containers': props.selectedGridRowStorageSize['running-containers'],
-              'exited-containers': props.selectedGridRowStorageSize['exited-containers'],
-              'paused-containers': props.selectedGridRowStorageSize['paused-containers'],
-              'dangling-images': props.selectedGridRowStorageSize['dangling-images'],
-              'in-use-images': props.selectedGridRowStorageSize['in-use-images'],
-              'unused-images': props.selectedGridRowStorageSize['unused-images'],
-              'built-casche': props.selectedGridRowStorageSize['built-casche'],
-              'selectedTotal': 0,
-            })
-     
-        //resets the dataForGridRows state to an empty array
-          props.setDataForGridRows([]);
-      }
-
-
-      //************************************************************************************************************************
-
-
       }
     }
 
@@ -292,7 +250,7 @@ export function PruneAllButtonComponent(props:any) {
                      <FormControlLabel control={<Checkbox disabled />}  label="Paused Containers - Beta" name='paused-containers'/>
                      </FormGroup>
                      <FormLabel sx={{color: 'primary.main'}}component="legend">Cache</FormLabel>
-                     <FormControlLabel control={<Checkbox  onChange={handleChange} />}  label="Build Cache - Beta" name='built-casche'/>
+                     <FormControlLabel control={<Checkbox disabled  />}  label="Build Cache - Beta" name='built-casche'/>
 
                        <Box sx={{ width:'100%', display:'flex', justifyContent:'center'}}>
                           <Button variant="contained" color='error' onClick={handleOnClick} sx={{

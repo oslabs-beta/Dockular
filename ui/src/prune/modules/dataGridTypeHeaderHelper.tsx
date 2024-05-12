@@ -15,7 +15,7 @@ export function dataGridTypeHeaderHelper(buttonSelectedType:any) {
     } else if (buttonSelectedType === 'unused-images'){
         return 'Unused Images'
     } else if (buttonSelectedType ===  'built-casche'){
-        return  'Build Cache'
+        return  'Build Cache - Beta'
     } 
     
     
