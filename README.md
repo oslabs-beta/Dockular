@@ -116,5 +116,27 @@ To remove the extension:
 docker extension rm my/awesome-extension:latest
 ```
 
+## Open Source Information
+
+| Feature                                                                               | Status    |
+|---------------------------------------------------------------------------------------|-----------|
+| Pruning Dangling Images                                             | ✅        |
+| Pruning Unused Images                                             | ✅        |
+| Pruning Images in use                                             | ⏳        |
+| Pruning Exited Containers                                             | ✅        |
+| Pruning Running Containers       | ⏳        |
+| Pruning Paused Containers                                                                         | ⏳        |
+| Pruning Build Cache                                                                         | ⏳        |
+| Scheduled Prune                                                                         | ⏳        |
+| CPU Perent Metrics Visualization                                                                 | ✅        |
+| RAM Perent Metrics Visualization                                                                         | ✅        |
+| Setting RAM Hard Limits for Containers                                                             | ✅         |
+| Setting CPU Limits for Containers                                         | ⏳        |
+
+
+- ✅ = Ready to use
+- ⏳ = In progress
+- 🙏🏻 = Looking for contributors
+
 
 
