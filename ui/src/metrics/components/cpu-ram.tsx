@@ -129,46 +129,17 @@ const updateContainerMemoryLimit = async (memoryLimitMb: number) => {
   const memoryLimit = '"'+memoryLimitMb+'m"'; // Convert memory limit to the format expected by Docker (e.g., "512m" for 512 MB)
 
     if (selectedContainerIndex !== null) {
-      let containerId = containerNamesList[selectedContainerIndex];
+      let containerName = containerNamesList[selectedContainerIndex];
+      let containerId = containerList[selectedContainerIndex];
+
       // await ddClient.docker.cli.exec(`container`, ['stop', containerId]);
       // Step 1: Run new container with updated memory limit
-      await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerId}`, [])   
-      
-      // Step 2: Remove the original container
-      // await ddClient.docker.cli.exec(`stop ${containerId}`, [])   
-      // await ddClient.docker.cli.exec(`container rm ${containerId}`, [])   
-      // await ddClient.docker.cli.exec("stop", containerId);
-      // await ddClient.docker.cli.exec("stop", [containerId]);
-      // await ddClient.docker.cli.exec("container rm", [containerId]);
-      // await ddClient.docker.cli.exec("stop", containerId);
-      // await ddClient.docker.cli.exec(`stop`, [containerId]);
+      await ddClient.docker.cli.exec(`stop`, [containerId])
+      await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerName}`, [])   
+      await ddClient.docker.cli.exec(`rmi`, [containerId, "-f"])
   }
 
 };
-
-
-// const testingfunction = async () => {
-//   setOpen(false)
-//   if (selectedContainerIndex !== null) {
-//     let containerId = containerNamesList[selectedContainerIndex];
-//     await ddClient.docker.cli.exec("container", ["stop", containerId]);
-//     // await ddClient.docker.cli.exec("container stop", [containerId]);
-//     // await ddClient.docker.cli.exec(`container stop ${containerId}`, []);
-//   }
-// }
-
-// Fetch container list function
-// const fetchContainerList = async () => {
-//   const result = await ddClient.docker.cli.exec("ps", ["--all", "--format", '{{json .}}']);
-//   const statsContainerData = result.parseJsonLines();
-//   const containerArray = statsContainerData.map(container => container.ID);
-//   const namesList = statsContainerData.map(container => container.Names);
-//   const imageList = statsContainerData.map(container => container.Image);
-
-//   setContainerList(containerArray);
-//   setContainerNamesList(namesList);
-//   setImageList(imageList);
-// };
 
 
 // state to refresh container list
