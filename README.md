@@ -2,9 +2,9 @@
 >Dockular is an
 
 ## Installation Instructions
-1. Open the docker desktop application
-2. Navigate to the "Add Extensions" button in the left toolbar and click.
-3. Search "Dockular" and click install. 
+1. Open the docker desktop application.
+2. Navigate to "Add Extensions" in the left toolbar and click.
+3. Search "Dockular" then click install. 
 
 ## Meet the Team!
 
