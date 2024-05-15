@@ -135,8 +135,8 @@ const updateContainerMemoryLimit = async (memoryLimitMb: number) => {
       // await ddClient.docker.cli.exec(`container`, ['stop', containerId]);
       // Step 1: Run new container with updated memory limit
       await ddClient.docker.cli.exec(`stop`, [containerId])
-      await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerName}`, [])   
-      await ddClient.docker.cli.exec(`rmi`, [containerId, "-f"])
+      await ddClient.docker.cli.exec(`rm`, [containerId, '-f'])
+      await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerName}`, [])
   }
 
 };
