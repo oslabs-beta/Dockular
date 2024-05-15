@@ -5,8 +5,9 @@ import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { Box, Container } from '@mui/material';
 import { blueGrey, red} from '@mui/material/colors';
 import { Stack } from "@mui/material";
-import Typography from '@mui/material/Typography';
-import Modal from '@mui/material/Modal';
+
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { createTheme } from '@mui/material';
 
 
 //mui grid
@@ -14,10 +15,7 @@ import { DataGrid, GridRowsProp, GridColDef, GridEventListener} from '@mui/x-dat
 import { useGridApiRef } from '@mui/x-data-grid';
 
 //components
-import { DataGridComponent } from './components/DataGridComponent';
 import { ProgressbarChartComponent } from './components/ProgressbarChartComponent';
-// import { PruneAllButtonComponent } from './components/PrunAllButtonComponent';
-// import { PruneAllButtonComponent } from './components/prunAllButtonComponent';
 import { PruneAllButtonComponent } from './components/PruneAllButtonComponent';
 import { ImageButtonComponent } from './components/ImageButtonComponent';
 import { ContainerButtonComponent } from './components/ContainerButtonComponent';
@@ -28,15 +26,10 @@ import GetAllStorage from './modules/GetAllStorage/GetAllStorage';
 import GetRunningContainers from './modules/GetAllStorage/GetRunningContainers';
 import { BuiltCascheRowDataParser } from './modules/builtCascheRowDataParser';
 import { containerVirtualSizeConverterToString } from './modules/ContainerVirtualSizeConverterToString';
-import { containerStatus } from './modules/ContainerStatus';
-import { containerTestCreator } from './utilities/containerTestCreator';
-import { removeInUseDanglingImages } from './modules/removeInUseDanglingImages';
 import { dataGridTypeHeaderHelper } from './modules/dataGridTypeHeaderHelper';
-
-
-
 import AllImageAndContainerStorage from './modules/AllImageAndContainerStorage';
 import { rowColumnTypeHelper } from './modules/GetAllStorage/rowColumnTypeHelper';
+
 //utilities
 import { storageNumToStr } from './utilities/StorageNumtoStr';
 import { checkBytesAndConvertToNumber } from './utilities/ CheckBytesAndConvertToNumber';
@@ -206,7 +199,9 @@ export function Prune() {
 
 
   //This eventListener helps us keep track of the boxes selected/unselected in the grid by id and the size of each image based off id
-  const handleRowClick: GridEventListener<'rowClick'> = (params) => {
+  const handleCellClick: GridEventListener<'cellClick'> = (params) => {
+    // const handleRowClick: GridEventListener<'rowClick'> = (params) => {
+
     
     if(dataGridBlueButtonType === 'dangling-images'){
 
@@ -1241,18 +1236,14 @@ export function Prune() {
     type: rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'type', type)
 
   }));
+
+
   
 
   //Build cache, in use images and paused containers are not selectable so we want to remove the checkboxes when we are in the rows of the buid cache
   function selectDataGrid (strType:any) {
     // console.log('strType', strType)
     if(strType === 'built-casche'){
-        //NO CHECKBOX SELECTION
-        // return <DataGrid 
-        // rows={rows} 
-        // columns={columns} 
-        // apiRef={apiRef} 
-        // />
         return <DataGrid 
         rows={rows} 
         columns={columns} 
@@ -1266,19 +1257,35 @@ export function Prune() {
         columns={columns} 
         checkboxSelection 
         apiRef={apiRef} 
-        onRowClick={handleRowClick} 
+        onCellClick={handleCellClick}
         keepNonExistentRowsSelected
         />
     }
 }
 
 
+//THESE WERE IMPORTED AND ARE UTILIZED AS MEDIA QUERIES
+//  const theme = useTheme();
+const theme = createTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 875,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
+});
+ const matches = useMediaQuery(theme.breakpoints.up('md'));
+ 
+
 
   return (
     <>
         <Container
             sx={{
-                width: '95vw',
+                width: matches === true ? '95vw' : '90vw',
                 height: '85vh',
                 bgcolor: blueGrey[50],
                 display: 'flex',
@@ -1288,7 +1295,7 @@ export function Prune() {
             }}>
           <Box 
           sx={{
-            width: '90vw',
+            width: matches === true ? '90vw' : '85vw',
             height: '40vh',
             bgcolor: blueGrey[50],
             display: 'flex',
@@ -1303,15 +1310,19 @@ export function Prune() {
                 height:'90%',
                 borderRadius: 2,
                 border:2,
-                borderColor:'primary.main'
+                borderColor:'primary.main',
+                overflow: 'scroll'
             }}
             >
             <Stack>
-
+           
         
             <ImageButtonComponent setDataGridBlueButtonType={setDataGridBlueButtonType} allImageAndContainerStorage={allImageAndContainerStorage} totalStorageTypes={totalStorageTypes}/>
            
+            
             <ContainerButtonComponent setDataGridBlueButtonType={setDataGridBlueButtonType} allImageAndContainerStorage={allImageAndContainerStorage} totalStorageTypes={totalStorageTypes}/>
+
+              { matches === true ? 
 
                 <ButtonGroup variant="contained" aria-label="Basic button group" sx={{m:2}}> 
                 <Button variant="contained"  onClick={()=>{setDataGridBlueButtonType('built-casche')}}>
@@ -1320,7 +1331,13 @@ export function Prune() {
                 <Button variant="contained" onClick={()=>{}} sx={{color: '#FFD700'}}>
                 {storageNumToStr(totalStorageTypes['built-casche'])}
                 </Button>
-                </ButtonGroup>
+                </ButtonGroup> 
+                :
+                <Button variant="contained"  onClick={()=>{setDataGridBlueButtonType('built-casche')}} sx={{m:2, marginBottom: 0}}>
+                   Build Cache
+                </Button>
+              }
+               
             </Stack>
             </Box>
 
@@ -1336,13 +1353,6 @@ export function Prune() {
                 // flexDirection: 'column',
                 // alignItems: 'center'
                 }}>
-
-                {/* If we click on build casche we dont want the checkboxes to be visible since you cant prune a selected item.
-                 They all have to be pruned at once. So we use the DataGridComponent to help achieve the desired results. */}
-                
-                {/* <DataGridComponent type={dataGridBlueButtonType} rows={rows} columns={columns} apiRef={apiRef} onRowClick={handleRowClick}/> */}
-                
-                {/* <DataGrid rows={rows} columns={columns} checkboxSelection apiRef={apiRef} onRowClick={handleRowClick} keepNonExistentRowsSelected/> */}
                
                 <Box sx={{
                   color: 'primary.main',
@@ -1350,17 +1360,23 @@ export function Prune() {
                   fontStyle: 'italic',
                   textAlign: 'center',
                   marginTop: 1,
+                   
                 }}
                 >{dataGridTypeHeaderHelper(dataGridBlueButtonType)}
                 </Box>
+
+                <Box>
                 {selectDataGrid(dataGridBlueButtonType)}
+                </Box>
                 
            </Box>
           </Box>
+        
+        
 
           <Box sx={{
-            width: '90vw',
-            height: '40vh',
+            width: matches === true ? '90vw' : '85vw',
+            height: matches === true ? '40vh' : '38vh',
             bgcolor: blueGrey[50],
             display: 'flex',
             justifyContent:'space-around',
@@ -1373,28 +1389,70 @@ export function Prune() {
             height:'90%',
             borderRadius: 2,
             border:2,
-            borderColor:'primary.main'
+            borderColor:'primary.main',
+            overflow: 'scroll'
         }}> 
 
           <Stack>
-            
             <PruneAllButtonComponent apiRef={apiRef} CLI={ddClient} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} setDataForGridRows={setDataForGridRows} />
-                  
+                
+            { matches === true ? 
                 <Button variant="contained" color='error' onClick={()=>{pruningFunc('prune-selected')}} sx={{
                     m:2,
                     p: 1,
-                    borderRadius: 2
+                    borderRadius: 2,
+                     
                     }}>
                     Prune Selected
                 </Button>
+                :
+                <Button variant="contained" color='error' onClick={()=>{pruningFunc('prune-selected')}} sx={{
+                  m:2,
+                  marginBottom:0,
+                  p: 1,
+                  borderRadius: 2,
+                   
+                  }}>
+                  <Box sx={{display:'flex', flexDirection:'column'}}>
+                    <Box>
+                       Prune 
+                    </Box>
+                    <Box>
+                      Selected
+                    </Box>
+                  </Box> 
+              </Button>
+              
+                }
 
+              { matches === true ? 
                 <Button variant="contained" color='secondary'sx={{
                     m:2,
                     p: 1,
-                    borderRadius: 2
+                    borderRadius: 2,
+                
                 }}>
                     Scheduled Prune - β
                 </Button>
+                :
+                <Button variant="contained" color='secondary'sx={{
+                  m:2,
+                  marginBottom:0,
+                  p: 1,
+                  borderRadius: 2,
+              
+              }}>
+                <Box sx={{display:'flex', flexDirection:'column'}}>
+                    <Box>
+                      Scheduled 
+                    </Box>
+                    <Box>
+                      Prune - β
+                    </Box>
+                  </Box> 
+              </Button>
+              }
+
             </Stack>
 
           </Box>
@@ -1410,6 +1468,7 @@ export function Prune() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            
             
         }}> 
             <ProgressbarChartComponent selectedTotal={selectedGridRowStorageSize['selectedTotal']} combinedTotal={totalStorageTypes['combinedTotal']}/>

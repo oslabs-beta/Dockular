@@ -11,6 +11,8 @@ import myIcon from './img/icon.png'
 import { Container, Box} from '@mui/material';
 import myImage from './img/logo.png';
 import { RouteProps } from 'react-router-dom'
+import { Navigate } from "react-router-dom";
+
 
 
 // Note: This line relies on Docker Desktop's presence as a host application.
@@ -27,8 +29,9 @@ const App = () => {
         justifyContent="center"
         alignItems="center"
         spacing={5}
-        sx= {{ pt : 4, pb : 8}}
+        sx= {{ pt : 2, pb : 2}}
       >
+       
 
         <Link to="/" style={{ width: '4%', height: 'auto', marginTop: '5px' }}>
           <img src={myIcon} style={{ width: '100%', height: 'auto' }} />
@@ -50,12 +53,14 @@ const App = () => {
 
       
       <Routes>
+        <Route path="*" element={<Navigate to="/" />} />
         <Route path ="/" element = {<Home />}/>
         <Route path ="/metrics" element = {<Metrics />}/>
         <Route path ="/prune" element = {<Prune />}/>
       </Routes>
 
     </>
+    
   );
 }
 
