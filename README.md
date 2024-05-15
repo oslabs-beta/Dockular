@@ -1,4 +1,21 @@
-# dockular
+# Dockular
+>Dockular is an
+
+## Installation Instructions
+1. Open the docker desktop application
+2. Navigate to the "Add Extensions" button in the left toolbar and click.
+3. Search "Dockular" and click install. 
+
+## Meet the Team!
+
+Ando Agamalian
+
+Alex Dawkins
+
+Darren Im
+
+Vishal Vivekanandan
+
 
 This repository defines an example of a Docker extension. The files in this repository have been automatically generated as a result of running `docker extension init`.
 
@@ -99,14 +116,5 @@ To remove the extension:
 docker extension rm my/awesome-extension:latest
 ```
 
-## Meet the Team!
-
-Ando Agamalian
-
-Alex Dawkins
-
-Darren Im
-
-Vishal Vivekanandan
 
 
