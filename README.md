@@ -99,9 +99,14 @@ To remove the extension:
 docker extension rm my/awesome-extension:latest
 ```
 
-## What's next?
+## Meet the Team!
 
-- To learn more about how to build your extension refer to the Extension SDK docs at https://docs.docker.com/desktop/extensions-sdk/.
-- To publish your extension in the Marketplace visit https://www.docker.com/products/extensions/submissions/.
-- To report issues and feedback visit https://github.com/docker/extensions-sdk/issues.
-- To look for other ideas of new extensions, or propose new ideas of extensions you would like to see, visit https://github.com/docker/extension-ideas/discussions.
+Ando Agamalian
+
+Alex Dawkins
+
+Darren Im
+
+Vishal Vivekanandan
+
+
