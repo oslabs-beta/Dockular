@@ -11,7 +11,7 @@ function selectDataGrid (strType:any) {
         rows={props.rows} 
         columns={props.columns} 
         apiRef={props.apiRef} 
-        onRowClick={props.handleRowClick} 
+        onCellClick={props.handleCellClick}
         keepNonExistentRowsSelected/>
     } else {
         return <DataGrid 
@@ -19,7 +19,7 @@ function selectDataGrid (strType:any) {
         columns={props.columns} 
         checkboxSelection 
         apiRef={props.apiRef} 
-        onRowClick={props.handleRowClick} 
+        onCellClick={props.handleCellClick}
         keepNonExistentRowsSelected/>
     }
 }

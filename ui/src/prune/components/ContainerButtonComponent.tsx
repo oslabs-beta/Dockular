@@ -4,7 +4,8 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { storageNumToStr } from '../utilities/StorageNumtoStr';
-
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { createTheme } from '@mui/material';
 
 
 
@@ -35,27 +36,70 @@ export function ContainerButtonComponent (props:any) {
             }
         }
        
+        //THESE WERE IMPORTED AND ARE UTILIZED AS MEDIA QUERIES
+        const theme = createTheme({
+        breakpoints: {
+         values: {
+             xs: 0,
+             sm: 600,
+             md: 875,
+             lg: 1200,
+             xl: 1536,
+                },
+              },
+            });
+   const matches = useMediaQuery(theme.breakpoints.up('md'));
+   
 
     return (
         <>
-        <ButtonGroup variant="contained" aria-label="Basic button group" sx={{m:2}}>
-            <Button 
+        { matches === true ? 
+        <>
+            <ButtonGroup variant="contained" aria-label="Basic button group" sx={{m:2}}>
+             <Button 
+                variant="contained" 
+                // onClick={()=>{props.type('dangling-images')}} 
+                aria-controls={open ? 'basic-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+                onClick={handleClick}
+                >
+                Containers
+                </Button>
+
+                    <Button variant="contained" sx={{color: '#FFD700', marginRight: 2}}>
+                    { storageNumToStr(props.allImageAndContainerStorage['all-containers'])}
+                    </Button>
+           
+                    
+                </ButtonGroup>
+                <Menu
+                    id="basic-menu"
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={handleClose}
+                    MenuListProps={{
+                    'aria-labelledby': 'basic-button',
+                }}
+                >
+                <MenuItem onClick={()=>{handleClose(), containerType('running-containers')}}> {`Running Containers (${storageNumToStr(props.totalStorageTypes['running-containers'])})`} </MenuItem>
+                <MenuItem onClick={()=>{handleClose(), containerType('paused-containers')}}> {`Paused Containers (${storageNumToStr(props.totalStorageTypes['paused-containers'])})`} </MenuItem>
+                <MenuItem onClick={()=>{handleClose(), containerType('exited-containers')}}>{`Exited Containers (${storageNumToStr(props.totalStorageTypes['exited-containers'])})`}</MenuItem>
+                </Menu>
+        </>
+        : 
+        <>
+         <Button 
             variant="contained" 
             // onClick={()=>{props.type('dangling-images')}} 
             aria-controls={open ? 'basic-menu' : undefined}
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
             onClick={handleClick}
+            sx={{m:2, marginBottom:0}}
             >
-              Containers
+            Containers
             </Button>
-
-                <Button variant="contained" sx={{color: '#FFD700', marginRight: 2}}>
-                { storageNumToStr(props.allImageAndContainerStorage['all-containers'])}
-                </Button>
-               
-                
-            </ButtonGroup>
             <Menu
                 id="basic-menu"
                 anchorEl={anchorEl}
@@ -63,15 +107,16 @@ export function ContainerButtonComponent (props:any) {
                 onClose={handleClose}
                 MenuListProps={{
                 'aria-labelledby': 'basic-button',
-             }}
-
-            
-             >
+            }}
+            >
             <MenuItem onClick={()=>{handleClose(), containerType('running-containers')}}> {`Running Containers (${storageNumToStr(props.totalStorageTypes['running-containers'])})`} </MenuItem>
             <MenuItem onClick={()=>{handleClose(), containerType('paused-containers')}}> {`Paused Containers (${storageNumToStr(props.totalStorageTypes['paused-containers'])})`} </MenuItem>
             <MenuItem onClick={()=>{handleClose(), containerType('exited-containers')}}>{`Exited Containers (${storageNumToStr(props.totalStorageTypes['exited-containers'])})`}</MenuItem>
             </Menu>
+        </>
+        
+        }
            
-            </>
+        </>
     )
 }

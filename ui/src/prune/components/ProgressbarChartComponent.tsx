@@ -4,10 +4,33 @@ import 'react-circular-progressbar/dist/styles.css';
 import { storageNumToStr } from '../utilities/StorageNumtoStr';
 import { BytesGraph } from './BytesGraph';
 import { Box} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { useEffect } from 'react';
+
 
 export function ProgressbarChartComponent(props:any) {
 
     const val:any = `${storageNumToStr(props.selectedTotal)} / ${storageNumToStr(props.combinedTotal)}`
+    
+    // const mediaQueryForMaxHeight = window.matchMedia("(max-height: 695px)");
+    // useEffect(()=>{
+    //   console.log('mediaQueryForMaxHeight',mediaQueryForMaxHeight.matches)
+    // })
+
+    const Root = styled('div')(({ theme }) => ({
+      [theme.breakpoints.up('sm')]: {
+        maxWidth: '425px', 
+        maxHeight: '425px',
+      },
+      [theme.breakpoints.up('md')]: {
+        maxWidth: '525px', 
+        maxHeight: '525px',
+      },
+      [theme.breakpoints.up('lg')]: {
+        maxWidth: '550px', 
+        maxHeight: '600px',
+      }
+    }));
     
     function byteGraph(){
       //kilobytes
@@ -30,50 +53,43 @@ export function ProgressbarChartComponent(props:any) {
         const value = props.selectedTotal;
         const maxValue = 1000;
         const pathColor = "#68cd75"
-        return <BytesGraph comparison={comparison} value={value} maxValue={maxValue} pathColor ={pathColor}/>
+        return <BytesGraph comparison={comparison} value={value} maxValue={maxValue} pathColor ={pathColor}/> 
       }
     }
-    
+
+   
     return (
+      
+      <Root>
         <Box sx={{ 
         width:'95%', 
         height:'95%',
-        // border:2,
-        // borderColor:'primary.main',
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-         
+        // border: 2,
+        // borderColor: 'red'
         }}>
 
-        <Box sx={{ 
-        width:'260px', 
-        height:'260px',
-        // border:2,
-        // borderColor:'red',
-        marginRight: '20px',
-     
-        }}>
-
-        <CircularProgressbarWithChildren value={props.selectedTotal} maxValue={props.combinedTotal} text={val} strokeWidth={8} styles={buildStyles({
-          strokeLinecap: "butt",
-          textSize: '8px',
-        })} >
-        </CircularProgressbarWithChildren>
-        </Box>
-
-        <Box sx={{ 
-        width:'260px', 
-        height:'260px',
         
-        // border:2,
-        // borderColor:'red',
-        }}>
-        {byteGraph()}
+          <Box sx={{ 
+            marginRight: '20px',
+            marginLeft: 2
+          }}>
+          
+           <CircularProgressbarWithChildren value={props.selectedTotal} maxValue={props.combinedTotal} text={val} strokeWidth={8} styles={buildStyles({
+             strokeLinecap: "butt",
+             textSize: '8px',
+            })} >
+           </CircularProgressbarWithChildren>
           </Box>
-
-        </Box>
+           
+          <Box> 
+            {byteGraph()}
+          </Box>
+      </Box>
+      </Root>
     )
 }
 

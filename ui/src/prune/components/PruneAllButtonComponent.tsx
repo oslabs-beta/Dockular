@@ -7,6 +7,9 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import FormLabel from '@mui/material/FormLabel';
 import GetAllStorage from '../modules/GetAllStorage/GetAllStorage';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { createTheme } from '@mui/material';
+
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -220,7 +223,23 @@ export function PruneAllButtonComponent(props:any) {
     
    }
 
+   //THESE WERE IMPORTED AND ARE UTILIZED AS MEDIA QUERIES
+   const theme = createTheme({
+    breakpoints: {
+     values: {
+         xs: 0,
+         sm: 600,
+         md: 875,
+         lg: 1200,
+         xl: 1536,
+            },
+          },
+        });
+  const matches = useMediaQuery(theme.breakpoints.up('md'));
+
     return (
+      <>
+      {matches === true ? //IF MATCHES IS EQUAL TO TRUE... MEANING IF THE WIDTH OF THE SCREEN HAS REACHED 875 PX
         <>
         <Button variant="contained" color='error' onClick={()=>{handleOpen()}} sx={{
                     m:2,
@@ -265,6 +284,57 @@ export function PruneAllButtonComponent(props:any) {
                     </Box>
                     </Modal>
        
+          </>
+
+          : // ELSE - WE WANT TO UPDATE THE MARGIN BOTTOM TO BE 0
+
+          <>
+          <Button variant="contained" color='error' onClick={()=>{handleOpen()}} sx={{
+                      m:2,
+                      marginBottom:0,
+                      p: 1,
+                      borderRadius: 2
+                      }}>
+                      Prune All
+                  </Button> 
+                  <Modal
+                    open={open}
+                    onClose={()=>{handleClose()}}
+                    aria-labelledby="modal-modal-title"
+                    aria-describedby="modal-modal-description"
+  >
+   
+                      <Box sx={style}>
+                      <FormLabel sx={{color: 'primary.main'}}component="legend">Images</FormLabel>
+                      <FormGroup>
+                       <FormControlLabel control={<Checkbox disabled  />} label="In Use Images - Beta" name='in-use-images'/>
+                       <FormControlLabel control={<Checkbox onChange={handleChange} />}  label="Dangling Images" name='dangling-images'/>
+                       <FormControlLabel control={<Checkbox onChange={handleChange} />}  label="Unused Images" name='unused-images' />
+                       </FormGroup>
+                       <FormLabel sx={{color: 'primary.main'}}component="legend">Containers</FormLabel>
+                      <FormGroup>
+                       <FormControlLabel control={<Checkbox disabled  />} label="Running Containers - Beta" name='running-containers'/>
+                       <FormControlLabel control={<Checkbox onChange={handleChange} />}  label="Exited Containers" name= 'exited-containers'/>
+                       <FormControlLabel control={<Checkbox disabled />}  label="Paused Containers - Beta" name='paused-containers'/>
+                       </FormGroup>
+                       <FormLabel sx={{color: 'primary.main'}}component="legend">Cache</FormLabel>
+                       <FormControlLabel control={<Checkbox disabled  />}  label="Build Cache - Beta" name='built-casche'/>
+  
+                         <Box sx={{ width:'100%', display:'flex', justifyContent:'center'}}>
+                            <Button variant="contained" color='error' onClick={handleOnClick} sx={{
+                               m:2,
+                               p: 1,
+                               borderRadius: 2,
+                               width:'100%'
+                               }}>
+                              Prune All
+                            </Button> 
+                         </Box>
+                      </Box>
+                      </Modal>
+         
+            </>
+          }
         </>
     )
 }
