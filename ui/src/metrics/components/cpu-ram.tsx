@@ -264,7 +264,7 @@ const handleMemoryChange = (event: any, newValue: any) => {
                     <DialogTitle>Are you sure?</DialogTitle>
                       <DialogContent>
                         <DialogContentText>
-                          This action will pause the visual graphs,terminate, and prune the selected container/image. A new container/image will be pulled with the chosen memory limit.
+                          This action will pause the visual graphs, terminate, and prune the selected container/image. A new container/image will be pulled with the chosen memory limit.
                         </DialogContentText>
                       </DialogContent>
                     <DialogActions>
