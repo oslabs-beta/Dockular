@@ -9,7 +9,7 @@ import { Home } from './Home'
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter >
     {/*
       If you eject from MUI (which we don't recommend!), you should add
       the `dockerDesktopTheme` class to your root <html> element to get
