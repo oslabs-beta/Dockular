@@ -1,44 +1,88 @@
-# Dockular
->Dockular is an
 
-## Installation Instructions
+<!-- PUT PROJECT'S LOGO ONCE DEV IS MERGED TO MAIN! -->
+
+<br />
+<p align="center">
+  <a href="https://github.com/oslabs-beta/sapling">
+    <img src="PATH TO LOGO" alt="Logo" height="120">
+  </a>
+
+  <h3 align="center">Dockular</h3>
+
+  <p align="center">
+    A convenient way to traverse your React application.
+    <br />
+    <a href="https://github.com/oslabs-beta/sapling"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/oslabs-beta/sapling/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/oslabs-beta/sapling/issues">Request Feature</a>
+  </p>
+</p>
+
+<hr>
+
+<!-- TABLE OF CONTENTS -->
+<details open="open">
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About The Project</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li><a href="#installation">Installation</a></li>
+    <li>
+      <a href="#getting-started">Getting Started</a></li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#local-development">Local development</a>
+      <ul>
+        <li><a href="#frontend-development">Frontend development</a></li>
+      </ul>
+      <ul>
+        <li><a href="#backend-development">Backend development</a></li>
+      </ul>
+      <ul>
+        <li><a href="#clean-up">Clean up</a></li>
+      </ul>
+    </li>
+    <li><a href="#open-source-information">Open Source Information</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#creators">Creators</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgements">Acknowledgements</a></li>
+  </ol>
+</details>
+<hr>
+
+
+## About The Project
+Description of Dockular goes here
+
+### Built With
+* [Docker](https://www.docker.com/)
+* [React](https://reactjs.org/)
+* [TypeScript](https://www.typescriptlang.org/)
+* [Go](https://go.dev/)
+* [Material UI](https://mui.com/)
+
+
+
+## Installation
 1. Open the docker desktop application.
 2. Navigate to "Add Extensions" in the left toolbar and click.
 3. Search "Dockular" then click install. 
 
-## Meet the Team!
-
-Ando Agamalian
-
-Alex Dawkins
-
-Darren Im
-
-Vishal Vivekanandan
 
 
-This repository defines an example of a Docker extension. The files in this repository have been automatically generated as a result of running `docker extension init`.
+## Usage
 
-This extension is composed of:
+1. Insructions for user to use our extension goes here
 
-- A [frontend](./ui) app in React that makes a request to the `/hello` endpoint and displays the payload in Docker Desktop.
-- A [backend](./backend) container that runs an API in Go. It exposes the `/hello` endpoint which returns a JSON payload.
 
-> You can build your Docker Extension using your fav tech stack:
->
-> - Frontend: React, Angular, Vue, Svelte, etc.
->   Basically, any frontend framework you can bundle in an `index.html` file with CSS, and JS assets.
-> - Backend (optional): anything that can run in a container.
-
-<details>
-  <summary>Looking for more templates?</summary>
-
-1. [React + NodeJS](https://github.com/benja-M-1/node-backend-extension).
-2. [React + .NET 6 WebAPI](https://github.com/felipecruz91/dotnet-api-docker-extension).
-
-Request one or submit yours [here](https://github.com/docker/extensions-sdk/issues).
-
-</details>
 
 ## Local development
 
@@ -59,6 +103,8 @@ To install the extension, use `make install-extension` **or**:
 > If you want to automate this command, use the `-f` or `--force` flag to accept the warning message.
 
 To preview the extension in Docker Desktop, open Docker Dashboard once the installation is complete. The left-hand menu displays a new tab with the name of your extension. You can also use `docker extension ls` to see that the extension has been installed successfully.
+
+
 
 ### Frontend development
 
@@ -91,6 +137,8 @@ Each subsequent click on the extension tab will also open Chrome Dev Tools. To s
   docker extension dev reset my/awesome-extension:latest
 ```
 
+
+
 ### Backend development (optional)
 
 This example defines an API in Go that is deployed as a backend container when the extension is installed. This backend could be implemented in any language, as it runs inside a container. The extension frameworks provides connectivity from the extension UI to a socket that the backend has to connect to on the server side.
@@ -108,6 +156,9 @@ docker extension update my/awesome-extension:latest
 
 > Extension containers are hidden from the Docker Dashboard by default. You can change this in Settings > Extensions > Show Docker Extensions system containers.
 
+
+
+
 ### Clean up
 
 To remove the extension:
@@ -115,6 +166,8 @@ To remove the extension:
 ```shell
 docker extension rm my/awesome-extension:latest
 ```
+
+
 
 ## Open Source Information
 
@@ -140,3 +193,30 @@ docker extension rm my/awesome-extension:latest
 
 
 
+## Contributing
+
+We are always open to accepting any potential contributions, please feel free to check out our feature table for any ideas for potential features to contribute! Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+
+## License
+
+Distributed under the MIT License. See [`LICENSE`](https://github.com/oslabs-beta/dockular/blob/main/LICENSE.md) for more information.
+
+## Creators
+
+* [Ando Agamalian](https://github.com/letscode94)
+* [Alex Dawkins](https://github.com/aDawKN)
+* [Darren Im](https://github.com/imdarren93)
+* [Vishal Vivekanandan](https://github.com/vishalVivekanandan)
+
+
+## Contact
+GitHub: [https://github.com/oslabs-beta/dockular/](https://github.com/oslabs-beta/dockular/)
+
+## Acknowledgements
