@@ -6,7 +6,7 @@
 
 import Slider from '@mui/material/Slider';
 import React, { useState, useEffect } from 'react';
-import { Paper, Button, Container, Stack, Typography } from '@mui/material';
+import { Paper, Button, Container, Stack, Box, Typography } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { blueGrey } from '@mui/material/colors';
@@ -15,6 +15,10 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import Modal from '@mui/material/Modal';
+
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { createTheme } from '@mui/material';
 
 
 // Create Docker client
@@ -135,8 +139,10 @@ const updateContainerMemoryLimit = async (memoryLimitMb: number) => {
       // await ddClient.docker.cli.exec(`container`, ['stop', containerId]);
       // Step 1: Run new container with updated memory limit
       await ddClient.docker.cli.exec(`stop`, [containerId])
-      await ddClient.docker.cli.exec(`rm`, [containerId, "-f"])
-      await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerName}`, [])   
+      await ddClient.docker.cli.exec(`rm`, [containerId, '-f'])
+      await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerName}`, [])
+      
+
   }
 
 };
@@ -202,86 +208,200 @@ const handleMemoryChange = (event: any, newValue: any) => {
 //   }
 // };
 
+//MODEL
+const [modelOpen, setModelOpen] = React.useState(false);
+const handleModelOpen = () => setModelOpen(true);
+const handleModelClose = () => setModelOpen(false);
+//MODEL STYLE
+const style = {
+  position: 'absolute' as 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: 2,
+  borderColor: 'primary.main'
+};
+
+//MUI MEDIA QUERIES
+const theme = createTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 875,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
+});
+ const matches = useMediaQuery(theme.breakpoints.up('md'));
+
+
+
   // Render components
   return (
     <>
-      <Stack direction="row">
-        <Container style={{ width: '30vw', height: '80vh', padding: '20px' }} sx={{ mb:2, mt: 0, mr: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
+      <Container
+            sx={{
+                width: '95vw', 
+                height: '85vh',
+                bgcolor: blueGrey[50],
+                display: 'flex',
+                flexDirection: 'row',
+                border:2,
+                borderColor:'primary.main'
+            }}>
+
+        <Box sx={{width:'275px', height:'100%', m:2}}>
+        {/* <Container style={{ width: '30vw', height: '80vh', padding: '20px' }} sx={{ mb:2, mt: 0, mr: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}> */}
+        <Container 
+          sx={{ bgcolor: blueGrey[50], 
+          border: 2, 
+          borderColor: 'primary.main', 
+          borderRadius: 2, 
+          height: '95%' , 
+          display: 'flex', 
+          flexDirection: 'column',
+          overflow: 'scroll'
+          }}>
+
           {/* Maybe you can make this always refresh every 1 second? */}
-          <Typography variant="h2">Container List</Typography>
+          <Box sx={{
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  marginTop: 1,
+                   
+                }}>Container List</Box>
           {containerNamesList.map((container, index) => (
             <Button key={index} onClick={() => handleContainerClick(index)} sx={{ mb: 2 }}>{container}</Button>
           ))}
 
         </Container>
-        <Stack direction="column">
-          <Container style={{ width: '60vw', height: '40vh', padding: '20px' }} sx={{ ml: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
-          <h2>{currentContainerName} - CPU Percentage</h2>
+        </Box>
+
+    
+          <Box sx={{width: matches === true ? '70%' : '50%', height:'95%', m:2, display: 'flex', flexDirection:'column', justifyContent:'space-between'}}>
+          {/* <Container style={{ width: '60vw', height: '40vh', padding: '20px' }} sx={{ ml: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}> */}
+          <Container sx={{  bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2, height: '45%'}}>
+          <Box sx={{
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  marginTop: 1,
+                   
+                }}>{`${currentContainerName} -`}  CPU Percentage
+               
+              </Box>
+
             {isStarted && (
               <ResponsiveLine
               data={dataCPU}
-              margin={{ top: 0, right: 60, bottom: 125, left: 100 }}
+              // margin={{ top: 5, right: 20, bottom: 110, left: 85 }}
+                           margin={{ top: 5, right: 20, bottom: 110, left: 85 }}
+
               xScale={{ type: 'point' }}
               yScale={{ type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false }}
-              axisBottom={{ legend: 'Time', legendOffset: 60, tickRotation: -45, legendPosition: 'middle', tickValues: dataCPU[0]?.data.filter((_: any, index: number) => index % Math.ceil(dataCPU[0]?.data.length / 7) === 0).map((item: { x: any; }) => item.x) }}
+              axisBottom={{ legend: '', legendOffset: 60, tickRotation: -45, legendPosition: 'middle', tickValues: dataCPU[0]?.data.filter((_: any, index: number) => index % Math.ceil(dataCPU[0]?.data.length / 7) === 0).map((item: { x: any; }) => item.x) }}
               axisLeft={{ legend: 'Value', legendOffset: -60, legendPosition: 'middle' }}
               />
             )}
           </Container>
-          <Container style={{ width: '60vw', height: '60vh', padding: '20px' }} sx={{ ml: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}>
-            <h2>{currentContainerName} - Memory Percentage</h2>
+
+
+
+          {/* <Container style={{ width: '60vw', height: '60vh', padding: '20px' }} sx={{ ml: 2, bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2 }}> */}
+          <Container sx={{ bgcolor: blueGrey[50], border: 2, borderColor: 'primary.main', borderRadius: 2, height: '50%', display:'flex', flexDirection:'column',alignItems:'center', justifyContent:'space-between'}}>
+
+          <Box sx={{
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  marginTop: 1,
+                   
+                }}>{`${currentContainerName} -`}  Memory Percentage
+            </Box>
+            
             {isStarted && (
               <>
-              <div style={{ width: '100%', height: '60%'}}>
+              <Box style={{ width: '100%', height: '60%'}}>
               <ResponsiveLine
                 data={dataRAM}
-                margin={{ top: 10, right: 60, bottom: 50, left: 100 }}
+                // margin={{ top: 10, right: 20, bottom: 65, left: 85 }}
+                margin={{ top: 11, right: 60, bottom: 42, left: 100 }}
+
                 xScale={{ type: 'point' }}
                 yScale={{ type: 'linear', min: 0, max: 'auto', stacked: true, reverse: false }}
-                axisBottom={{ legend: 'Time', legendOffset: 60, tickRotation: -45, legendPosition: 'middle', tickValues: dataRAM[0]?.data.filter((_: any, index: number) => index % Math.ceil(dataRAM[0]?.data.length / 7) === 0).map((item: { x: any; }) => item.x) }}
+                axisBottom={{ legend: '', legendOffset: 60, tickRotation: -45, legendPosition: 'middle', tickValues: dataRAM[0]?.data.filter((_: any, index: number) => index % Math.ceil(dataRAM[0]?.data.length / 7) === 0).map((item: { x: any; }) => item.x) }}
                 axisLeft={{ legend: 'Value', legendOffset: -60, legendPosition: 'middle' }} 
                 />
-              </div>
-              <hr style={{ border: 'none', borderBottom: '1px dashed #aaa' }} />
-              <div>
-                <h4>{selectedMemory}</h4>
-                <Slider
-                  // could replace some of these vqriables with ones retrieved from commands, should work hopefully
-                  value={selectedMemory}
-                  onChange={handleMemoryChange}
-                  min={128} // Minimum memory value (in MB)
-                  max={8192} // Maximum memory value (in MB)
-                  step={128} // Memory increment step (in MB)
-                  aria-labelledby="memory-slider" 
-                  />
-                  <Button onClick={handleOpen}>
-                    Set Memory Limit
-                  </Button>
-                  {/* <Button onClick={()=> testingfunction}>
-                        testing
-                      </Button> */}
-                  <Dialog open={open} onClose={handleClose}>
-                    <DialogTitle>Are you sure?</DialogTitle>
-                      <DialogContent>
-                        <DialogContentText>
-                          This action will pause the visual graphs, terminate, and prune the selected container/image. A new container/image will be pulled with the chosen memory limit.
-                        </DialogContentText>
-                      </DialogContent>
-                    <DialogActions>
-                      <Button onClick={handleClose}>
-                        Cancel
-                      </Button>
-                      <Button onClick={()=> updateContainerMemoryLimit(selectedMemory)} autoFocus>
-                        Confirm
-                      </Button>
-                    </DialogActions>
-                  </Dialog>
-                </div>
+
+              </Box>
+              {/* <hr style={{ border: 'none', borderBottom: '1px dashed #aaa' }} /> */}
+              
+
                   </>
             )}
+           
+            <Button  onClick={()=>{handleModelOpen()}} variant="contained" color='error' sx={{width:'90%', height:'20px'}} style={{marginTop:1, marginBottom:10}}>Set Memory Limit</Button>
+            
+<Modal
+ open={modelOpen}
+ onClose={()=>{handleModelClose()}}
+ aria-labelledby="modal-modal-title"
+ aria-describedby="modal-modal-description"
+>
+ <Box sx={style}>
+ <div>
+<h4>{`${selectedMemory} MB`}</h4>
+<Slider
+ // could replace some of these vqriables with ones retrieved from commands, should work hopefully
+ value={selectedMemory}
+ onChange={handleMemoryChange}
+ min={128} // Minimum memory value (in MB)
+ max={8192} // Maximum memory value (in MB)
+ step={128} // Memory increment step (in MB)
+ aria-labelledby="memory-slider" 
+ />
+ <Button onClick={handleOpen}>
+   Set Memory Limit - β
+ </Button>
+ {/* <Button onClick={()=> testingfunction}>
+       testing
+     </Button> */}
+ <Dialog open={open} onClose={handleClose}>
+   <DialogTitle>Are you sure?</DialogTitle>
+     <DialogContent>
+       <DialogContentText>
+         This action will pause the visual graphs, terminate, and prune the selected container/image. A new container/image will be pulled with the chosen memory limit.
+       </DialogContentText>
+     </DialogContent>
+   <DialogActions>
+     <Button onClick={handleClose}>
+       Cancel
+     </Button>
+     
+     <Button onClick={()=> {updateContainerMemoryLimit(selectedMemory), handleModelClose()}} autoFocus>
+       Confirm
+     </Button>
+   </DialogActions>
+ </Dialog>
+</div>
+ </Box>
+</Modal>
+
           </Container> 
-        </Stack>
-      </Stack>
+          </Box>
+          </Container> 
+       
     </>
   );
 }

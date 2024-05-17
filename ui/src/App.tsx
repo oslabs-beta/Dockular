@@ -29,22 +29,22 @@ const App = () => {
         justifyContent="center"
         alignItems="center"
         spacing={5}
-        sx= {{ pt : 2, pb : 2}}
+        sx= {{ pt: 2, pb : 2}}
       >
        
 
-        <Link to="/" style={{ width: '4%', height: 'auto', marginTop: '5px' }}>
-          <img src={myIcon} style={{ width: '100%', height: 'auto' }} />
+        <Link to="/" style={{ width: '42px', height: 'auto', marginTop: '5px'}}>
+          <img src={myIcon} style={{ width: '100%', height: '80%' }} />
         </Link>
 
         <Button variant="contained">
-          <Link to = {'/metrics'}> 
+          <Link to = {'/metrics'} style={{color:'white', textDecoration:'none'}} > 
             {'Metrics'}
           </Link>
         </Button>
 
         <Button variant="contained">
-          <Link to = {'/prune'}> 
+          <Link to = {'/prune'} style={{color:'white', textDecoration:'none'}}> 
             {'Prune'}
           </Link>
         </Button>

@@ -6,9 +6,10 @@
   "dependencies": {
     "@docker/docker-mui-theme": "<0.1.0",
     "@docker/extension-api-client": "0.3.4",
-    "@emotion/react": "11.10.4",
-    "@emotion/styled": "11.10.4",
-    "@mui/material": "5.10.8",
+    "@emotion/react": "^11.10.4",
+    "@emotion/styled": "^11.10.4",
+    "@mui/icons-material": "^5.15.17",
+    "@mui/material": "^5.10.8",
     "@mui/x-data-grid": "^6.19.6",
     "@nivo/line": "^0.84.0",
     "@toast-ui/chart": "^4.6.1",
