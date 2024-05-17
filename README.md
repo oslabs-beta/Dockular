@@ -59,8 +59,13 @@
 <hr>
 
 
-## About The Project
-Description of Dockular goes here
+## The Vision
+Dockular is an open source product developed to combat the resource usage challenges of working with Docker. Our application is a docker desktop extension that current provides two main features; Metrics and Prune.
+
+Metric provides container CPU/RAM monitoring allowing users to montior individual container CPU and RAM usage. As needed the user can then set hard usage limits for each container.
+
+Prune provides granular Control of image pruning and is accomplished by grouping images into categories such as "Dangling Images", "UnUsed Containers", and "Build Cache". The user can then select as many, or as little, individual images or entire categories to prune at the same time.
+
 
 ### Built With
 * [Docker](https://www.docker.com/)
@@ -81,12 +86,6 @@ Or following the instructions below:
 2. Navigate to "Add Extensions" in the left toolbar and click.
 3. Search "Dockular" then click install. 
 
-## The Vision
-Dockular is an open source product developed to combat the resource usage challenges of working with Docker. Our application is a docker desktop extension that current provides two main features; Metrics and Prune.
-
-Metric provides container CPU/RAM monitoring allowing users to montior individual container CPU and RAM usage. As needed the user can then set hard usage limits for each container.
-
-Prune provides granular Control of image pruning and is accomplished by grouping images into categories such as "Dangling Images", "UnUsed Containers", and "Build Cache". The user can then select as many, or as little, individual images or entire categories to prune at the same time.
 
 
 ## Open Source Information
