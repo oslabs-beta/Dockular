@@ -3,21 +3,21 @@
 
 <br />
 <p align="center">
-  <a href="https://github.com/oslabs-beta/sapling">
+  <a href="https://github.com/oslabs-beta/dockular">
     <img src="PATH TO LOGO" alt="Logo" height="120">
   </a>
 
   <h3 align="center">Dockular</h3>
 
   <p align="center">
-    A convenient way to traverse your React application.
+    An all in one solution that provides granular control over image pruning and container resource management.
     <br />
-    <a href="https://github.com/oslabs-beta/sapling"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/oslabs-beta/dockular"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/oslabs-beta/sapling/issues">Report Bug</a>
+    <a href="https://github.com/oslabs-beta/dockular">Report Bug</a>
     ·
-    <a href="https://github.com/oslabs-beta/sapling/issues">Request Feature</a>
+    <a href="https://github.com/oslabs-beta/dockular">Request Feature</a>
   </p>
 </p>
 
@@ -72,101 +72,21 @@ Description of Dockular goes here
 
 
 ## Installation
+>NOTE: Product is currently in Beta, not all features are complete and bugs are expected.
+
+Download link Here: [Dockular](https://drive.google.com/drive/folders/1VAEELfdDcVjEgaRteeRW07YudNLwSWb2).
+
+Or following the instructions below:
 1. Open the docker desktop application.
 2. Navigate to "Add Extensions" in the left toolbar and click.
 3. Search "Dockular" then click install. 
 
+## The Vision
+Dockular is an open source product developed to combat the resource usage challenges of working with Docker. Our application is a docker desktop extension that current provides two main features; Metrics and Prune.
 
+Metric provides container CPU/RAM monitoring allowing users to montior individual container CPU and RAM usage. As needed the user can then set hard usage limits for each container.
 
-## Usage
-
-1. Insructions for user to use our extension goes here
-
-
-
-## Local development
-
-You can use `docker` to build, install and push your extension. Also, we provide an opinionated [Makefile](Makefile) that could be convenient for you. There isn't a strong preference of using one over the other, so just use the one you're most comfortable with.
-
-To build the extension, use `make build-extension` **or**:
-
-```shell
-  docker buildx build -t my/awesome-extension:latest . --load
-```
-
-To install the extension, use `make install-extension` **or**:
-
-```shell
-  docker extension install my/awesome-extension:latest
-```
-
-> If you want to automate this command, use the `-f` or `--force` flag to accept the warning message.
-
-To preview the extension in Docker Desktop, open Docker Dashboard once the installation is complete. The left-hand menu displays a new tab with the name of your extension. You can also use `docker extension ls` to see that the extension has been installed successfully.
-
-
-
-### Frontend development
-
-During the development of the frontend part, it's helpful to use hot reloading to test your changes without rebuilding your entire extension. To do this, you can configure Docker Desktop to load your UI from a development server.
-Assuming your app runs on the default port, start your UI app and then run:
-
-```shell
-  cd ui
-  npm install
-  npm run dev
-```
-
-This starts a development server that listens on port `3000`.
-
-You can now tell Docker Desktop to use this as the frontend source. In another terminal run:
-
-```shell
-  docker extension dev ui-source my/awesome-extension:latest http://localhost:3000
-```
-
-In order to open the Chrome Dev Tools for your extension when you click on the extension tab, run:
-
-```shell
-  docker extension dev debug my/awesome-extension:latest
-```
-
-Each subsequent click on the extension tab will also open Chrome Dev Tools. To stop this behaviour, run:
-
-```shell
-  docker extension dev reset my/awesome-extension:latest
-```
-
-
-
-### Backend development (optional)
-
-This example defines an API in Go that is deployed as a backend container when the extension is installed. This backend could be implemented in any language, as it runs inside a container. The extension frameworks provides connectivity from the extension UI to a socket that the backend has to connect to on the server side.
-
-Note that an extension doesn't necessarily need a backend container, but in this example we include one for teaching purposes.
-
-Whenever you make changes in the [backend](./backend) source code, you will need to compile them and re-deploy a new version of your backend container.
-Use the `docker extension update` command to remove and re-install the extension automatically:
-
-```shell
-docker extension update my/awesome-extension:latest
-```
-
-> If you want to automate this command, use the `-f` or `--force` flag to accept the warning message.
-
-> Extension containers are hidden from the Docker Dashboard by default. You can change this in Settings > Extensions > Show Docker Extensions system containers.
-
-
-
-
-### Clean up
-
-To remove the extension:
-
-```shell
-docker extension rm my/awesome-extension:latest
-```
-
+Prune provides granular Control of image pruning and is accomplished by grouping images into categories such as "Dangling Images", "UnUsed Containers", and "Build Cache". The user can then select as many, or as little, individual images or entire categories to prune at the same time.
 
 
 ## Open Source Information
@@ -208,13 +128,27 @@ We are always open to accepting any potential contributions, please feel free to
 
 Distributed under the MIT License. See [`LICENSE`](https://github.com/oslabs-beta/dockular/blob/main/LICENSE.md) for more information.
 
-## Creators
+## Meet the Team
 
-* [Ando Agamalian](https://github.com/letscode94)
-* [Alex Dawkins](https://github.com/aDawKN)
-* [Darren Im](https://github.com/imdarren93)
-* [Vishal Vivekanandan](https://github.com/vishalVivekanandan)
+Ando Agamalian
+{Place Holder for Image}
+[LinkedIn](https://www.linkedin.com/in/andranikagamalian/)
+[Github](https://github.com/letscode94)
 
+Alex Dawkins
+{Place Holder for Image}
+[LinkedIn](https://www.linkedin.com/in/alex-dawkins-1718a92b1/)
+[Github](https://github.com/aDawKN)
+
+Darren Im
+{Place Holder for Image}
+[LinkedIn](https://www.linkedin.com/in/imdarren93/)
+[Github](https://github.com/imdarren93)
+
+Vishal Vivekanandan
+{Place Holder for Image}
+[LinkedIn](https://www.linkedin.com/in/vishal-vivekanandan-a6756b229/)
+[Github](https://github.com/vishalVivekanandan)
 
 ## Contact
 GitHub: [https://github.com/oslabs-beta/dockular/](https://github.com/oslabs-beta/dockular/)
