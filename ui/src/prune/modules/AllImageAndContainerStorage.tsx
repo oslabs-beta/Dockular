@@ -16,6 +16,7 @@ import { roundTwoDecimalPlaces } from '../utilities/RoundTwoDecimalPlaces';
     .then((result:any) => {
       // console.log('Dangling Result:', result)
       const allImgs = result.parseJsonLines();
+      console.log('images',allImgs)
       storage['all-images'] = allImgs.reduce((sum:any,current:any)=>{
         // console.log('current image in AllImageStorage module', current)
         return sum + strToNumb(current.Size);
@@ -26,6 +27,8 @@ import { roundTwoDecimalPlaces } from '../utilities/RoundTwoDecimalPlaces';
     await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
    .then((result:any) => {
     const unusedCont = result.parseJsonLines();
+    console.log('containers',unusedCont)
+
     //storage['unused-containers'] = 
     const containerSum =  unusedCont.reduce((sum:any,current:any)=>{ 
       const virtualStringConverter = containerVirtualSizeConverterToString(current.Size)

@@ -9,7 +9,12 @@ import FormLabel from '@mui/material/FormLabel';
 import GetAllStorage from '../modules/GetAllStorage/GetAllStorage';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { createTheme } from '@mui/material';
-
+import IconButton from '@mui/material/IconButton';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import Popover from '@mui/material/Popover';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -237,6 +242,24 @@ export function PruneAllButtonComponent(props:any) {
         });
   const matches = useMediaQuery(theme.breakpoints.up('md'));
 
+
+//POPOVER
+  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
+
+  const handlePopoverClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
+
+  const openPopover = Boolean(anchorEl);
+  const id = openPopover ? 'simple-popover' : undefined;
+
+
+
+
     return (
       <>
       {matches === true ? //IF MATCHES IS EQUAL TO TRUE... MEANING IF THE WIDTH OF THE SCREEN HAS REACHED 875 PX
@@ -244,7 +267,8 @@ export function PruneAllButtonComponent(props:any) {
         <Button variant="contained" color='error' onClick={()=>{handleOpen()}} sx={{
                     m:2,
                     p: 1,
-                    borderRadius: 2
+                    borderRadius: 2,
+                    
                     }}>
                     Prune All
                 </Button> 
@@ -269,7 +293,41 @@ export function PruneAllButtonComponent(props:any) {
                      <FormControlLabel control={<Checkbox disabled />}  label="Paused Containers - Beta" name='paused-containers'/>
                      </FormGroup>
                      <FormLabel sx={{color: 'primary.main'}}component="legend">Cache</FormLabel>
-                     <FormControlLabel control={<Checkbox disabled  />}  label="Build Cache - Beta" name='built-casche'/>
+ 
+                      <IconButton onClick={handlePopoverClick}><DeleteOutlineIcon color='error'/></IconButton> Build Cache - Beta
+                          <Popover
+                            
+                            id={id}
+                            open={openPopover}
+                            anchorEl={anchorEl}
+                            onClose={handlePopoverClose}
+                            anchorOrigin={{
+                              vertical: 'center',
+                              horizontal: 'right',
+                            }}
+                            transformOrigin={{
+                              vertical: 'center',
+                              horizontal: 'left',
+                            }}
+                           
+                           >
+                          <Box sx={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+                         <TextField
+                           id="outlined-read-only-input"
+                           label="Run in Terminal"
+                            defaultValue="Docker buildx prune -a"
+                            InputProps={{
+                            readOnly: true
+                            }}
+                            sx={{m:2, textAlign: 'center'}}
+                          />
+                          <Box sx={{ width: '250px', fontStyle: 'italic', m:2, color:'red'}}>Note: The Build Cache total storage value can be represented by multiple builder instances.
+                          This pruning command will remove the cache within the default instance you are currently in, so if you notice that the "gold colored" value (in the build cache button group represented within the top left container) is not reducing in size that may mean that you have to change the builder instance you are in.
+                          </Box>
+                        </Box>
+                        </Popover>
+                       
+                      
 
                        <Box sx={{ width:'100%', display:'flex', justifyContent:'center'}}>
                           <Button variant="contained" color='error' onClick={handleOnClick} sx={{
@@ -318,7 +376,40 @@ export function PruneAllButtonComponent(props:any) {
                        <FormControlLabel control={<Checkbox disabled />}  label="Paused Containers - Beta" name='paused-containers'/>
                        </FormGroup>
                        <FormLabel sx={{color: 'primary.main'}}component="legend">Cache</FormLabel>
-                       <FormControlLabel control={<Checkbox disabled  />}  label="Build Cache - Beta" name='built-casche'/>
+                       <IconButton onClick={handlePopoverClick}><DeleteOutlineIcon color='error'/></IconButton> Build Cache - Beta
+                          <Popover
+                            
+                            id={id}
+                            open={openPopover}
+                            anchorEl={anchorEl}
+                            onClose={handlePopoverClose}
+                            anchorOrigin={{
+                              vertical: 'center',
+                              horizontal: 'right',
+                            }}
+                            transformOrigin={{
+                              vertical: 'center',
+                              horizontal: 'left',
+                            }}
+                           
+                           >
+                         <Box sx={{display:'flex', flexDirection:'column', alignItems:'center'}}>
+                         <TextField
+                           id="outlined-read-only-input"
+                           label="Run in Terminal"
+                            defaultValue="Docker buildx prune -a"
+                            InputProps={{
+                            readOnly: true
+                            }}
+                            sx={{m:2, textAlign: 'center'}}
+                          />
+                          <Box sx={{ width: '250px', fontStyle: 'italic', m:2, color:'red'}}>Note: The Build Cache total storage value can be represented by multiple builder instances.
+                          This pruning command will remove the cache within the default instance you are currently in, so if you notice that the "gold colored" value (in the build cache button group represented within the top left container) is not reducing in size that may mean that you have to change the builder instance you are in.
+                          </Box>
+                        </Box>
+                        </Popover>
+                       
+                       
   
                          <Box sx={{ width:'100%', display:'flex', justifyContent:'center'}}>
                             <Button variant="contained" color='error' onClick={handleOnClick} sx={{

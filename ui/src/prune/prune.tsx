@@ -1212,17 +1212,18 @@ export function Prune() {
   //return the string we are looking for in the column or row of the datagrid. 
 
   //sets columns/headers in dataGrid 
-  const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 130 },
-    { field: 'size', headerName: 'Size', width: 130},
-    { field: 'created', headerName: 'Created', width: 130 },
-    { field: 'status', headerName: rowColumnTypeHelper(dataGridBlueButtonType, 'col', '', {}),width: 130}, 
+   const columns: GridColDef[] = [
+    { field: 'status', headerName: 'Status', width: 130 },
+    { field: 'id', headerName: 'ID', width: 135 },
+    { field: 'size', headerName: 'Size', width: 115},
+    { field: 'created', headerName: 'Created', width: 135 },
+    { field: 'RepoOrImage', headerName: rowColumnTypeHelper(dataGridBlueButtonType, 'col', 'RepoOrImage', {}), width: 145 },
+    { field: 'TagOrName', headerName: rowColumnTypeHelper(dataGridBlueButtonType, 'col', 'TagOrName', {}),width: 135}, 
       //created a type field so we can utilize and be able to distinguish whether we are pruning 
       //a container, image or cache within the pruning function. The getSelectedRows() returns
       //an array of objects with these fields. We also need to distinguid because each type
       //has different pruning commands. 
-      
-    { field: 'type', headerName: 'Type', width: 150 },
+    { field: 'type', headerName: 'Type', width: 130 },
   ];
 
   //sets row data in dataGrid 
@@ -1232,7 +1233,9 @@ export function Prune() {
     dataGridBlueButtonType === 'paused-containers' ? containerVirtualSizeConverterToString(type.Size) :
     dataGridBlueButtonType === 'running-containers' ? containerVirtualSizeConverterToString(type.Size): type.Size ,
     created:  rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'created', type),
-    status:  rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'status', type),
+    TagOrName:  rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'TagOrName', type),
+    RepoOrImage:  rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'RepoOrImage', type),
+    status: rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'status', type),
     type: rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'type', type)
 
   }));
@@ -1352,6 +1355,7 @@ const theme = createTheme({
                 // display: 'flex',
                 // flexDirection: 'column',
                 // alignItems: 'center'
+                
                 }}>
                
                 <Box sx={{
@@ -1360,6 +1364,7 @@ const theme = createTheme({
                   fontStyle: 'italic',
                   textAlign: 'center',
                   marginTop: 1,
+                  
                    
                 }}
                 >{dataGridTypeHeaderHelper(dataGridBlueButtonType)}
@@ -1401,6 +1406,7 @@ const theme = createTheme({
                     m:2,
                     p: 1,
                     borderRadius: 2,
+                    
                      
                     }}>
                     Prune Selected
@@ -1468,6 +1474,7 @@ const theme = createTheme({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            
             
             
         }}> 
