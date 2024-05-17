@@ -3,8 +3,8 @@
 
 <br />
 <p align="center">
-  <a href="./ui/src/img/icon.png">
-    <img src="PATH TO LOGO" alt="Logo" height="120">
+  <a href="https://github.com/oslabs-beta/dockular">
+    <img src="./ui/src/img/icon.png" alt="Logo" height="120">
   </a>
 
   <h3 align="center">Dockular</h3>
