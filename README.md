@@ -119,7 +119,7 @@ Distributed under the MIT License. See [`LICENSE`](https://github.com/oslabs-bet
 Ando Agamalian
 
 [LinkedIn](https://www.linkedin.com/in/andranikagamalian/)
-[Github](https://github.com/letscode94)
+[Github](https://github.com/andranik-agamalian)
 
 Alex Dawkins
 
