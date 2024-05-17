@@ -44,7 +44,7 @@ func main() {
 	}
 	router.Listener = ln
 
-	router.GET("/hello", hello)
+	router.GET("/", hello)
 
 	logger.Fatal(router.Start(startURL))
 }

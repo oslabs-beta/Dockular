@@ -1,0 +1,35 @@
+{
+    "name": "@types/bytes",
+    "version": "3.1.4",
+    "description": "TypeScript definitions for bytes",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/bytes",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Zhiyuan Wang",
+            "githubUsername": "danny8002",
+            "url": "https://github.com/danny8002"
+        },
+        {
+            "name": "Rickard Laurin",
+            "githubUsername": "believer",
+            "url": "https://github.com/believer"
+        },
+        {
+            "name": "Florian Keller",
+            "githubUsername": "ffflorian",
+            "url": "https://github.com/ffflorian"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/bytes"
+    },
+    "scripts": {},
+    "dependencies": {},
+    "typesPublisherContentHash": "b8080a55863f65d2c5786c51b1a9dd4f012fcf84c8e82ed7edd825a205827355",
+    "typeScriptVersion": "4.5"
+}
