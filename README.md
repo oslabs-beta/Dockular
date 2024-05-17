@@ -34,10 +34,6 @@
       </ul>
     </li>
     <li><a href="#Installation">Installation</a></li>
-    <li>
-      <a href="#getting-started">Getting Started</a></li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#local-development">Local development</a>
     </li>
     <li><a href="#open-source-information">Open Source Information</a></li>
     <li><a href="#contributing">Contributing</a></li>
@@ -121,22 +117,22 @@ Distributed under the MIT License. See [`LICENSE`](https://github.com/oslabs-bet
 ## Meet the Team
 
 Ando Agamalian
-{Place Holder for Image}
+
 [LinkedIn](https://www.linkedin.com/in/andranikagamalian/)
 [Github](https://github.com/letscode94)
 
 Alex Dawkins
-{Place Holder for Image}
+
 [LinkedIn](https://www.linkedin.com/in/alex-dawkins-1718a92b1/)
 [Github](https://github.com/aDawKN)
 
 Darren Im
-{Place Holder for Image}
+
 [LinkedIn](https://www.linkedin.com/in/imdarren93/)
 [Github](https://github.com/imdarren93)
 
 Vishal Vivekanandan
-{Place Holder for Image}
+
 [LinkedIn](https://www.linkedin.com/in/vishal-vivekanandan-a6756b229/)
 [Github](https://github.com/vishalVivekanandan)
 
