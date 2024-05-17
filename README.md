@@ -28,25 +28,16 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#about-the-project">About The Project</a>
+      <a href="#The-Vision">About The Project</a>
       <ul>
-        <li><a href="#built-with">Built With</a></li>
+        <li><a href="#Built-with">Built With</a></li>
       </ul>
     </li>
-    <li><a href="#installation">Installation</a></li>
+    <li><a href="#Installation">Installation</a></li>
     <li>
       <a href="#getting-started">Getting Started</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#local-development">Local development</a>
-      <ul>
-        <li><a href="#frontend-development">Frontend development</a></li>
-      </ul>
-      <ul>
-        <li><a href="#backend-development">Backend development</a></li>
-      </ul>
-      <ul>
-        <li><a href="#clean-up">Clean up</a></li>
-      </ul>
     </li>
     <li><a href="#open-source-information">Open Source Information</a></li>
     <li><a href="#contributing">Contributing</a></li>
