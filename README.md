@@ -123,7 +123,7 @@ Distributed under the MIT License. See [`LICENSE`](https://github.com/oslabs-bet
 
 ## Meet the Team
 
-Ando Agamalian
+Andranik Agamalian
 
 [LinkedIn](https://www.linkedin.com/in/andranikagamalian/)
 [Github](https://github.com/andranik-agamalian)
