@@ -87,11 +87,11 @@ Or following the instructions below:
 | Pruning Running Containers       | ⏳        |
 | Pruning Paused Containers                                                                         | ⏳        |
 | Pruning Build Cache                                                                         | ⏳        |
-| Scheduled Prune                                                                         | ⏳        |
+| Scheduled Prune                                                                         | 🙏🏻        |
 | CPU Percent Metrics Visualization                                                                 | ✅        |
 | RAM Percent Metrics Visualization                                                                         | ✅        |
 | Setting RAM Hard Limits for Containers                                                             | ⏳         |
-| Setting CPU Limits for Containers                                         | ⏳        |
+| Setting CPU Limits for Containers                                         | 🙏🏻        |
 
 - ✅ = Ready to use
 - ⏳ = In progress
