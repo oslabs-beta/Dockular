@@ -34,6 +34,7 @@
     //storage['unused-containers'] = 
     pausedCont.forEach((container:any) =>{
     if(!pausedContainerIdSet.has(container.ID)) {
+      console.log('running container', container)
         runningContainerDataArray.push({
             ID: container.ID, 
             Size: container.Size,
