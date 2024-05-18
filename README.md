@@ -36,6 +36,7 @@
     <li><a href="#Installation">Installation</a></li>
     </li>
     <li><a href="#open-source-information">Open Source Information</a></li>
+    <li><a href="#enhancement-ideas">Enhancement Ideas</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#creators">Creators</a></li>
@@ -87,15 +88,21 @@ Or following the instructions below:
 | Pruning Paused Containers                                                                         | ⏳        |
 | Pruning Build Cache                                                                         | ⏳        |
 | Scheduled Prune                                                                         | ⏳        |
-| CPU Perent Metrics Visualization                                                                 | ✅        |
-| RAM Perent Metrics Visualization                                                                         | ✅        |
-| Setting RAM Hard Limits for Containers                                                             | ✅         |
+| CPU Percent Metrics Visualization                                                                 | ✅        |
+| RAM Percent Metrics Visualization                                                                         | ✅        |
+| Setting RAM Hard Limits for Containers                                                             | ⏳         |
 | Setting CPU Limits for Containers                                         | ⏳        |
-
 
 - ✅ = Ready to use
 - ⏳ = In progress
 - 🙏🏻 = Looking for contributors
+
+## Enhancement Ideas
+- Utilize Go to save pruned images/containers. Grant users the ability to visualize these containers/images within the datagrid by clicking a “Already pruned” button. This will allow the user to check if they accidentally pruned an image/container.
+- When the user’s machine gets overwhelmed by large files saved locally and/or if they forget to prune docker containers, images and build cache for an extended period of time, their machine will experience system issues and the Dockular extension will not operate efficiently. This issue is due to the user reaching the limits to the machine’s storage capacity. Create an alert that warns the user that they are approaching maximum storage capacity. You can accomplish this by comparing the amount of local storage the user’s machine comes with, the amount of storage their local files are taking up, and lastly the amount of storage left available to utilize by Docker.
+- The extension is not re-rendering when the user runs a command on their local machine. By accomplishing this task, the user will have the most up-to-date data on new containers, images, and build cache without having to click in and out of the prune section.
+- Expand pruning capability for Docker Volumes, Logs, and Instances.
+
 
 
 
