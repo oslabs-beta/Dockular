@@ -12,7 +12,14 @@ function selectDataGrid (strType:any) {
         columns={props.columns} 
         apiRef={props.apiRef} 
         onCellClick={props.handleCellClick}
-        keepNonExistentRowsSelected/>
+        keepNonExistentRowsSelected
+        sx={{
+            "& .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer": {
+              display: "none"
+            }
+          }}
+        />
+        
     } else {
         return <DataGrid 
         rows={props.rows} 
@@ -20,7 +27,13 @@ function selectDataGrid (strType:any) {
         checkboxSelection 
         apiRef={props.apiRef} 
         onCellClick={props.handleCellClick}
-        keepNonExistentRowsSelected/>
+        keepNonExistentRowsSelected
+        sx={{
+            "& .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer": {
+              display: "none"
+            }
+          }}
+          />
     }
 }
 

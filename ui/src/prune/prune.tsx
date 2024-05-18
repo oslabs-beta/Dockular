@@ -1251,6 +1251,11 @@ export function Prune() {
         rows={rows} 
         columns={columns} 
         apiRef={apiRef} 
+        sx={{
+          "& .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer": {
+            display: "none"
+          }
+        }}
         />
     } 
 
@@ -1262,6 +1267,11 @@ export function Prune() {
         apiRef={apiRef} 
         onCellClick={handleCellClick}
         keepNonExistentRowsSelected
+        sx={{
+          "& .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer": {
+            display: "none"
+          }
+        }}
         />
     }
 }
