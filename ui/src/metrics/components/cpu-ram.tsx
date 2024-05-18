@@ -142,6 +142,7 @@ const updateContainerMemoryLimit = async (memoryLimitMb: number) => {
       await ddClient.docker.cli.exec(`rm`, [containerId, '-f'])
       await ddClient.docker.cli.exec(`run --memory=${memoryLimit} ${containerName}`, [])
       
+
   }
 
 };
@@ -342,9 +343,11 @@ const theme = createTheme({
                 axisBottom={{ legend: '', legendOffset: 60, tickRotation: -45, legendPosition: 'middle', tickValues: dataRAM[0]?.data.filter((_: any, index: number) => index % Math.ceil(dataRAM[0]?.data.length / 7) === 0).map((item: { x: any; }) => item.x) }}
                 axisLeft={{ legend: 'Value', legendOffset: -60, legendPosition: 'middle' }} 
                 />
+
               </Box>
               {/* <hr style={{ border: 'none', borderBottom: '1px dashed #aaa' }} /> */}
               
+
                   </>
             )}
            
