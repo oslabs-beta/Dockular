@@ -48,7 +48,7 @@
 
 
 ## The Vision
-Dockular is an open source product developed to combat the resource usage challenges of working with Docker. Our application is a docker desktop extension that current provides two main features; Metrics and Prune.
+Dockular is an open source product developed to combat the resource usage challenges of working with Docker. Our application is a docker desktop extension that currently provides two main features; Metrics and Prune.
 
 Metric provides container CPU/RAM monitoring allowing users to montior individual container CPU and RAM usage. As needed the user can then set hard usage limits for each container.
 
