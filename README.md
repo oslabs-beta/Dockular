@@ -66,7 +66,7 @@ Prune provides granular Control of image pruning and is accomplished by grouping
 ## Installation
 >NOTE: Product is currently in Beta, not all features are complete and bugs are expected.
 
-Download link Here: [Dockular](https://drive.google.com/drive/folders/1VAEELfdDcVjEgaRteeRW07YudNLwSWb2).
+Download link Here: [Dockular](https://open.docker.com/extensions/marketplace?extensionId=vishalvivekanandan05/dockular-extension).
 
 Or follow the instructions below:
 1. Open the docker desktop application.
