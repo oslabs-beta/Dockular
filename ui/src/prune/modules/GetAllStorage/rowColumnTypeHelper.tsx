@@ -169,7 +169,7 @@ export function rowColumnTypeHelper (buttonType:any, rowOrCol:any, field:any, ty
 
             }else {
 
-                return typeElement.Reclaimable // build cache
+                return 'Build Cache' // build cache
 
            }
            

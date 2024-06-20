@@ -1,107 +1,146 @@
-# dockular
 
-This repository defines an example of a Docker extension. The files in this repository have been automatically generated as a result of running `docker extension init`.
+<!-- PUT PROJECT'S LOGO ONCE DEV IS MERGED TO MAIN! -->
 
-This extension is composed of:
+<br />
+<p align="center">
+  <a href="https://github.com/oslabs-beta/dockular">
+    <img src="./ui/src/img/icon.png" alt="Logo" height="120">
+  </a>
 
-- A [frontend](./ui) app in React that makes a request to the `/hello` endpoint and displays the payload in Docker Desktop.
-- A [backend](./backend) container that runs an API in Go. It exposes the `/hello` endpoint which returns a JSON payload.
+  <h3 align="center">Dockular</h3>
 
-> You can build your Docker Extension using your fav tech stack:
->
-> - Frontend: React, Angular, Vue, Svelte, etc.
->   Basically, any frontend framework you can bundle in an `index.html` file with CSS, and JS assets.
-> - Backend (optional): anything that can run in a container.
+  <p align="center">
+    An all in one solution that provides granular control over image pruning and container resource management.
+    <br />
+    <a href="https://github.com/oslabs-beta/dockular"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/oslabs-beta/dockular">Report Bug</a>
+    ·
+    <a href="https://github.com/oslabs-beta/dockular">Request Feature</a>
+  </p>
+</p>
 
-<details>
-  <summary>Looking for more templates?</summary>
+<hr>
 
-1. [React + NodeJS](https://github.com/benja-M-1/node-backend-extension).
-2. [React + .NET 6 WebAPI](https://github.com/felipecruz91/dotnet-api-docker-extension).
-
-Request one or submit yours [here](https://github.com/docker/extensions-sdk/issues).
-
+<!-- TABLE OF CONTENTS -->
+<details open="open">
+  <summary>Table of Contents</summary>
+  <ol>
+    <li>
+      <a href="#The-Vision">About The Project</a>
+      <ul>
+        <li><a href="#Built-with">Built With</a></li>
+      </ul>
+    </li>
+    <li><a href="#Installation">Installation</a></li>
+    </li>
+    <li><a href="#open-source-information">Open Source Information</a></li>
+    <li><a href="#enhancement-ideas">Enhancement Ideas</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#creators">Creators</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ol>
 </details>
+<hr>
 
-## Local development
 
-You can use `docker` to build, install and push your extension. Also, we provide an opinionated [Makefile](Makefile) that could be convenient for you. There isn't a strong preference of using one over the other, so just use the one you're most comfortable with.
+## The Vision
+Dockular is an open source product developed to combat the resource usage challenges of working with Docker. Our application is a docker desktop extension that currently provides two main features; Metrics and Prune.
 
-To build the extension, use `make build-extension` **or**:
+Metrics provides container CPU/RAM monitoring allowing users to montior individual container CPU and RAM usage. As needed the user can then set hard usage limits for each container.
 
-```shell
-  docker buildx build -t my/awesome-extension:latest . --load
-```
+Prune provides granular Control of image pruning and is accomplished by grouping images into categories such as "Dangling Images", "UnUsed Containers", and "Build Cache". The user can then select as many, or as little, individual images or entire categories to prune at the same time.
 
-To install the extension, use `make install-extension` **or**:
 
-```shell
-  docker extension install my/awesome-extension:latest
-```
+### Built With
+* [Docker](https://www.docker.com/)
+* [React](https://reactjs.org/)
+* [TypeScript](https://www.typescriptlang.org/)
+* [Go](https://go.dev/)
+* [Material UI](https://mui.com/)
 
-> If you want to automate this command, use the `-f` or `--force` flag to accept the warning message.
 
-To preview the extension in Docker Desktop, open Docker Dashboard once the installation is complete. The left-hand menu displays a new tab with the name of your extension. You can also use `docker extension ls` to see that the extension has been installed successfully.
 
-### Frontend development
+## Installation
+>NOTE: Product is currently in Beta, not all features are complete and bugs are expected.
 
-During the development of the frontend part, it's helpful to use hot reloading to test your changes without rebuilding your entire extension. To do this, you can configure Docker Desktop to load your UI from a development server.
-Assuming your app runs on the default port, start your UI app and then run:
+Download link Here: [Dockular](https://open.docker.com/extensions/marketplace?extensionId=vishalvivekanandan05/dockular-extension).
 
-```shell
-  cd ui
-  npm install
-  npm run dev
-```
+Or follow the instructions below:
+1. Open the docker desktop application.
+2. Navigate to "Add Extensions" in the left toolbar and click.
+3. Search "Dockular" then click install. 
 
-This starts a development server that listens on port `3000`.
 
-You can now tell Docker Desktop to use this as the frontend source. In another terminal run:
 
-```shell
-  docker extension dev ui-source my/awesome-extension:latest http://localhost:3000
-```
+## Open Source Information
 
-In order to open the Chrome Dev Tools for your extension when you click on the extension tab, run:
+| Feature                                                                               | Status    |
+|---------------------------------------------------------------------------------------|-----------|
+| Pruning Dangling Images                                             | ✅        |
+| Pruning Unused Images                                             | ✅        |
+| Pruning Images in use                                             | ⏳        |
+| Pruning Exited Containers                                             | ✅        |
+| Pruning Running Containers       | ⏳        |
+| Pruning Paused Containers                                                                         | ⏳        |
+| Pruning Build Cache                                                                         | ⏳        |
+| Scheduled Prune                                                                         | 🙏🏻        |
+| CPU Percent Metrics Visualization                                                                 | ✅        |
+| RAM Percent Metrics Visualization                                                                         | ✅        |
+| Setting RAM Hard Limits for Containers                                                             | ⏳         |
+| Setting CPU Limits for Containers                                         | 🙏🏻        |
 
-```shell
-  docker extension dev debug my/awesome-extension:latest
-```
+- ✅ = Ready to use
+- ⏳ = In progress
+- 🙏🏻 = Looking for contributors
 
-Each subsequent click on the extension tab will also open Chrome Dev Tools. To stop this behaviour, run:
+## Enhancement Ideas
+- Utilize Go to save pruned images/containers. Grant users the ability to visualize these containers/images within the datagrid by clicking a “Already pruned” button. This will allow the user to check if they accidentally pruned an image/container.
+- When the user’s machine gets overwhelmed by large files saved locally and/or if they forget to prune docker containers, images and build cache for an extended period of time, their machine will experience system issues and the Dockular extension will not operate efficiently. This issue is due to the user reaching the limits to the machine’s storage capacity. Create an alert that warns the user that they are approaching maximum storage capacity. You can accomplish this by comparing the amount of local storage the user’s machine comes with, the amount of storage their local files are taking up, and lastly the amount of storage left available to utilize by Docker.
+- The extension is not re-rendering when the user runs a command on their local machine. By accomplishing this task, the user will have the most up-to-date data on new containers, images, and build cache without having to click in and out of the prune section.
+- Expand pruning capability for Docker Volumes, Logs, and Instances.
 
-```shell
-  docker extension dev reset my/awesome-extension:latest
-```
 
-### Backend development (optional)
 
-This example defines an API in Go that is deployed as a backend container when the extension is installed. This backend could be implemented in any language, as it runs inside a container. The extension frameworks provides connectivity from the extension UI to a socket that the backend has to connect to on the server side.
 
-Note that an extension doesn't necessarily need a backend container, but in this example we include one for teaching purposes.
+## Contributing
 
-Whenever you make changes in the [backend](./backend) source code, you will need to compile them and re-deploy a new version of your backend container.
-Use the `docker extension update` command to remove and re-install the extension automatically:
+We are always open to accepting any potential contributions, please feel free to check out our feature table for any ideas for potential features to contribute! Any contributions you make are **greatly appreciated**.
 
-```shell
-docker extension update my/awesome-extension:latest
-```
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-> If you want to automate this command, use the `-f` or `--force` flag to accept the warning message.
 
-> Extension containers are hidden from the Docker Dashboard by default. You can change this in Settings > Extensions > Show Docker Extensions system containers.
+## License
 
-### Clean up
+Distributed under the MIT License. See [`LICENSE`](https://github.com/oslabs-beta/dockular/blob/main/LICENSE.md) for more information.
 
-To remove the extension:
+## Meet the Team
 
-```shell
-docker extension rm my/awesome-extension:latest
-```
+Andranik Agamalian
 
-## What's next?
+[LinkedIn](https://www.linkedin.com/in/andranikagamalian/)
+[Github](https://github.com/andranik-agamalian)
 
-- To learn more about how to build your extension refer to the Extension SDK docs at https://docs.docker.com/desktop/extensions-sdk/.
-- To publish your extension in the Marketplace visit https://www.docker.com/products/extensions/submissions/.
-- To report issues and feedback visit https://github.com/docker/extensions-sdk/issues.
-- To look for other ideas of new extensions, or propose new ideas of extensions you would like to see, visit https://github.com/docker/extension-ideas/discussions.
+Alex Dawkins
+
+[LinkedIn](https://www.linkedin.com/in/alex-dawkins-1718a92b1/)
+[Github](https://github.com/aDawKN)
+
+Darren Im
+
+[LinkedIn](https://www.linkedin.com/in/imdarren93/)
+[Github](https://github.com/imdarren93)
+
+Vishal Vivekanandan
+
+[LinkedIn](https://www.linkedin.com/in/vishal-vivekanandan-a6756b229/)
+[Github](https://github.com/vishalVivekanandan)
+
+## Contact
+[LinkedIn](https://www.linkedin.com/company/dockular)

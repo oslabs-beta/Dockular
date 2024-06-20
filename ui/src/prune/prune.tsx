@@ -54,9 +54,14 @@ export function Prune() {
   //state trackings whether we have clicked dangling-images, unsused containers or built-casche
   const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
   //state that manages a list of all the dangling images, unused containers, and builtCasche
-  const [dataForGridRows, setDataForGridRows] = React.useState<any[]>([]);
+  const [dataForGridRows, setDataForGridRows] = React.useState<{[key:string]:string}[]>([]);
+
   //initialize state for containers, images and builtCasche to be set to an empty object. Contains key of id and value of storage size. 
-  const [storageSizeById, setStorageSizeById] = React.useState<{ [key: string]: any }>({
+  // interface StorageItem {
+  //   [key: string]: string;
+  // }
+
+  const [storageSizeById, setStorageSizeById] = React.useState<{ [key: string] : { [key: string]: string } }>({
     'running-containers':{},
     'exited-containers':{},  
     'paused-containers':{},
@@ -68,7 +73,7 @@ export function Prune() {
 
   //state that manages the current amount of storage size used from each selected image/container/builtCasche from the Data Grid component
   //The storage you've selected within each category
-  const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState<{ [key: string]: any }>({
+  const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState<{ [key: string]: number }>({
     'running-containers': 0,
     'exited-containers': 0, 
     'paused-containers':0,
@@ -80,7 +85,7 @@ export function Prune() {
   })
 
   //state that manages the total amount of storage being used by unused-containers, dangling-images, built-casche and the combined-total
-  const [totalStorageTypes, setTotalStorageTypes] = React.useState<{ [key: string]: any }>({
+  const [totalStorageTypes, setTotalStorageTypes] = React.useState<{ [key: string]: number }>({
     'running-containers': 0,
     'exited-containers': 0,  
     'paused-containers':0,
@@ -91,7 +96,7 @@ export function Prune() {
     'combinedTotal': 0
   });
 
-  const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState<{ [key: string]: any }>({
+  const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState<{ [key: string]: number }>({
     'all-images': 0, 
     'all-containers': 0
   });
@@ -1251,6 +1256,11 @@ export function Prune() {
         rows={rows} 
         columns={columns} 
         apiRef={apiRef} 
+        sx={{
+          "& .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer": {
+            display: "none"
+          }
+        }}
         />
     } 
 
@@ -1262,6 +1272,11 @@ export function Prune() {
         apiRef={apiRef} 
         onCellClick={handleCellClick}
         keepNonExistentRowsSelected
+        sx={{
+          "& .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer": {
+            display: "none"
+          }
+        }}
         />
     }
 }
