@@ -3,7 +3,7 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { Box, Container } from '@mui/material';
-import { blueGrey, red} from '@mui/material/colors';
+import { blueGrey } from '@mui/material/colors';
 import { Stack } from "@mui/material";
 
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -34,6 +34,9 @@ import { rowColumnTypeHelper } from './modules/GetAllStorage/rowColumnTypeHelper
 import { storageNumToStr } from './utilities/StorageNumtoStr';
 import { checkBytesAndConvertToNumber } from './utilities/ CheckBytesAndConvertToNumber';
 
+//TYPES
+import { GridRowsDataType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType } from '../types'
+
 //Docker Desktop Client
 const client = createDockerDesktopClient();
 function useDockerDesktopClient() {
@@ -47,16 +50,18 @@ export function Prune() {
   
   //state for dataGrid
   const apiRef = useGridApiRef();
-
-  // const [pruningFuncSet, SetPruningFuncSet] = React.useState<string>('');
-
-  
+ 
   //state trackings whether we have clicked dangling-images, unsused containers or built-casche
   const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
+
   //state that manages a list of all the dangling images, unused containers, and builtCasche
-  const [dataForGridRows, setDataForGridRows] = React.useState<any[]>([]);
-  //initialize state for containers, images and builtCasche to be set to an empty object. Contains key of id and value of storage size. 
-  const [storageSizeById, setStorageSizeById] = React.useState<{ [key: string]: any }>({
+  const [dataForGridRows, setDataForGridRows] = React.useState<GridRowsDataType>([]);
+
+  //state that handles the size of each image and container. Data is utilized to calculate size...which affects datagrid etc. 
+  //This state seems to only be utilized for tracking the value of the id selected for the given container/image. See if you can combine with other state? 
+  //helps us keep track of the ids of selected images/containers so we know what to prune. 
+  //{ [key: string] : { [key: string]: string }
+  const [storageSizeById, setStorageSizeById] = React.useState<StorageSizeType>({
     'running-containers':{},
     'exited-containers':{},  
     'paused-containers':{},
@@ -67,8 +72,9 @@ export function Prune() {
   })
 
   //state that manages the current amount of storage size used from each selected image/container/builtCasche from the Data Grid component
-  //The storage you've selected within each category
-  const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState<{ [key: string]: any }>({
+  //The storage you've selected within each category. Helps us calcualte the total selected within each category. 
+  //{ [key: string]: number }
+  const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState<SelectedRowSizeType>({
     'running-containers': 0,
     'exited-containers': 0, 
     'paused-containers':0,
@@ -80,7 +86,8 @@ export function Prune() {
   })
 
   //state that manages the total amount of storage being used by unused-containers, dangling-images, built-casche and the combined-total
-  const [totalStorageTypes, setTotalStorageTypes] = React.useState<{ [key: string]: any }>({
+  //{ [key: string]: number }
+  const [totalStorageTypes, setTotalStorageTypes] = React.useState<TotalStorageType>({
     'running-containers': 0,
     'exited-containers': 0,  
     'paused-containers':0,
@@ -91,23 +98,27 @@ export function Prune() {
     'combinedTotal': 0
   });
 
-  const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState<{ [key: string]: any }>({
+  //{ [key: string]: number }
+  const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState<AllImageAndContainerStorageType>({
     'all-images': 0, 
     'all-containers': 0
   });
 
+  // useEffect(()=>{
+  //   console.log('selectedGridRowStorageSize', selectedGridRowStorageSize, 'storageSizeById', storageSizeById)
+  // },[selectedGridRowStorageSize, ])
 
 
   useEffect(()=>{
     AllImageAndContainerStorage(ddClient).
     then(res => {    
      // console.log('res in useEffect - GetAllStorage(ddClient).', res)
+     
      setAllImageAndContainerStorage({
        'all-images': res['all-images'],
        'all-containers' : res['all-containers'],
      }) 
     })
-
 
     //gets the total amount of storage being used by each category and the combined total
        GetAllStorage(ddClient, 'storage').
@@ -127,6 +138,7 @@ export function Prune() {
        
   }, [])
 
+ 
    
   
   //keeps track of state change in dataGridBlueButtonType and changes state in dataForGridRows state depending on selection of dangling-images,unused-container, or built casche
@@ -145,6 +157,9 @@ export function Prune() {
      } else if(dataGridBlueButtonType === 'unused-images') {
       GetAllStorage(ddClient, 'data').
       then(res => {    
+
+        console.log("res.data['unused-images']", res.data['unused-images']); 
+
       setDataForGridRows(res.data['unused-images'])
       }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (UNUSED IMAGES) - Docker command in: GetAllStorage module ${err}`})  
 
@@ -207,6 +222,8 @@ export function Prune() {
 
       //user has selected row in dangling-images
       const imageStorageSize = params.row.size; //storage size
+      
+      
       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
       const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
 
@@ -253,6 +270,8 @@ export function Prune() {
         'built-casche': {...storageSizeById['built-casche']}
         };
         
+        
+       
         delete copyOfImgCpuObj['dangling-images'][params.row.id]; 
 
         setStorageSizeById(imgStorageSize=>({
@@ -295,8 +314,6 @@ export function Prune() {
           'unused-images': {...storageSize['unused-images'], [params.row.id] : currImageSize},
           'built-casche' : {...storageSize['built-casche']},
         }))
-
-        
 
         
 
@@ -535,7 +552,7 @@ export function Prune() {
  
        } else {
          //else user has unselected row. Remove the key/value pair from storageSizeById.
-         const copyForContainer = {
+         const copyForContainer= {
          'running-containers': {...storageSizeById['running-containers']}, 
          'exited-containers': {...storageSizeById['exited-containers']}, 
          'paused-containers': {...storageSizeById['paused-containers']}, 
@@ -757,7 +774,7 @@ export function Prune() {
 
       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
         'running-containers': selectedGridRowStorageSize['running-containers'], 
-        'exited-containers': selectedGridRowStorageSize['exited-containers'], //EXITED
+        'exited-containers': selectedGridRowStorageSize['exited-containers'], 
         'paused-containers': selectedGridRowStorageSize['paused-containers'], 
         'dangling-images': cpuUsageCalculation,
         'in-use-images': selectedGridRowStorageSize['in-use-images'],
@@ -1290,6 +1307,7 @@ const theme = createTheme({
     },
   },
 });
+
  const matches = useMediaQuery(theme.breakpoints.up('md'));
  
 
