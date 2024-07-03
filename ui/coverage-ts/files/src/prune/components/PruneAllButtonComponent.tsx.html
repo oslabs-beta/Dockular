@@ -1,0 +1,451 @@
+
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>PruneAllButtonComponent.tsx</title>
+      <link href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" type="text/css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/javascript/javascript.min.js" type="text/javascript" charset="utf-8"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.css" type="text/css" rel="stylesheet">
+<script src="../../../../assets/source-file.js" type="text/javascript" charset="utf-8"></script>
+<link href="../../../../assets/source-file.css" type="text/css" rel="stylesheet">
+    </head>
+    <body>
+    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="negative"><td class="">src/prune/components/PruneAllButtonComponent.tsx</td><td class="">72.74%</td><td class="">80%</td><td class="">565</td><td class="">411</td><td class="">154</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">import Modal from &#x27;@mui/material/Modal&#x27;;
+import React, { useEffect } from &#x27;react&#x27;;
+import Button from &#x27;@mui/material/Button&#x27;;
+import { Box, } from &#x27;@mui/material&#x27;;
+import FormGroup from &#x27;@mui/material/FormGroup&#x27;;
+import FormControlLabel from &#x27;@mui/material/FormControlLabel&#x27;;
+import Checkbox from &#x27;@mui/material/Checkbox&#x27;;
+import FormLabel from &#x27;@mui/material/FormLabel&#x27;;
+import GetAllStorage from &#x27;../modules/GetAllStorage/GetAllStorage&#x27;;
+import useMediaQuery from &#x27;@mui/material/useMediaQuery&#x27;;
+import { createTheme } from &#x27;@mui/material&#x27;;
+import IconButton from &#x27;@mui/material/IconButton&#x27;;
+import DeleteOutlineIcon from &#x27;@mui/icons-material/DeleteOutline&#x27;;
+import Popover from &#x27;@mui/material/Popover&#x27;;
+import Typography from &#x27;@mui/material/Typography&#x27;;
+import TextField from &#x27;@mui/material/TextField&#x27;;
+import QuestionMarkIcon from &#x27;@mui/icons-material/QuestionMark&#x27;;
+
+const style = {
+    position: &#x27;absolute&#x27; as &#x27;absolute&#x27;,
+    top: &#x27;50%&#x27;,
+    left: &#x27;50%&#x27;,
+    transform: &#x27;translate(-50%, -50%)&#x27;,
+    width: 400,
+    bgcolor: &#x27;background.paper&#x27;,
+    border: &#x27;2px solid #000&#x27;,
+    boxShadow: 24,
+    p: 4,
+    borderRadius: 2,
+    borderColor: &#x27;primary.main&#x27;
+  };
+
+  
+export function PruneAllButtonComponent(props:any) {
+  // PROPS: apiRef={apiRef} CLI={ddClient} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} setDataForGridRows={setDataForGridRows} 
+
+    const [selectedTypes, SetSelectedTypes] = React.useState&lt;{ [key: string]: any }&gt;({
+      &#x27;built-casche&#x27; : false, 
+      &#x27;running-containers&#x27; : false,
+      &#x27;paused-containers&#x27; : false, 
+      &#x27;exited-containers&#x27; : false, 
+      &#x27;in-use-images&#x27;  : false, 
+      &#x27;dangling-images&#x27; : false, 
+      &#x27;unused-images&#x27; : false 
+    })
+
+    const [open, setOpen] = React.useState(false);
+    const handleOpen = () =&gt; setOpen(true);
+    const handleClose = () =&gt; setOpen(false);
+    
+    const handleChange = (event: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; {
+      SetSelectedTypes({
+        ...selectedTypes,
+        [event.target.name]: event.target.checked,
+      });
+    };
+
+   const handleOnClick = async () =&gt; {
+    
+    for(let key in selectedTypes){
+      if(selectedTypes[key]=== true){
+
+        //************************************************************************************************************************
+
+        if(key === &#x27;exited-containers&#x27;){
+          // console.log(&#x27;Selected KEY&#x27;, key)
+          
+          let exitedContainerIdSet = new Set();
+
+          await props.CLI.docker.cli.exec(&#x27;ps&#x27;, [&#x27;--all&#x27;, &#x27;--format&#x27;, &#x27;&quot;{{json .}}&quot;&#x27;, &#x27;--filter&#x27;, &quot;status=exited&quot;])
+           .then((result:any) =&gt; {
+            const exitedContainers = result.parseJsonLines()
+            exitedContainers.forEach((container:any) =&gt; {
+              exitedContainerIdSet.add(container.ID)
+            })
+          })
+
+           //prune all exited containers
+           await props.CLI.docker.cli.exec(&#x27;rm&#x27;, [...exitedContainerIdSet])
+           .catch((err:any)=&gt;{
+            //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+            props.apiRef.current.setRowSelectionModel([])
+            alert(`Error in container prune command ${err.stderr}`)});
+
+          props.setStorageSizeById((storageSize:any) =&gt; ({
+            &#x27;running-containers&#x27;:  {...storageSize[&#x27;running-containers&#x27;]},
+            &#x27;exited-containers&#x27;: {},
+            &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;]},
+            &#x27;in-use-images&#x27;:  {...storageSize[&#x27;in-use-images&#x27;]},
+            &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+            &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+            &#x27;built-casche&#x27;:  {...storageSize[&#x27;built-casche&#x27;]},
+          }))
+          
+       
+          //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
+          //all types - unused-containers, dangling-images and build-cache
+              props.setSelectedGridRowStorageSize({
+                &#x27;running-containers&#x27;: props.selectedGridRowStorageSize[&#x27;running-containers&#x27;],
+                &#x27;exited-containers&#x27;: props.selectedGridRowStorageSize[&#x27;exited-containers&#x27;],
+                &#x27;paused-containers&#x27;: props.selectedGridRowStorageSize[&#x27;paused-containers&#x27;],
+                &#x27;dangling-images&#x27;: props.selectedGridRowStorageSize[&#x27;dangling-images&#x27;],
+                &#x27;in-use-images&#x27;: props.selectedGridRowStorageSize[&#x27;in-use-images&#x27;],
+                &#x27;unused-images&#x27;: props.selectedGridRowStorageSize[&#x27;unused-images&#x27;],
+                &#x27;built-casche&#x27;: props.selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+                &#x27;selectedTotal&#x27;: 0,
+              })
+       
+          //resets the dataForGridRows state to an empty array
+            props.setDataForGridRows([]);
+            
+
+        }
+        
+        //************************************************************************************************************************
+
+      if(key === &#x27;dangling-images&#x27;){
+        // console.log(&#x27;Selected KEY&#x27;, key)
+        
+        let danglingImageIdSet = new Set();
+
+        await GetAllStorage(props.CLI, &#x27;data&#x27;).
+          then(res =&gt; {    
+            res.data[&#x27;dangling-images&#x27;].forEach((image:any)=&gt;{
+              // console.log(&#x27;images&#x27;,image)
+              danglingImageIdSet.add(image.ID)
+            })
+          })
+
+         //prune all Dangling Images
+         await props.CLI.docker.cli.exec(&#x27;rmi&#x27;, [...danglingImageIdSet])
+         .catch((err:any)=&gt;{
+          //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+          props.apiRef.current.setRowSelectionModel([])
+          console.log(&#x27;Unable to prune... Dangling Image is being utilized by container&#x27;,
+           alert(`Error in container prune command ${err.stderr}`))
+          });
+
+        props.setStorageSizeById((storageSize:any) =&gt; ({
+          &#x27;running-containers&#x27;:  {...storageSize[&#x27;running-containers&#x27;]},
+          &#x27;exited-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;]},
+          &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;]},
+          &#x27;in-use-images&#x27;:  {...storageSize[&#x27;in-use-images&#x27;]},
+          &#x27;dangling-images&#x27;: {},
+          &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+          &#x27;built-casche&#x27;:  {...storageSize[&#x27;built-casche&#x27;]},
+        }))
+        
+     
+        //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
+        //all types - unused-containers, dangling-images and build-cache
+            props.setSelectedGridRowStorageSize({
+              &#x27;running-containers&#x27;: props.selectedGridRowStorageSize[&#x27;running-containers&#x27;],
+              &#x27;exited-containers&#x27;: props.selectedGridRowStorageSize[&#x27;exited-containers&#x27;],
+              &#x27;paused-containers&#x27;: props.selectedGridRowStorageSize[&#x27;paused-containers&#x27;],
+              &#x27;dangling-images&#x27;: props.selectedGridRowStorageSize[&#x27;dangling-images&#x27;],
+              &#x27;in-use-images&#x27;: props.selectedGridRowStorageSize[&#x27;in-use-images&#x27;],
+              &#x27;unused-images&#x27;: props.selectedGridRowStorageSize[&#x27;unused-images&#x27;],
+              &#x27;built-casche&#x27;: props.selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+              &#x27;selectedTotal&#x27;: 0,
+            })
+     
+        //resets the dataForGridRows state to an empty array
+          props.setDataForGridRows([]);
+            
+      }
+
+      //************************************************************************************************************************
+
+      if(key === &#x27;unused-images&#x27;){
+        // console.log(&#x27;Selected KEY&#x27;, key)
+        
+        let unusedImageIdSet = new Set();
+
+        await GetAllStorage(props.CLI, &#x27;data&#x27;).
+          then(res =&gt; {    
+            res.data[&#x27;unused-images&#x27;].forEach((image:any)=&gt;{
+              // console.log(&#x27;images&#x27;,image)
+              unusedImageIdSet.add(image.ID)
+            })
+          })
+    
+
+         //prune all unused images
+         await props.CLI.docker.cli.exec(&#x27;rmi&#x27;, [...unusedImageIdSet])
+         .catch((err:any)=&gt;{
+          //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+          props.apiRef.current.setRowSelectionModel([])
+          console.log(&#x27;Unable to prune... Unused Image is being utilized by container&#x27;,
+          alert(`Error in unused image prune command ${err.stderr}`))});
+
+        props.setStorageSizeById((storageSize:any) =&gt; ({
+          &#x27;running-containers&#x27;:  {...storageSize[&#x27;running-containers&#x27;]},
+          &#x27;exited-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;]},
+          &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;]},
+          &#x27;in-use-images&#x27;:  {...storageSize[&#x27;in-use-images&#x27;]},
+          &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+          &#x27;unused-images&#x27;: {},
+          &#x27;built-casche&#x27;:  {...storageSize[&#x27;built-casche&#x27;]},
+        }))
+        
+     
+        //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
+        //all types - unused-containers, dangling-images and build-cache
+            props.setSelectedGridRowStorageSize({
+              &#x27;running-containers&#x27;: props.selectedGridRowStorageSize[&#x27;running-containers&#x27;],
+              &#x27;exited-containers&#x27;: props.selectedGridRowStorageSize[&#x27;exited-containers&#x27;],
+              &#x27;paused-containers&#x27;: props.selectedGridRowStorageSize[&#x27;paused-containers&#x27;],
+              &#x27;dangling-images&#x27;: props.selectedGridRowStorageSize[&#x27;dangling-images&#x27;],
+              &#x27;in-use-images&#x27;: props.selectedGridRowStorageSize[&#x27;in-use-images&#x27;],
+              &#x27;unused-images&#x27;: props.selectedGridRowStorageSize[&#x27;unused-images&#x27;],
+              &#x27;built-casche&#x27;: props.selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+              &#x27;selectedTotal&#x27;: 0,
+            })
+     
+        //resets the dataForGridRows state to an empty array
+          props.setDataForGridRows([]);
+      }
+
+
+      //************************************************************************************************************************
+
+      }
+    }
+
+    //CLOSES MODEL
+    setOpen(false);
+    
+   }
+
+   //THESE WERE IMPORTED AND ARE UTILIZED AS MEDIA QUERIES
+   const theme = createTheme({
+    breakpoints: {
+     values: {
+         xs: 0,
+         sm: 600,
+         md: 875,
+         lg: 1200,
+         xl: 1536,
+            },
+          },
+        });
+  const matches = useMediaQuery(theme.breakpoints.up(&#x27;md&#x27;));
+
+
+//POPOVER
+  const [anchorEl, setAnchorEl] = React.useState&lt;HTMLButtonElement | null&gt;(null);
+
+  const handlePopoverClick = (event: React.MouseEvent&lt;HTMLButtonElement&gt;) =&gt; {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handlePopoverClose = () =&gt; {
+    setAnchorEl(null);
+  };
+
+  const openPopover = Boolean(anchorEl);
+  const id = openPopover ? &#x27;simple-popover&#x27; : undefined;
+
+
+
+
+    return (
+      &lt;&gt;
+      {matches === true ? //IF MATCHES IS EQUAL TO TRUE... MEANING IF THE WIDTH OF THE SCREEN HAS REACHED 875 PX
+        &lt;&gt;
+        &lt;Button variant=&quot;contained&quot; color=&#x27;error&#x27; onClick={()=&gt;{handleOpen()}} sx={{
+                    m:2,
+                    p: 1,
+                    borderRadius: 2,
+                    
+                    }}&gt;
+                    Prune All
+                &lt;/Button&gt; 
+                &lt;Modal
+                  open={open}
+                  onClose={()=&gt;{handleClose()}}
+                  aria-labelledby=&quot;modal-modal-title&quot;
+                  aria-describedby=&quot;modal-modal-description&quot;
+&gt;
+ 
+                    &lt;Box sx={style}&gt;
+                    &lt;FormLabel sx={{color: &#x27;primary.main&#x27;}}component=&quot;legend&quot;&gt;Images&lt;/FormLabel&gt;
+                    &lt;FormGroup&gt;
+                     &lt;FormControlLabel control={&lt;Checkbox disabled  /&gt;} label=&quot;In Use Images - Beta&quot; name=&#x27;in-use-images&#x27;/&gt;
+                     &lt;FormControlLabel control={&lt;Checkbox onChange={handleChange} /&gt;}  label=&quot;Dangling Images&quot; name=&#x27;dangling-images&#x27;/&gt;
+                     &lt;FormControlLabel control={&lt;Checkbox onChange={handleChange} /&gt;}  label=&quot;Unused Images&quot; name=&#x27;unused-images&#x27; /&gt;
+                     &lt;/FormGroup&gt;
+                     &lt;FormLabel sx={{color: &#x27;primary.main&#x27;}}component=&quot;legend&quot;&gt;Containers&lt;/FormLabel&gt;
+                    &lt;FormGroup&gt;
+                     &lt;FormControlLabel control={&lt;Checkbox disabled  /&gt;} label=&quot;Running Containers - Beta&quot; name=&#x27;running-containers&#x27;/&gt;
+                     &lt;FormControlLabel control={&lt;Checkbox onChange={handleChange} /&gt;}  label=&quot;Exited Containers&quot; name= &#x27;exited-containers&#x27;/&gt;
+                     &lt;FormControlLabel control={&lt;Checkbox disabled /&gt;}  label=&quot;Paused Containers - Beta&quot; name=&#x27;paused-containers&#x27;/&gt;
+                     &lt;/FormGroup&gt;
+                     &lt;FormLabel sx={{color: &#x27;primary.main&#x27;}}component=&quot;legend&quot;&gt;Cache&lt;/FormLabel&gt;
+ 
+                      &lt;IconButton onClick={handlePopoverClick}&gt;&lt;DeleteOutlineIcon color=&#x27;error&#x27;/&gt;&lt;/IconButton&gt; Build Cache - Beta
+                          &lt;Popover
+                            
+                            id={id}
+                            open={openPopover}
+                            anchorEl={anchorEl}
+                            onClose={handlePopoverClose}
+                            anchorOrigin={{
+                              vertical: &#x27;center&#x27;,
+                              horizontal: &#x27;right&#x27;,
+                            }}
+                            transformOrigin={{
+                              vertical: &#x27;center&#x27;,
+                              horizontal: &#x27;left&#x27;,
+                            }}
+                           
+                           &gt;
+                          &lt;Box sx={{display:&#x27;flex&#x27;, flexDirection:&#x27;column&#x27;, alignItems:&#x27;center&#x27;}}&gt;
+                         &lt;TextField
+                           id=&quot;outlined-read-only-input&quot;
+                           label=&quot;Run in Terminal&quot;
+                            defaultValue=&quot;Docker buildx prune -a&quot;
+                            InputProps={{
+                            readOnly: true
+                            }}
+                            sx={{m:2, textAlign: &#x27;center&#x27;}}
+                          /&gt;
+                          &lt;Box sx={{ width: &#x27;250px&#x27;, fontStyle: &#x27;italic&#x27;, m:2, color:&#x27;red&#x27;}}&gt;Note: The Build Cache total storage value can be represented by multiple builder instances.
+                          This pruning command will remove the cache within the default instance you are currently in, so if you notice that the &quot;gold colored&quot; value (in the build cache button group represented within the top left container) is not reducing in size that may mean that you have to change the builder instance you are in.
+                          &lt;/Box&gt;
+                        &lt;/Box&gt;
+                        &lt;/Popover&gt;
+                       
+                      
+
+                       &lt;Box sx={{ width:&#x27;100%&#x27;, display:&#x27;flex&#x27;, justifyContent:&#x27;center&#x27;}}&gt;
+                          &lt;Button variant=&quot;contained&quot; color=&#x27;error&#x27; onClick={handleOnClick} sx={{
+                             m:2,
+                             p: 1,
+                             borderRadius: 2,
+                             width:&#x27;100%&#x27;
+                             }}&gt;
+                            Prune All
+                          &lt;/Button&gt; 
+                       &lt;/Box&gt;
+                    &lt;/Box&gt;
+                    &lt;/Modal&gt;
+       
+          &lt;/&gt;
+
+          : // ELSE - WE WANT TO UPDATE THE MARGIN BOTTOM TO BE 0
+
+          &lt;&gt;
+          &lt;Button variant=&quot;contained&quot; color=&#x27;error&#x27; onClick={()=&gt;{handleOpen()}} sx={{
+                      m:2,
+                      marginBottom:0,
+                      p: 1,
+                      borderRadius: 2
+                      }}&gt;
+                      Prune All
+                  &lt;/Button&gt; 
+                  &lt;Modal
+                    open={open}
+                    onClose={()=&gt;{handleClose()}}
+                    aria-labelledby=&quot;modal-modal-title&quot;
+                    aria-describedby=&quot;modal-modal-description&quot;
+  &gt;
+   
+                      &lt;Box sx={style}&gt;
+                      &lt;FormLabel sx={{color: &#x27;primary.main&#x27;}}component=&quot;legend&quot;&gt;Images&lt;/FormLabel&gt;
+                      &lt;FormGroup&gt;
+                       &lt;FormControlLabel control={&lt;Checkbox disabled  /&gt;} label=&quot;In Use Images - Beta&quot; name=&#x27;in-use-images&#x27;/&gt;
+                       &lt;FormControlLabel control={&lt;Checkbox onChange={handleChange} /&gt;}  label=&quot;Dangling Images&quot; name=&#x27;dangling-images&#x27;/&gt;
+                       &lt;FormControlLabel control={&lt;Checkbox onChange={handleChange} /&gt;}  label=&quot;Unused Images&quot; name=&#x27;unused-images&#x27; /&gt;
+                       &lt;/FormGroup&gt;
+                       &lt;FormLabel sx={{color: &#x27;primary.main&#x27;}}component=&quot;legend&quot;&gt;Containers&lt;/FormLabel&gt;
+                      &lt;FormGroup&gt;
+                       &lt;FormControlLabel control={&lt;Checkbox disabled  /&gt;} label=&quot;Running Containers - Beta&quot; name=&#x27;running-containers&#x27;/&gt;
+                       &lt;FormControlLabel control={&lt;Checkbox onChange={handleChange} /&gt;}  label=&quot;Exited Containers&quot; name= &#x27;exited-containers&#x27;/&gt;
+                       &lt;FormControlLabel control={&lt;Checkbox disabled /&gt;}  label=&quot;Paused Containers - Beta&quot; name=&#x27;paused-containers&#x27;/&gt;
+                       &lt;/FormGroup&gt;
+                       &lt;FormLabel sx={{color: &#x27;primary.main&#x27;}}component=&quot;legend&quot;&gt;Cache&lt;/FormLabel&gt;
+                       &lt;IconButton onClick={handlePopoverClick}&gt;&lt;DeleteOutlineIcon color=&#x27;error&#x27;/&gt;&lt;/IconButton&gt; Build Cache - Beta
+                          &lt;Popover
+                            
+                            id={id}
+                            open={openPopover}
+                            anchorEl={anchorEl}
+                            onClose={handlePopoverClose}
+                            anchorOrigin={{
+                              vertical: &#x27;center&#x27;,
+                              horizontal: &#x27;right&#x27;,
+                            }}
+                            transformOrigin={{
+                              vertical: &#x27;center&#x27;,
+                              horizontal: &#x27;left&#x27;,
+                            }}
+                           
+                           &gt;
+                         &lt;Box sx={{display:&#x27;flex&#x27;, flexDirection:&#x27;column&#x27;, alignItems:&#x27;center&#x27;}}&gt;
+                         &lt;TextField
+                           id=&quot;outlined-read-only-input&quot;
+                           label=&quot;Run in Terminal&quot;
+                            defaultValue=&quot;Docker buildx prune -a&quot;
+                            InputProps={{
+                            readOnly: true
+                            }}
+                            sx={{m:2, textAlign: &#x27;center&#x27;}}
+                          /&gt;
+                          &lt;Box sx={{ width: &#x27;250px&#x27;, fontStyle: &#x27;italic&#x27;, m:2, color:&#x27;red&#x27;}}&gt;Note: The Build Cache total storage value can be represented by multiple builder instances.
+                          This pruning command will remove the cache within the default instance you are currently in, so if you notice that the &quot;gold colored&quot; value (in the build cache button group represented within the top left container) is not reducing in size that may mean that you have to change the builder instance you are in.
+                          &lt;/Box&gt;
+                        &lt;/Box&gt;
+                        &lt;/Popover&gt;
+                       
+                       
+  
+                         &lt;Box sx={{ width:&#x27;100%&#x27;, display:&#x27;flex&#x27;, justifyContent:&#x27;center&#x27;}}&gt;
+                            &lt;Button variant=&quot;contained&quot; color=&#x27;error&#x27; onClick={handleOnClick} sx={{
+                               m:2,
+                               p: 1,
+                               borderRadius: 2,
+                               width:&#x27;100%&#x27;
+                               }}&gt;
+                              Prune All
+                            &lt;/Button&gt; 
+                         &lt;/Box&gt;
+                      &lt;/Box&gt;
+                      &lt;/Modal&gt;
+         
+            &lt;/&gt;
+          }
+        &lt;/&gt;
+    )
+}
+
+
+ </textarea><pre id="annotations" style="display:none">[{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:33,&quot;character&quot;:40,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:69,&quot;character&quot;:16,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:69,&quot;character&quot;:22,&quot;text&quot;:&quot;CLI&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:69,&quot;character&quot;:26,&quot;text&quot;:&quot;docker&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:69,&quot;character&quot;:33,&quot;text&quot;:&quot;cli&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:69,&quot;character&quot;:37,&quot;text&quot;:&quot;exec&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:70,&quot;character&quot;:12,&quot;text&quot;:&quot;then&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:70,&quot;character&quot;:18,&quot;text&quot;:&quot;result&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:71,&quot;character&quot;:18,&quot;text&quot;:&quot;exitedContainers&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:71,&quot;character&quot;:37,&quot;text&quot;:&quot;result&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:71,&quot;character&quot;:44,&quot;text&quot;:&quot;parseJsonLines&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:72,&quot;character&quot;:12,&quot;text&quot;:&quot;exitedContainers&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:72,&quot;character&quot;:29,&quot;text&quot;:&quot;forEach&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:72,&quot;character&quot;:38,&quot;text&quot;:&quot;container&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:73,&quot;character&quot;:39,&quot;text&quot;:&quot;container&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:73,&quot;character&quot;:49,&quot;text&quot;:&quot;ID&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:78,&quot;character&quot;:17,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:78,&quot;character&quot;:23,&quot;text&quot;:&quot;CLI&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:78,&quot;character&quot;:27,&quot;text&quot;:&quot;docker&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:78,&quot;character&quot;:34,&quot;text&quot;:&quot;cli&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:78,&quot;character&quot;:38,&quot;text&quot;:&quot;exec&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:79,&quot;character&quot;:12,&quot;text&quot;:&quot;catch&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:79,&quot;character&quot;:19,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:81,&quot;character&quot;:12,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:81,&quot;character&quot;:18,&quot;text&quot;:&quot;apiRef&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:81,&quot;character&quot;:25,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:81,&quot;character&quot;:33,&quot;text&quot;:&quot;setRowSelectionModel&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:82,&quot;character&quot;:54,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:82,&quot;character&quot;:58,&quot;text&quot;:&quot;stderr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:84,&quot;character&quot;:10,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:84,&quot;character&quot;:16,&quot;text&quot;:&quot;setStorageSizeById&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:84,&quot;character&quot;:36,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:85,&quot;character&quot;:39,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:87,&quot;character&quot;:37,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:88,&quot;character&quot;:34,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:89,&quot;character&quot;:35,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:90,&quot;character&quot;:33,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:91,&quot;character&quot;:33,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:97,&quot;character&quot;:14,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:97,&quot;character&quot;:20,&quot;text&quot;:&quot;setSelectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:98,&quot;character&quot;:38,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:98,&quot;character&quot;:44,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:99,&quot;character&quot;:37,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:99,&quot;character&quot;:43,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:100,&quot;character&quot;:37,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:100,&quot;character&quot;:43,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:101,&quot;character&quot;:35,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:101,&quot;character&quot;:41,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:102,&quot;character&quot;:33,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:102,&quot;character&quot;:39,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:103,&quot;character&quot;:33,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:103,&quot;character&quot;:39,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:104,&quot;character&quot;:32,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:104,&quot;character&quot;:38,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:109,&quot;character&quot;:12,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:109,&quot;character&quot;:18,&quot;text&quot;:&quot;setDataForGridRows&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:121,&quot;character&quot;:28,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:121,&quot;character&quot;:34,&quot;text&quot;:&quot;CLI&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:122,&quot;character&quot;:15,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:123,&quot;character&quot;:12,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:123,&quot;character&quot;:16,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:123,&quot;character&quot;:40,&quot;text&quot;:&quot;forEach&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:123,&quot;character&quot;:49,&quot;text&quot;:&quot;image&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:125,&quot;character&quot;:37,&quot;text&quot;:&quot;image&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:125,&quot;character&quot;:43,&quot;text&quot;:&quot;ID&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:130,&quot;character&quot;:15,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:130,&quot;character&quot;:21,&quot;text&quot;:&quot;CLI&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:130,&quot;character&quot;:25,&quot;text&quot;:&quot;docker&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:130,&quot;character&quot;:32,&quot;text&quot;:&quot;cli&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:130,&quot;character&quot;:36,&quot;text&quot;:&quot;exec&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:131,&quot;character&quot;:10,&quot;text&quot;:&quot;catch&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:131,&quot;character&quot;:17,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:133,&quot;character&quot;:10,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:133,&quot;character&quot;:16,&quot;text&quot;:&quot;apiRef&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:133,&quot;character&quot;:23,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:133,&quot;character&quot;:31,&quot;text&quot;:&quot;setRowSelectionModel&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:135,&quot;character&quot;:53,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:135,&quot;character&quot;:57,&quot;text&quot;:&quot;stderr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:138,&quot;character&quot;:8,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:138,&quot;character&quot;:14,&quot;text&quot;:&quot;setStorageSizeById&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:138,&quot;character&quot;:34,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:139,&quot;character&quot;:37,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:140,&quot;character&quot;:35,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:141,&quot;character&quot;:35,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:142,&quot;character&quot;:32,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:144,&quot;character&quot;:31,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:145,&quot;character&quot;:31,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:151,&quot;character&quot;:12,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:151,&quot;character&quot;:18,&quot;text&quot;:&quot;setSelectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:152,&quot;character&quot;:36,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:152,&quot;character&quot;:42,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:153,&quot;character&quot;:35,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:153,&quot;character&quot;:41,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:154,&quot;character&quot;:35,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:154,&quot;character&quot;:41,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:155,&quot;character&quot;:33,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:155,&quot;character&quot;:39,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:156,&quot;character&quot;:31,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:156,&quot;character&quot;:37,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:157,&quot;character&quot;:31,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:157,&quot;character&quot;:37,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:158,&quot;character&quot;:30,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:158,&quot;character&quot;:36,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:163,&quot;character&quot;:10,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:163,&quot;character&quot;:16,&quot;text&quot;:&quot;setDataForGridRows&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:174,&quot;character&quot;:28,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:174,&quot;character&quot;:34,&quot;text&quot;:&quot;CLI&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:175,&quot;character&quot;:15,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:176,&quot;character&quot;:12,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:176,&quot;character&quot;:16,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:176,&quot;character&quot;:38,&quot;text&quot;:&quot;forEach&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:176,&quot;character&quot;:47,&quot;text&quot;:&quot;image&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:178,&quot;character&quot;:35,&quot;text&quot;:&quot;image&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:178,&quot;character&quot;:41,&quot;text&quot;:&quot;ID&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:184,&quot;character&quot;:15,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:184,&quot;character&quot;:21,&quot;text&quot;:&quot;CLI&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:184,&quot;character&quot;:25,&quot;text&quot;:&quot;docker&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:184,&quot;character&quot;:32,&quot;text&quot;:&quot;cli&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:184,&quot;character&quot;:36,&quot;text&quot;:&quot;exec&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:185,&quot;character&quot;:10,&quot;text&quot;:&quot;catch&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:185,&quot;character&quot;:17,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:187,&quot;character&quot;:10,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:187,&quot;character&quot;:16,&quot;text&quot;:&quot;apiRef&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:187,&quot;character&quot;:23,&quot;text&quot;:&quot;current&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:187,&quot;character&quot;:31,&quot;text&quot;:&quot;setRowSelectionModel&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:189,&quot;character&quot;:55,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:189,&quot;character&quot;:59,&quot;text&quot;:&quot;stderr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:191,&quot;character&quot;:8,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:191,&quot;character&quot;:14,&quot;text&quot;:&quot;setStorageSizeById&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:191,&quot;character&quot;:34,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:192,&quot;character&quot;:37,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:193,&quot;character&quot;:35,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:194,&quot;character&quot;:35,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:195,&quot;character&quot;:32,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:196,&quot;character&quot;:33,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:198,&quot;character&quot;:31,&quot;text&quot;:&quot;storageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:204,&quot;character&quot;:12,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:204,&quot;character&quot;:18,&quot;text&quot;:&quot;setSelectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:205,&quot;character&quot;:36,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:205,&quot;character&quot;:42,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:206,&quot;character&quot;:35,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:206,&quot;character&quot;:41,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:207,&quot;character&quot;:35,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:207,&quot;character&quot;:41,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:208,&quot;character&quot;:33,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:208,&quot;character&quot;:39,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:209,&quot;character&quot;:31,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:209,&quot;character&quot;:37,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:210,&quot;character&quot;:31,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:210,&quot;character&quot;:37,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:211,&quot;character&quot;:30,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:211,&quot;character&quot;:36,&quot;text&quot;:&quot;selectedGridRowStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:216,&quot;character&quot;:10,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/PruneAllButtonComponent.tsx&quot;,&quot;line&quot;:216,&quot;character&quot;:16,&quot;text&quot;:&quot;setDataForGridRows&quot;,&quot;kind&quot;:1}]</pre></div>
+    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Fri, 28 Jun 2024 22:01:27 GMT</p>
+    </body>
+  </html>
+  

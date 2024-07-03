@@ -1,0 +1,144 @@
+
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>ImageButtonComponent.tsx</title>
+      <link href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" type="text/css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/javascript/javascript.min.js" type="text/javascript" charset="utf-8"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.css" type="text/css" rel="stylesheet">
+<script src="../../../../assets/source-file.js" type="text/javascript" charset="utf-8"></script>
+<link href="../../../../assets/source-file.css" type="text/css" rel="stylesheet">
+    </head>
+    <body>
+    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/prune/components/ImageButtonComponent.tsx</td><td class="">87.50%</td><td class="">80%</td><td class="">168</td><td class="">147</td><td class="">21</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">import React, { useEffect } from &#x27;react&#x27;;
+import Button from &#x27;@mui/material/Button&#x27;;
+import ButtonGroup from &#x27;@mui/material/ButtonGroup&#x27;;
+import Menu from &#x27;@mui/material/Menu&#x27;;
+import MenuItem from &#x27;@mui/material/MenuItem&#x27;;
+import { storageNumToStr } from &#x27;../utilities/StorageNumtoStr&#x27;;
+import useMediaQuery from &#x27;@mui/material/useMediaQuery&#x27;;
+import { createTheme } from &#x27;@mui/material&#x27;;
+
+
+
+ 
+
+export function ImageButtonComponent (props:any) {
+ 
+        const [anchorEl, setAnchorEl] = React.useState&lt;null | HTMLElement&gt;(null);
+        const open = Boolean(anchorEl);
+        const handleClick = (event: React.MouseEvent&lt;HTMLButtonElement&gt;) =&gt; {
+          setAnchorEl(event.currentTarget);
+        };
+        const handleClose = () =&gt; {
+            console.log(&#x27;handleclose event&#x27;, event)
+          setAnchorEl(null);
+        };
+    
+        function imageType(strType:string){
+            // console.log(strType)
+            if(strType === &#x27;in-use-images&#x27;){
+                props.setDataGridBlueButtonType(&#x27;in-use-images&#x27;)
+
+            } else if(strType === &#x27;dangling-images&#x27;) {
+                props.setDataGridBlueButtonType(&#x27;dangling-images&#x27;)
+
+            } else if (strType === &#x27;unused-images&#x27;) {
+                props.setDataGridBlueButtonType(&#x27;unused-images&#x27;)
+            }
+        }
+
+           //THESE WERE IMPORTED AND ARE UTILIZED AS MEDIA QUERIES
+           const theme = createTheme({
+            breakpoints: {
+             values: {
+                 xs: 0,
+                 sm: 600,
+                 md: 875,
+                 lg: 1200,
+                 xl: 1536,
+                    },
+                  },
+                });
+       const matches = useMediaQuery(theme.breakpoints.up(&#x27;md&#x27;));
+
+    return (
+        &lt;&gt;
+        { matches === true ?
+        &lt;&gt;
+        &lt;ButtonGroup variant=&quot;contained&quot; aria-label=&quot;Basic button group&quot; sx={{m:2}}&gt;
+            &lt;Button 
+            variant=&quot;contained&quot; 
+            // onClick={()=&gt;{props.type(&#x27;dangling-images&#x27;)}} 
+            aria-controls={open ? &#x27;basic-menu&#x27; : undefined}
+            aria-haspopup=&quot;true&quot;
+            aria-expanded={open ? &#x27;true&#x27; : undefined}
+            onClick={handleClick}
+            &gt;
+               Images
+            &lt;/Button&gt;
+
+                &lt;Button variant=&quot;contained&quot; sx={{color: &#x27;#FFD700&#x27;, marginRight: 2}}&gt;
+                { storageNumToStr(props.allImageAndContainerStorage[&#x27;all-images&#x27;])}
+                &lt;/Button&gt;
+               
+                
+            &lt;/ButtonGroup&gt;
+            &lt;Menu
+                id=&quot;basic-menu&quot;
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                MenuListProps={{
+                &#x27;aria-labelledby&#x27;: &#x27;basic-button&#x27;,
+             }}
+
+            //  `Dangling Images (${storageNumToStr(props.totalStorageTypes[&#x27;in-use-images&#x27;])})`
+             &gt;
+            &lt;MenuItem onClick={()=&gt;{handleClose(), imageType(&#x27;in-use-images&#x27;)}}&gt;{`In Use Images (${storageNumToStr(props.totalStorageTypes[&#x27;in-use-images&#x27;])})`}&lt;/MenuItem&gt;
+            &lt;MenuItem onClick={()=&gt;{handleClose(), imageType(&#x27;dangling-images&#x27;)}}&gt; {`Dangling Images (${storageNumToStr(props.totalStorageTypes[&#x27;dangling-images&#x27;])})`} &lt;/MenuItem&gt;
+            &lt;MenuItem onClick={()=&gt;{handleClose(), imageType(&#x27;unused-images&#x27;)}}&gt;{`Unused Images (${storageNumToStr(props.totalStorageTypes[&#x27;unused-images&#x27;])})`}&lt;/MenuItem&gt;
+            &lt;/Menu&gt;
+           
+            &lt;/&gt;
+            :
+            &lt;&gt;
+       
+            &lt;Button 
+            variant=&quot;contained&quot; 
+            // onClick={()=&gt;{props.type(&#x27;dangling-images&#x27;)}} 
+            aria-controls={open ? &#x27;basic-menu&#x27; : undefined}
+            aria-haspopup=&quot;true&quot;
+            aria-expanded={open ? &#x27;true&#x27; : undefined}
+            onClick={handleClick}
+            sx={{m:2, marginBottom:0}}
+            &gt;
+               Images
+            &lt;/Button&gt;
+
+            &lt;Menu
+                id=&quot;basic-menu&quot;
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                MenuListProps={{
+                &#x27;aria-labelledby&#x27;: &#x27;basic-button&#x27;,
+             }}
+
+            //  `Dangling Images (${storageNumToStr(props.totalStorageTypes[&#x27;in-use-images&#x27;])})`
+             &gt;
+            &lt;MenuItem onClick={()=&gt;{handleClose(), imageType(&#x27;in-use-images&#x27;)}}&gt;{`In Use Images (${storageNumToStr(props.totalStorageTypes[&#x27;in-use-images&#x27;])})`}&lt;/MenuItem&gt;
+            &lt;MenuItem onClick={()=&gt;{handleClose(), imageType(&#x27;dangling-images&#x27;)}}&gt; {`Dangling Images (${storageNumToStr(props.totalStorageTypes[&#x27;dangling-images&#x27;])})`} &lt;/MenuItem&gt;
+            &lt;MenuItem onClick={()=&gt;{handleClose(), imageType(&#x27;unused-images&#x27;)}}&gt;{`Unused Images (${storageNumToStr(props.totalStorageTypes[&#x27;unused-images&#x27;])})`}&lt;/MenuItem&gt;
+            &lt;/Menu&gt;
+           
+            &lt;/&gt;
+        }       
+            &lt;/&gt;
+    )
+}</textarea><pre id="annotations" style="display:none">[{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:13,&quot;character&quot;:38,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:28,&quot;character&quot;:16,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:28,&quot;character&quot;:22,&quot;text&quot;:&quot;setDataGridBlueButtonType&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:31,&quot;character&quot;:16,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:31,&quot;character&quot;:22,&quot;text&quot;:&quot;setDataGridBlueButtonType&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:34,&quot;character&quot;:16,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:34,&quot;character&quot;:22,&quot;text&quot;:&quot;setDataGridBlueButtonType&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:69,&quot;character&quot;:34,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:69,&quot;character&quot;:40,&quot;text&quot;:&quot;allImageAndContainerStorage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:85,&quot;character&quot;:115,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:85,&quot;character&quot;:121,&quot;text&quot;:&quot;totalStorageTypes&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:86,&quot;character&quot;:120,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:86,&quot;character&quot;:126,&quot;text&quot;:&quot;totalStorageTypes&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:87,&quot;character&quot;:115,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:87,&quot;character&quot;:121,&quot;text&quot;:&quot;totalStorageTypes&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:117,&quot;character&quot;:115,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:117,&quot;character&quot;:121,&quot;text&quot;:&quot;totalStorageTypes&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:118,&quot;character&quot;:120,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:118,&quot;character&quot;:126,&quot;text&quot;:&quot;totalStorageTypes&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:119,&quot;character&quot;:115,&quot;text&quot;:&quot;props&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/components/ImageButtonComponent.tsx&quot;,&quot;line&quot;:119,&quot;character&quot;:121,&quot;text&quot;:&quot;totalStorageTypes&quot;,&quot;kind&quot;:1}]</pre></div>
+    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Fri, 28 Jun 2024 22:01:27 GMT</p>
+    </body>
+  </html>
+  
