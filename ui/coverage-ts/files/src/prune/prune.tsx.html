@@ -1,0 +1,1537 @@
+
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <title>prune.tsx</title>
+      <link href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" type="text/css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/mode/javascript/javascript.min.js" type="text/javascript" charset="utf-8"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.2/codemirror.min.css" type="text/css" rel="stylesheet">
+<script src="../../../assets/source-file.js" type="text/javascript" charset="utf-8"></script>
+<link href="../../../assets/source-file.css" type="text/css" rel="stylesheet">
+    </head>
+    <body>
+    <div style="margin-top:3em" class="ui container"><h1 class="ui header"><a href="../../../index.html">TypeScript coverage report</a></h1><table style="margin-top:2em" class="ui celled table"><thead class=""><tr class=""><th class="">Filename</th><th class="">Percent</th><th class="">Threshold</th><th class="">Total</th><th class="">Covered</th><th class="">Uncovered</th></tr></thead><tbody class=""><tr class="positive"><td class="">src/prune/prune.tsx</td><td class="">83.34%</td><td class="">80%</td><td class="">1435</td><td class="">1196</td><td class="">239</td></tr></tbody></table><textarea id="editor" readonly="" style="margin-top:3em">import React, { useEffect } from &#x27;react&#x27;;
+import Button from &#x27;@mui/material/Button&#x27;;
+import ButtonGroup from &#x27;@mui/material/ButtonGroup&#x27;;
+import { createDockerDesktopClient } from &#x27;@docker/extension-api-client&#x27;;
+import { Box, Container } from &#x27;@mui/material&#x27;;
+import { blueGrey } from &#x27;@mui/material/colors&#x27;;
+import { Stack } from &quot;@mui/material&quot;;
+
+import useMediaQuery from &#x27;@mui/material/useMediaQuery&#x27;;
+import { createTheme } from &#x27;@mui/material&#x27;;
+
+
+//mui grid
+import { DataGrid, GridRowsProp, GridColDef, GridEventListener} from &#x27;@mui/x-data-grid&#x27;;
+import { useGridApiRef } from &#x27;@mui/x-data-grid&#x27;;
+
+//components
+import { ProgressbarChartComponent } from &#x27;./components/ProgressbarChartComponent&#x27;;
+import { PruneAllButtonComponent } from &#x27;./components/PruneAllButtonComponent&#x27;;
+import { ImageButtonComponent } from &#x27;./components/ImageButtonComponent&#x27;;
+import { ContainerButtonComponent } from &#x27;./components/ContainerButtonComponent&#x27;;
+ 
+
+//modules
+import GetAllStorage from &#x27;./modules/GetAllStorage/GetAllStorage&#x27;;
+import GetRunningContainers from &#x27;./modules/GetAllStorage/GetRunningContainers&#x27;;
+import { BuiltCascheRowDataParser } from &#x27;./modules/builtCascheRowDataParser&#x27;;
+import { containerVirtualSizeConverterToString } from &#x27;./modules/ContainerVirtualSizeConverterToString&#x27;;
+import { dataGridTypeHeaderHelper } from &#x27;./modules/dataGridTypeHeaderHelper&#x27;;
+import AllImageAndContainerStorage from &#x27;./modules/AllImageAndContainerStorage&#x27;;
+import { rowColumnTypeHelper } from &#x27;./modules/GetAllStorage/rowColumnTypeHelper&#x27;;
+
+//utilities
+import { storageNumToStr } from &#x27;./utilities/StorageNumtoStr&#x27;;
+import { checkBytesAndConvertToNumber } from &#x27;./utilities/ CheckBytesAndConvertToNumber&#x27;;
+
+//TYPES
+import { GridRowsDataType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType } from &#x27;../types&#x27;
+
+//Docker Desktop Client
+const client = createDockerDesktopClient();
+function useDockerDesktopClient() {
+  return client;
+}
+
+
+export function Prune() {
+
+  const ddClient = useDockerDesktopClient();
+  
+  //state for dataGrid
+  const apiRef = useGridApiRef();
+ 
+  //state trackings whether we have clicked dangling-images, unsused containers or built-casche
+  const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState&lt;string&gt;(&#x27;dangling-images&#x27;);
+
+  //state that manages a list of all the dangling images, unused containers, and builtCasche
+  const [dataForGridRows, setDataForGridRows] = React.useState&lt;GridRowsDataType&gt;([]);
+
+  //state that handles the size of each image and container. Data is utilized to calculate size...which affects datagrid etc. 
+  //This state seems to only be utilized for tracking the value of the id selected for the given container/image. See if you can combine with other state? 
+  //helps us keep track of the ids of selected images/containers so we know what to prune. 
+  //{ [key: string] : { [key: string]: string }
+  const [storageSizeById, setStorageSizeById] = React.useState&lt;StorageSizeType&gt;({
+    &#x27;running-containers&#x27;:{},
+    &#x27;exited-containers&#x27;:{},  
+    &#x27;paused-containers&#x27;:{},
+    &#x27;dangling-images&#x27;: {}, 
+    &#x27;in-use-images&#x27;: {},
+    &#x27;unused-images&#x27;:{},
+    &#x27;built-casche&#x27;: {},
+  })
+
+  //state that manages the current amount of storage size used from each selected image/container/builtCasche from the Data Grid component
+  //The storage you&#x27;ve selected within each category. Helps us calcualte the total selected within each category. 
+  //{ [key: string]: number }
+  const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState&lt;SelectedRowSizeType&gt;({
+    &#x27;running-containers&#x27;: 0,
+    &#x27;exited-containers&#x27;: 0, 
+    &#x27;paused-containers&#x27;:0,
+    &#x27;dangling-images&#x27;: 0, 
+    &#x27;in-use-images&#x27;: 0,
+    &#x27;unused-images&#x27;:0,
+    &#x27;built-casche&#x27;: 0,
+    &#x27;selectedTotal&#x27;: 0, 
+  })
+
+  //state that manages the total amount of storage being used by unused-containers, dangling-images, built-casche and the combined-total
+  //{ [key: string]: number }
+  const [totalStorageTypes, setTotalStorageTypes] = React.useState&lt;TotalStorageType&gt;({
+    &#x27;running-containers&#x27;: 0,
+    &#x27;exited-containers&#x27;: 0,  
+    &#x27;paused-containers&#x27;:0,
+    &#x27;dangling-images&#x27;: 0,
+    &#x27;in-use-images&#x27;: 0,
+    &#x27;unused-images&#x27;:0,
+    &#x27;built-casche&#x27;: 0,
+    &#x27;combinedTotal&#x27;: 0
+  });
+
+  //{ [key: string]: number }
+  const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState&lt;AllImageAndContainerStorageType&gt;({
+    &#x27;all-images&#x27;: 0, 
+    &#x27;all-containers&#x27;: 0
+  });
+
+  // useEffect(()=&gt;{
+  //   console.log(&#x27;selectedGridRowStorageSize&#x27;, selectedGridRowStorageSize, &#x27;storageSizeById&#x27;, storageSizeById)
+  // },[selectedGridRowStorageSize, ])
+
+
+  useEffect(()=&gt;{
+    AllImageAndContainerStorage(ddClient).
+    then(res =&gt; {    
+     // console.log(&#x27;res in useEffect - GetAllStorage(ddClient).&#x27;, res)
+     
+     setAllImageAndContainerStorage({
+       &#x27;all-images&#x27;: res[&#x27;all-images&#x27;],
+       &#x27;all-containers&#x27; : res[&#x27;all-containers&#x27;],
+     }) 
+    })
+
+    //gets the total amount of storage being used by each category and the combined total
+       GetAllStorage(ddClient, &#x27;storage&#x27;).
+       then(res =&gt; {    
+        // console.log(&#x27;res in useEffect - GetAllStorage(ddClient).&#x27;, res)
+        setTotalStorageTypes({
+          &#x27;running-containers&#x27;: res.storage[&#x27;running-containers&#x27;],
+          &#x27;exited-containers&#x27;:  res.storage[&#x27;exited-containers&#x27;],  
+          &#x27;paused-containers&#x27;: res.storage[&#x27;paused-containers&#x27;],
+          &#x27;dangling-images&#x27;:  res.storage[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: res.storage[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: res.storage[&#x27;unused-images&#x27;], 
+          &#x27;built-casche&#x27;: res.storage[&#x27;built-casche&#x27;],
+          &#x27;combinedTotal&#x27;:  res.storage[&#x27;combinedTotal&#x27;], 
+        }) 
+       })
+       
+  }, [])
+
+ 
+   
+  
+  //keeps track of state change in dataGridBlueButtonType and changes state in dataForGridRows state depending on selection of dangling-images,unused-container, or built casche
+  useEffect(()=&gt;{
+    
+    //command populates all dangling images
+     if (dataGridBlueButtonType === &#x27;dangling-images&#x27;){
+       
+      GetAllStorage(ddClient, &#x27;data&#x27;).
+      then(res =&gt; {    
+      setDataForGridRows(res.data[&#x27;dangling-images&#x27;])
+      
+      }).catch((err)=&gt;{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (DANGLING IMAGES) - Docker command in: GetAllStorage module ${err}`}) 
+
+      //COMMAND POPULATES UNUSED IMAGES
+     } else if(dataGridBlueButtonType === &#x27;unused-images&#x27;) {
+      GetAllStorage(ddClient, &#x27;data&#x27;).
+      then(res =&gt; {    
+
+        console.log(&quot;res.data[&#x27;unused-images&#x27;]&quot;, res.data[&#x27;unused-images&#x27;]); 
+
+      setDataForGridRows(res.data[&#x27;unused-images&#x27;])
+      }).catch((err)=&gt;{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (UNUSED IMAGES) - Docker command in: GetAllStorage module ${err}`})  
+
+    //command populates all &#x27;in-use-images&#x27;
+    } else if(dataGridBlueButtonType === &#x27;in-use-images&#x27;){
+
+      GetAllStorage(ddClient, &#x27;data&#x27;).
+      then(res =&gt; {    
+        // console.log(res)
+      setDataForGridRows(res.data[&#x27;in-use-images&#x27;])
+      
+      }).catch((err)=&gt;{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (IN USE IMAGES) - Docker command in: GetAllStorage module${err}`})  
+
+      //EXITED CONTAINERS 
+    } else if(dataGridBlueButtonType === &#x27;exited-containers&#x27;){
+        ddClient.docker.cli.exec(&#x27;ps&#x27;, [&#x27;--all&#x27;, &#x27;--format&#x27;, &#x27;&quot;{{json .}}&quot;&#x27;, &#x27;--filter&#x27;, &quot;status=exited&quot;])
+        .then((result) =&gt; {
+          // console.log(&#x27;psAll&#x27;,result.parseJsonLines())
+          setDataForGridRows(result.parseJsonLines());
+          
+        }).catch((err)=&gt;{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (EXITED CONTAINERS) - command: ddClient.docker.cli.exec(&#x27;ps&#x27;, [&#x27;--all&#x27;, &#x27;--format&#x27;, &#x27;&quot;{{json .}}&quot;&#x27;, &#x27;--filter&#x27;, &quot;status=exited&quot;]) ${err}`})
+
+          //Paused Containers
+      } else if(dataGridBlueButtonType === &#x27;paused-containers&#x27;){
+        ddClient.docker.cli.exec(&#x27;ps&#x27;, [&#x27;--all&#x27;, &#x27;--format&#x27;, &#x27;&quot;{{json .}}&quot;&#x27;, &#x27;--filter&#x27;, &quot;status=paused&quot;])
+        .then((result) =&gt; {
+          // console.log(&#x27;psAll&#x27;,result.parseJsonLines())
+          setDataForGridRows(result.parseJsonLines());
+          
+        }).catch((err)=&gt;{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (PAUSED CONTAINERS) - command: ddClient.docker.cli.exec(&#x27;ps&#x27;, [&#x27;--all&#x27;, &#x27;--format&#x27;, &#x27;&quot;{{json .}}&quot;&#x27;, &#x27;--filter&#x27;, &quot;status=exited&quot;]) ${err}`})
+
+        //RUNNING CONTAINERS
+      }else if(dataGridBlueButtonType === &#x27;running-containers&#x27;){
+        GetRunningContainers(ddClient).
+        then(res =&gt; { 
+          // console.log(&#x27;running containers&#x27;, res)   
+        setDataForGridRows(res)
+        }).catch((err)=&gt;{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (RUNNING CONTAINERS) Docker command in: GetRunningContainers module ${err}`})  
+       
+        //command populates all built casche
+      }else if(dataGridBlueButtonType === &#x27;built-casche&#x27;){
+        ddClient.docker.cli.exec(&#x27;builder&#x27;, [&#x27;du&#x27;, &#x27;--verbose&#x27;])
+        .then((result) =&gt; {
+          // console.log(&#x27;result.stdout within useEffect in prune file --&gt;&#x27;, result.stdout)
+          // console.log(&#x27;Parsed BuiltCascheRowDataParser(result) in prune useEffect&#x27;, JSON.parse(BuiltCascheRowDataParser(result.stdout)))
+          setDataForGridRows(JSON.parse(BuiltCascheRowDataParser(result.stdout)));
+        }).catch((err)=&gt;{`Error in use Effect within prune.tsx for BUILD CACHE - command: ddClient.docker.cli.exec(&#x27;builder&#x27;, [&#x27;du&#x27;, &#x27;--verbose&#x27;]) ${err}`})
+
+      }  
+      
+  },[dataGridBlueButtonType])
+
+
+  //This eventListener helps us keep track of the boxes selected/unselected in the grid by id and the size of each image based off id
+  const handleCellClick: GridEventListener&lt;&#x27;cellClick&#x27;&gt; = (params) =&gt; {
+    // const handleRowClick: GridEventListener&lt;&#x27;rowClick&#x27;&gt; = (params) =&gt; {
+
+    
+    if(dataGridBlueButtonType === &#x27;dangling-images&#x27;){
+
+      //user has selected row in dangling-images
+      const imageStorageSize = params.row.size; //storage size
+      
+      
+      //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
+      const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
+
+      //if image id is NOT in the object
+      if(!storageSizeById[&#x27;dangling-images&#x27;].hasOwnProperty(params.row.id)){
+        //key is id and the value is the storage size 
+        setStorageSizeById(storageSize =&gt; ({
+          &#x27;running-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;]},
+          &#x27;exited-containers&#x27;: {...storageSize[&#x27;exited-containers&#x27;]},
+          &#x27;paused-containers&#x27; : {...storageSize[&#x27;paused-containers&#x27;]},
+          &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;], [params.row.id] : currImageSize},
+          &#x27;in-use-images&#x27; : {...storageSize[&#x27;in-use-images&#x27;]},
+          &#x27;unused-images&#x27; : {...storageSize[&#x27;unused-images&#x27;]},
+          &#x27;built-casche&#x27; : {...storageSize[&#x27;built-casche&#x27;]},
+        }))
+        
+        
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we SELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+          &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+          &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+          &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+          &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+          &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+          &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] + currImageSize, 
+        }))
+       
+        
+       
+       
+      } else {
+        //else user has unselected row. Remove the key/value pair from storageSizeById.
+        const copyOfImgCpuObj = {
+        &#x27;running-containers&#x27;: {...storageSizeById[&#x27;running-containers&#x27;]}, 
+        &#x27;exited-containers&#x27;: {...storageSizeById[&#x27;exited-containers&#x27;]}, 
+        &#x27;paused-containers&#x27;: {...storageSizeById[&#x27;paused-containers&#x27;]}, 
+        &#x27;dangling-images&#x27;: {...storageSizeById[&#x27;dangling-images&#x27;]}, 
+        &#x27;in-use-images&#x27;: {...storageSizeById[&#x27;in-use-images&#x27;]}, 
+        &#x27;unused-images&#x27;: {...storageSizeById[&#x27;unused-images&#x27;]}, 
+        &#x27;built-casche&#x27;: {...storageSizeById[&#x27;built-casche&#x27;]}
+        };
+        
+        
+       
+        delete copyOfImgCpuObj[&#x27;dangling-images&#x27;][params.row.id]; 
+
+        setStorageSizeById(imgStorageSize=&gt;({
+          ...copyOfImgCpuObj
+        }))
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we UNSELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+          &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+          &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+          &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+          &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+          &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+          &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] - currImageSize, 
+        }))
+        
+       
+      }
+      
+ 
+    } else if(dataGridBlueButtonType === &#x27;unused-images&#x27;){
+
+      //user has selected row in dangling-images
+      const imageStorageSize = params.row.size; //storage size
+      //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
+      const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
+
+      //if image id is NOT in the object
+      if(!storageSizeById[&#x27;unused-images&#x27;].hasOwnProperty(params.row.id)){
+        //key is id and the value is the storage size 
+        setStorageSizeById(storageSize =&gt; ({
+          &#x27;running-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;]},
+          &#x27;exited-containers&#x27;: {...storageSize[&#x27;exited-containers&#x27;]},
+          &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;]},
+          &#x27;dangling-images&#x27; : {...storageSize[&#x27;dangling-images&#x27;]},
+          &#x27;in-use-images&#x27; : {...storageSize[&#x27;in-use-images&#x27;]},
+          &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;], [params.row.id] : currImageSize},
+          &#x27;built-casche&#x27; : {...storageSize[&#x27;built-casche&#x27;]},
+        }))
+
+        
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we SELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+          &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+          &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+          &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+          &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+          &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+          &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] + currImageSize, 
+        }))
+
+        
+        
+       
+       
+      } else {
+        //else user has unselected row. Remove the key/value pair from storageSizeById.
+        const copyOfImgCpuObj = {
+        &#x27;running-containers&#x27;: {...storageSizeById[&#x27;running-containers&#x27;]}, 
+        &#x27;exited-containers&#x27;: {...storageSizeById[&#x27;exited-containers&#x27;]}, 
+        &#x27;paused-containers&#x27;: {...storageSizeById[&#x27;paused-containers&#x27;]}, 
+        &#x27;dangling-images&#x27;: {...storageSizeById[&#x27;dangling-images&#x27;]}, 
+        &#x27;in-use-images&#x27;: {...storageSizeById[&#x27;in-use-images&#x27;]}, 
+        &#x27;unused-images&#x27;: {...storageSizeById[&#x27;unused-images&#x27;]}, 
+        &#x27;built-casche&#x27;: {...storageSizeById[&#x27;built-casche&#x27;]}
+        };
+        
+
+        delete copyOfImgCpuObj[&#x27;unused-images&#x27;][params.row.id]; 
+
+        setStorageSizeById(imgStorageSize=&gt;({
+          ...copyOfImgCpuObj
+        }))
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we UNSELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+          &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+          &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+          &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+          &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+          &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+          &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] - currImageSize, 
+        }))
+      }
+     
+
+    }
+    
+    else if(dataGridBlueButtonType === &#x27;in-use-images&#x27;){
+
+      //user has selected row in dangling-images
+      const imageStorageSize = params.row.size; //storage size
+      //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
+      const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
+
+      //if image id is NOT in the object
+      if(!storageSizeById[&#x27;in-use-images&#x27;].hasOwnProperty(params.row.id)){
+        //key is id and the value is the storage size 
+        setStorageSizeById(storageSize =&gt; ({
+          &#x27;running-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;]},
+          &#x27;exited-containers&#x27;: {...storageSize[&#x27;exited-containers&#x27;]},
+          &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;]},
+          &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+          &#x27;in-use-images&#x27;: {...storageSize[&#x27;in-use-images&#x27;], [params.row.id] : currImageSize},
+          &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+          &#x27;built-casche&#x27; : {...storageSize[&#x27;built-casche&#x27;]},
+        }))
+       
+        
+        
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we SELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+          &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+          &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+          &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+          &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+          &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+          &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] + currImageSize, 
+        }))
+        
+       
+      } else {
+        //else user has unselected row. Remove the key/value pair from storageSizeById.
+        const copyOfImgCpuObj = {
+        &#x27;running-containers&#x27;: {...storageSizeById[&#x27;running-containers&#x27;]}, 
+        &#x27;exited-containers&#x27;: {...storageSizeById[&#x27;exited-containers&#x27;]}, 
+        &#x27;paused-containers&#x27;: {...storageSizeById[&#x27;paused-containers&#x27;]}, 
+        &#x27;dangling-images&#x27;: {...storageSizeById[&#x27;dangling-images&#x27;]}, 
+        &#x27;in-use-images&#x27;: {...storageSizeById[&#x27;in-use-images&#x27;]}, 
+        &#x27;unused-images&#x27;: {...storageSizeById[&#x27;unused-images&#x27;]}, 
+        &#x27;built-casche&#x27;: {...storageSizeById[&#x27;built-casche&#x27;]}
+      
+      };
+      
+      
+        delete copyOfImgCpuObj[ &#x27;in-use-images&#x27;][params.row.id]; 
+
+        setStorageSizeById(imgStorageSize=&gt;({
+          ...copyOfImgCpuObj
+        }))
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we UNSELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+          &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+          &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+          &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+          &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+          &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+          &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] - currImageSize, 
+        }))
+      } 
+      
+       
+    }  else if (dataGridBlueButtonType === &#x27;exited-containers&#x27;){ //EXITED
+      //user has selected row in unused-containers
+      
+      const unusedContainerSizeStr = params.row.size; //storage size
+      // console.log(&#x27;unusedContainerSizeStr&#x27;, checkBytesAndConvertToNumber(unusedContainerSizeStr))
+      // const currbuiltCascheStorage = Math.trunc(Number(unusedContainerSizeStr.slice(0, length-2))); // storageSize converted to #
+      const currContainerStorage = checkBytesAndConvertToNumber(unusedContainerSizeStr)
+
+      //if image id is NOT in the object
+      if(!storageSizeById[&#x27;exited-containers&#x27;].hasOwnProperty(params.row.id)){
+        //key is id and the value is the storage size 
+        setStorageSizeById(storageSize =&gt; ({
+          &#x27;running-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;]},
+          &#x27;exited-containers&#x27;: {...storageSize[&#x27;exited-containers&#x27;],[params.row.id] : currContainerStorage},
+          &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;]},
+          &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+          &#x27;in-use-images&#x27;: {...storageSize[&#x27;in-use-images&#x27;]},
+          &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+          &#x27;built-casche&#x27; : {...storageSize[&#x27;built-casche&#x27;]}
+        }))
+        
+        
+        
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+        that controls whether we SELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+           &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+           &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+           &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+           &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+           &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+           &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+           &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+           &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] + currContainerStorage
+         }))
+         
+        
+
+      } else {
+        //else user has unselected row. Remove the key/value pair from storageSizeById.
+        const copyForContainer = {
+        &#x27;running-containers&#x27;: {...storageSizeById[&#x27;running-containers&#x27;]}, 
+        &#x27;exited-containers&#x27;: {...storageSizeById[&#x27;exited-containers&#x27;]}, 
+        &#x27;paused-containers&#x27;: {...storageSizeById[&#x27;paused-containers&#x27;]}, 
+        &#x27;dangling-images&#x27;: {...storageSizeById[&#x27;dangling-images&#x27;]}, 
+        &#x27;in-use-images&#x27;: {...storageSizeById[&#x27;in-use-images&#x27;]}, 
+        &#x27;unused-images&#x27;: {...storageSizeById[&#x27;unused-images&#x27;]}, 
+        &#x27;built-casche&#x27;: {...storageSizeById[&#x27;built-casche&#x27;]}
+       };
+       
+       
+        delete copyForContainer[&#x27;exited-containers&#x27;][params.row.id]; 
+
+        setStorageSizeById(imgStorageSize=&gt;({
+          ...copyForContainer
+        }))
+
+         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+        that controls whether we UNSELECT the row. */
+        setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+         &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+         &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+         &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+         &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+         &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+         &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+         &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+         &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] - currContainerStorage
+       }))
+      }
+      
+    } else if (dataGridBlueButtonType === &#x27;paused-containers&#x27;){
+       //user has selected row in unused-containers
+      
+       const pausedContainerSizeStr = params.row.size; //storage size
+       // console.log(&#x27;unusedContainerSizeStr&#x27;, checkBytesAndConvertToNumber(unusedContainerSizeStr))
+       // const currbuiltCascheStorage = Math.trunc(Number(unusedContainerSizeStr.slice(0, length-2))); // storageSize converted to #
+       const currContainerStorage = checkBytesAndConvertToNumber(pausedContainerSizeStr)
+ 
+       //if image id is NOT in the object
+       if(!storageSizeById[&#x27;paused-containers&#x27;].hasOwnProperty(params.row.id)){
+         //key is id and the value is the storage size 
+         setStorageSizeById(storageSize =&gt; ({
+           &#x27;running-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;]},
+           &#x27;exited-containers&#x27;: {...storageSize[&#x27;exited-containers&#x27;]},
+           &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;],[params.row.id] : currContainerStorage},
+           &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+           &#x27;in-use-images&#x27;: {...storageSize[&#x27;in-use-images&#x27;]},
+           &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+           &#x27;built-casche&#x27; : {...storageSize[&#x27;built-casche&#x27;]}
+         }))
+
+         
+ 
+         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we SELECT the row. */
+          setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+            &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+            &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+            &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+            &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+            &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+            &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+            &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+            &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] + currContainerStorage
+          }))
+          
+         
+ 
+       } else {
+         //else user has unselected row. Remove the key/value pair from storageSizeById.
+         const copyForContainer= {
+         &#x27;running-containers&#x27;: {...storageSizeById[&#x27;running-containers&#x27;]}, 
+         &#x27;exited-containers&#x27;: {...storageSizeById[&#x27;exited-containers&#x27;]}, 
+         &#x27;paused-containers&#x27;: {...storageSizeById[&#x27;paused-containers&#x27;]}, 
+         &#x27;dangling-images&#x27;: {...storageSizeById[&#x27;dangling-images&#x27;]}, 
+         &#x27;in-use-images&#x27;: {...storageSizeById[&#x27;in-use-images&#x27;]}, 
+         &#x27;unused-images&#x27;: {...storageSizeById[&#x27;unused-images&#x27;]}, 
+         &#x27;built-casche&#x27;: {...storageSizeById[&#x27;built-casche&#x27;]}
+        };
+        
+        
+         delete copyForContainer[&#x27;paused-containers&#x27;][params.row.id]; 
+ 
+         setStorageSizeById(imgStorageSize=&gt;({
+           ...copyForContainer
+         }))
+ 
+          /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we UNSELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+          &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+          &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+          &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+          &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+          &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+          &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] - currContainerStorage
+        }))
+       }
+       
+      
+      
+    }  else if (dataGridBlueButtonType === &#x27;running-containers&#x27;){
+      //user has selected row in unused-containers
+     
+      const runningContainerSizeStr = params.row.size; //storage size
+      // console.log(&#x27;unusedContainerSizeStr&#x27;, checkBytesAndConvertToNumber(unusedContainerSizeStr))
+      // const currbuiltCascheStorage = Math.trunc(Number(unusedContainerSizeStr.slice(0, length-2))); // storageSize converted to #
+      const currContainerStorage = checkBytesAndConvertToNumber(runningContainerSizeStr)
+
+      //if image id is NOT in the object
+      if(!storageSizeById[&#x27;running-containers&#x27;].hasOwnProperty(params.row.id)){
+        //key is id and the value is the storage size 
+        setStorageSizeById(storageSize =&gt; ({
+          &#x27;running-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;],[params.row.id] : currContainerStorage},
+          &#x27;exited-containers&#x27;: {...storageSize[&#x27;exited-containers&#x27;]},
+          &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;]},
+          &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+          &#x27;in-use-images&#x27;: {...storageSize[&#x27;in-use-images&#x27;]},
+          &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+          &#x27;built-casche&#x27; : {...storageSize[&#x27;built-casche&#x27;]}
+        }))
+
+        
+
+        /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+        that controls whether we SELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+           &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+           &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+           &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+           &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+           &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+           &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+           &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+           &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] + currContainerStorage
+         }))
+         
+        
+
+      } else {
+        //else user has unselected row. Remove the key/value pair from storageSizeById.
+        const copyForContainer = {
+        &#x27;running-containers&#x27;: {...storageSizeById[&#x27;running-containers&#x27;]}, 
+        &#x27;exited-containers&#x27;: {...storageSizeById[&#x27;exited-containers&#x27;]}, 
+        &#x27;paused-containers&#x27;: {...storageSizeById[&#x27;paused-containers&#x27;]}, 
+        &#x27;dangling-images&#x27;: {...storageSizeById[&#x27;dangling-images&#x27;]}, 
+        &#x27;in-use-images&#x27;: {...storageSizeById[&#x27;in-use-images&#x27;]}, 
+        &#x27;unused-images&#x27;: {...storageSizeById[&#x27;unused-images&#x27;]}, 
+        &#x27;built-casche&#x27;: {...storageSizeById[&#x27;built-casche&#x27;]}
+       };
+       
+       
+        delete copyForContainer[&#x27;running-containers&#x27;][params.row.id]; 
+
+        setStorageSizeById(imgStorageSize=&gt;({
+          ...copyForContainer
+        }))
+
+         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+        that controls whether we UNSELECT the row. */
+        setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+         &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+         &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;], 
+         &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+         &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+         &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+         &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+         &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+         &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] - currContainerStorage
+       }))
+      }
+      
+   }  else if(dataGridBlueButtonType === &#x27;built-casche&#x27;){
+      //No NEED TO HAVE THIS CALC FOR BUILT-CASCHE? 
+
+      //user has selected row in &#x27;built-casche&#x27;
+       const builtCascheSizeStr = params.row.size; //storage size
+       
+       const currbuiltCascheStorage = Math.trunc(Number(builtCascheSizeStr.slice(0, length-2))); // storageSize converted to #
+ 
+       //if image id is NOT in the object
+       if(!storageSizeById[&#x27;built-casche&#x27;].hasOwnProperty(params.row.id)){
+         //key is id and the value is the storage size 
+         setStorageSizeById(storageSize =&gt; ({
+           &#x27;running-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;]},
+           &#x27;exited-containers&#x27;: {...storageSize[&#x27;exited-containers&#x27;]},
+           &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;]},
+           &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+           &#x27;in-use-images&#x27;: {...storageSize[&#x27;in-use-images&#x27;]},
+           &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+           &#x27;built-casche&#x27; : {...storageSize[&#x27;built-casche&#x27;],[params.row.id] : currbuiltCascheStorage}
+         }))
+         
+        
+
+         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we SELECT the row. */
+          setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+            &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+            &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+            &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+            &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+            &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+            &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+            &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+            &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] + currbuiltCascheStorage
+          }))
+          
+          
+       } else {
+         //else user has unselected row. Remove the key/value pair from storageSizeById.
+         const copyForBuiltCasche = {
+          &#x27;running-containers&#x27;: {...storageSizeById[&#x27;running-containers&#x27;]}, 
+          &#x27;exited-containers&#x27;: {...storageSizeById[&#x27;exited-containers&#x27;]}, 
+          &#x27;paused-containers&#x27;: {...storageSizeById[&#x27;paused-containers&#x27;]}, 
+          &#x27;dangling-images&#x27;: {...storageSizeById[&#x27;dangling-images&#x27;]}, 
+          &#x27;in-use-images&#x27;: {...storageSizeById[&#x27;in-use-images&#x27;]}, 
+          &#x27;unused-images&#x27;: {...storageSizeById[&#x27;unused-images&#x27;]}, 
+          &#x27;built-casche&#x27;: {...storageSizeById[&#x27;built-casche&#x27;]}
+        };
+        
+ 
+         delete copyForBuiltCasche[&#x27;built-casche&#x27;][params.row.id]; 
+ 
+         setStorageSizeById(imgStorageSize=&gt;({
+           ...copyForBuiltCasche
+         }))
+
+          /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
+         that controls whether we UNSELECT the row. */
+         setSelectedGridRowStorageSize(currSelectedStorage =&gt; ({
+         &#x27;running-containers&#x27;: currSelectedStorage[&#x27;running-containers&#x27;],
+         &#x27;exited-containers&#x27;: currSelectedStorage[&#x27;exited-containers&#x27;],
+         &#x27;paused-containers&#x27;: currSelectedStorage[&#x27;paused-containers&#x27;],
+         &#x27;dangling-images&#x27;: currSelectedStorage[&#x27;dangling-images&#x27;],
+         &#x27;in-use-images&#x27;: currSelectedStorage[&#x27;in-use-images&#x27;],
+         &#x27;unused-images&#x27;: currSelectedStorage[&#x27;unused-images&#x27;],
+         &#x27;built-casche&#x27;: currSelectedStorage[&#x27;built-casche&#x27;],
+         &#x27;selectedTotal&#x27;: currSelectedStorage[&#x27;selectedTotal&#x27;] - currbuiltCascheStorage
+        }))
+        
+       }
+    }
+  };
+
+  //Fires in general? Because the storage size is being filled.  YES IT DOES !!!
+  //useEffect fires when we select or prune a dangling-image, unused-conatiner or built-casche
+  //This useEffect is utilized to update our circular chart.
+  //THIS MAY BE THE CONTAINER THAT HELPS US REFILL THE VALUES WITHIN THE DATA GRID? 
+  useEffect(()=&gt;{
+    // we set the totalStorageTypes state with the most updated amount of storage size utilized by each type, ex: unused-containers, dangling images, etc. 
+    // this shouldnt be called when we are only selecting but it is because everything is overlapping. Its also called everytime we render in general
+
+    AllImageAndContainerStorage(ddClient).
+    then(res =&gt; {    
+     // console.log(&#x27;res in useEffect - GetAllStorage(ddClient).&#x27;, res)
+     setAllImageAndContainerStorage({
+      &#x27;all-images&#x27;: res[&#x27;all-images&#x27;],
+      &#x27;all-containers&#x27; : res[&#x27;all-containers&#x27;],
+    }) 
+   })
+
+    GetAllStorage(ddClient, &#x27;storage&#x27;).
+       then(res =&gt; {
+        setTotalStorageTypes({
+          &#x27;running-containers&#x27;: res.storage[&#x27;running-containers&#x27;], 
+          &#x27;exited-containers&#x27;:  res.storage[&#x27;exited-containers&#x27;], //EXITED
+          &#x27;paused-containers&#x27;: res.storage[&#x27;paused-containers&#x27;], 
+          &#x27;dangling-images&#x27;:  res.storage[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: res.storage[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: res.storage[&#x27;unused-images&#x27;],
+          &#x27;built-casche&#x27;: res.storage[&#x27;built-casche&#x27;],
+          &#x27;combinedTotal&#x27;:  res.storage[&#x27;combinedTotal&#x27;], 
+        })
+       })
+
+       
+    //if the selected rows are within the dangling-images
+    if(dataGridBlueButtonType === &#x27;dangling-images&#x27;){
+   
+      //we get all the number values from the storageSizeById object in an array format
+      const selectedImageCpuSizeArray = Object.values(storageSizeById[&#x27;dangling-images&#x27;]); //Example: [14,14,30]
+
+      // console.log(&#x27;selectedImageCpuSizeArray&#x27;, selectedImageCpuSizeArray)
+
+      //we sum up all these values using the reduce method
+      const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=&gt; sum + num, 0); 
+
+      const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+        &#x27;running-containers&#x27;: selectedGridRowStorageSize[&#x27;running-containers&#x27;], 
+        &#x27;exited-containers&#x27;: selectedGridRowStorageSize[&#x27;exited-containers&#x27;], 
+        &#x27;paused-containers&#x27;: selectedGridRowStorageSize[&#x27;paused-containers&#x27;], 
+        &#x27;dangling-images&#x27;: cpuUsageCalculation,
+        &#x27;in-use-images&#x27;: selectedGridRowStorageSize[&#x27;in-use-images&#x27;],
+        &#x27;unused-images&#x27;: selectedGridRowStorageSize[&#x27;unused-images&#x27;],
+        &#x27;built-casche&#x27;: selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+        &#x27;selectedTotal&#x27;: selectedGridRowStorageSize[&#x27;selectedTotal&#x27;]
+      }) 
+      
+      
+
+    } else if(dataGridBlueButtonType === &#x27;in-use-images&#x27;){
+      // console.log(&#x27;in-use-images in useEffect tracking storageSizeById&#x27;)
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedImageCpuSizeArray = Object.values(storageSizeById[ &#x27;in-use-images&#x27;]); //Example: [14,14,30]
+
+       // console.log(&#x27;selectedImageCpuSizeArray&#x27;, selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=&gt; sum + num, 0); 
+ 
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         &#x27;running-containers&#x27;: selectedGridRowStorageSize[&#x27;running-containers&#x27;], 
+         &#x27;exited-containers&#x27;: selectedGridRowStorageSize[&#x27;exited-containers&#x27;], 
+         &#x27;paused-containers&#x27;: selectedGridRowStorageSize[&#x27;paused-containers&#x27;], 
+         &#x27;dangling-images&#x27;: selectedGridRowStorageSize[&#x27;dangling-images&#x27;], 
+         &#x27;in-use-images&#x27;: cpuUsageCalculation,
+         &#x27;unused-images&#x27;: selectedGridRowStorageSize[&#x27;unused-images&#x27;],
+         &#x27;built-casche&#x27;: selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+         &#x27;selectedTotal&#x27;: selectedGridRowStorageSize[&#x27;selectedTotal&#x27;]
+       }) 
+       
+       
+      
+    } else if (dataGridBlueButtonType === &#x27;unused-images&#x27;) {
+
+      // console.log(&#x27;in-use-images in useEffect tracking storageSizeById&#x27;)
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedImageCpuSizeArray = Object.values(storageSizeById[&#x27;unused-images&#x27;]); //Example: [14,14,30]
+
+       // console.log(&#x27;selectedImageCpuSizeArray&#x27;, selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=&gt; sum + num, 0); 
+ 
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         &#x27;running-containers&#x27;: selectedGridRowStorageSize[&#x27;running-containers&#x27;], 
+         &#x27;exited-containers&#x27;: selectedGridRowStorageSize[&#x27;exited-containers&#x27;], 
+         &#x27;paused-containers&#x27;: selectedGridRowStorageSize[&#x27;paused-containers&#x27;], 
+         &#x27;dangling-images&#x27;: selectedGridRowStorageSize[&#x27;dangling-images&#x27;], 
+         &#x27;in-use-images&#x27;: selectedGridRowStorageSize[&#x27;in-use-images&#x27;],
+         &#x27;unused-images&#x27;: cpuUsageCalculation,
+         &#x27;built-casche&#x27;: selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+         &#x27;selectedTotal&#x27;: selectedGridRowStorageSize[&#x27;selectedTotal&#x27;]
+       }) 
+      
+       
+      
+    } else if(dataGridBlueButtonType === &#x27;exited-containers&#x27;){
+
+      // console.log(&#x27;selected unused-container in prune useEffect that follows storageSizeById&#x27;)
+      // console.log(&#x27;in-use-images in useEffect tracking storageSizeById&#x27;)
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedContainerCpuSizeArray = Object.values(storageSizeById[&#x27;exited-containers&#x27;]); //Example: [14,14,30]
+
+       // console.log(&#x27;selectedImageCpuSizeArray&#x27;, selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedContainerCpuSizeArray.reduce((sum: any, num: any)=&gt; sum + num, 0); 
+ 
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         &#x27;running-containers&#x27;: selectedGridRowStorageSize[&#x27;running-containers&#x27;], 
+         &#x27;exited-containers&#x27;: cpuUsageCalculation,
+         &#x27;paused-containers&#x27;: selectedGridRowStorageSize[&#x27;paused-containers&#x27;], 
+         &#x27;dangling-images&#x27;: selectedGridRowStorageSize[&#x27;dangling-images&#x27;], 
+         &#x27;in-use-images&#x27;: selectedGridRowStorageSize[&#x27;in-use-images&#x27;], 
+         &#x27;unused-images&#x27;: selectedGridRowStorageSize[&#x27;unused-images&#x27;], 
+         &#x27;built-casche&#x27;: selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+         &#x27;selectedTotal&#x27;: selectedGridRowStorageSize[&#x27;selectedTotal&#x27;]
+       }) 
+       
+       
+    } else if(dataGridBlueButtonType ===  &#x27;paused-containers&#x27;){
+       
+      // console.log(&#x27;selected unused-container in prune useEffect that follows storageSizeById&#x27;)
+      // console.log(&#x27;in-use-images in useEffect tracking storageSizeById&#x27;)
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedContainerCpuSizeArray = Object.values(storageSizeById[ &#x27;paused-containers&#x27;]); //Example: [14,14,30]
+
+       // console.log(&#x27;selectedImageCpuSizeArray&#x27;, selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedContainerCpuSizeArray.reduce((sum: any, num: any)=&gt; sum + num, 0); 
+ 
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         &#x27;running-containers&#x27;: selectedGridRowStorageSize[&#x27;running-containers&#x27;], 
+         &#x27;exited-containers&#x27;: selectedGridRowStorageSize[&#x27;exited-containers&#x27;], 
+         &#x27;paused-containers&#x27;: cpuUsageCalculation,
+         &#x27;dangling-images&#x27;: selectedGridRowStorageSize[&#x27;dangling-images&#x27;], 
+         &#x27;in-use-images&#x27;: selectedGridRowStorageSize[&#x27;in-use-images&#x27;], 
+         &#x27;unused-images&#x27;: selectedGridRowStorageSize[&#x27;unused-images&#x27;], 
+         &#x27;built-casche&#x27;: selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+         &#x27;selectedTotal&#x27;: selectedGridRowStorageSize[&#x27;selectedTotal&#x27;]
+       }) 
+       
+       
+    } else if(dataGridBlueButtonType ===  &#x27;running-containers&#x27;){
+      
+      // console.log(&#x27;selected unused-container in prune useEffect that follows storageSizeById&#x27;)
+      // console.log(&#x27;in-use-images in useEffect tracking storageSizeById&#x27;)
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedContainerCpuSizeArray = Object.values(storageSizeById[&#x27;running-containers&#x27;]); //Example: [14,14,30]
+
+       // console.log(&#x27;selectedImageCpuSizeArray&#x27;, selectedImageCpuSizeArray)
+ 
+       //we sum up all these values using the reduce method
+       const cpuUsageCalculation:any = selectedContainerCpuSizeArray.reduce((sum: any, num: any)=&gt; sum + num, 0); 
+       
+       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+         &#x27;running-containers&#x27;: cpuUsageCalculation,
+         &#x27;exited-containers&#x27;: selectedGridRowStorageSize[&#x27;exited-containers&#x27;], 
+         &#x27;paused-containers&#x27;: selectedGridRowStorageSize[&#x27;paused-containers&#x27;], 
+         &#x27;dangling-images&#x27;: selectedGridRowStorageSize[&#x27;dangling-images&#x27;], 
+         &#x27;in-use-images&#x27;: selectedGridRowStorageSize[&#x27;in-use-images&#x27;], 
+         &#x27;unused-images&#x27;: selectedGridRowStorageSize[&#x27;unused-images&#x27;], 
+         &#x27;built-casche&#x27;: selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+         &#x27;selectedTotal&#x27;: selectedGridRowStorageSize[&#x27;selectedTotal&#x27;]
+       }) 
+       
+       
+    } else if(dataGridBlueButtonType === &#x27;built-casche&#x27;){
+      //No NEED TO HAVE THIS CALC FOR BUILT-CASCHE? 
+
+       //we get all the number values from the storageSizeById object in an array format
+       const selectedImageCpuSizeArray = Object.values(storageSizeById[&#x27;built-casche&#x27;]); //Example: [14,14,30]
+       //we sum up all these values using the reduce method
+       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
+       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=&gt; sum + num, 0); 
+ 
+
+      const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
+        &#x27;running-containers&#x27;: selectedGridRowStorageSize[&#x27;running-containers&#x27;], 
+        &#x27;exited-containers&#x27;: selectedGridRowStorageSize[&#x27;exited-containers&#x27;], 
+        &#x27;paused-containers&#x27;: selectedGridRowStorageSize[&#x27;paused-containers&#x27;], 
+        &#x27;dangling-images&#x27;: selectedGridRowStorageSize[&#x27;dangling-images&#x27;],
+        &#x27;in-use-images&#x27;: selectedGridRowStorageSize[&#x27;in-use-images&#x27;],
+        &#x27;unused-images&#x27;: selectedGridRowStorageSize[&#x27;unused-images&#x27;],
+        &#x27;built-casche&#x27;: cpuUsageCalculation,
+        &#x27;selectedTotal&#x27;: selectedGridRowStorageSize[&#x27;selectedTotal&#x27;]
+      }) 
+      
+      // console.log(&#x27;selected built-casche in prune useEffect that follows storageSizeById&#x27;, storageSizeById)
+    }
+  }, [storageSizeById]);
+
+
+  
+  //function does pruning commands depending on prune state
+  const pruningFunc = async (prune:String, selectedStorageArray:any = apiRef.current.getSelectedRows()) =&gt; {
+ 
+    // console.log(selectedStorageArray)
+    
+    //the selectedImageArray contains an array of objects.
+    //ex: [{ key:id, value:{} }]
+    //ex: [{&quot;4012d2bb7317&quot;: {id: &#x27;4012d2bb7317&#x27;, size: &#x27;14.1MB&#x27;, created: &#x27;7 minutes ago&#x27;, status: &#x27;&lt;none&gt;&#x27;, type: &#x27;Image&#x27;}}]
+    // console.log(&#x27;selectedStorageArray&#x27;, selectedStorageArray)
+    
+    if(prune === &#x27;prune-all&#x27;) {
+
+    } else if(prune === &#x27;prune-selected&#x27;) {
+      //we utilize the type field within the object to determine whether the key value pair represents and image, cache or container
+      //we then split them up appropriately to be able to prune them with their associated commands. 
+     let danglingImageIdsToRemove:any = [];
+     let inUseImageIdsToRemove:any = [];
+     let unusedImageIdsToRemove:any = [];
+     let exitedContainerIdsToRemove:any = [];
+     let pausedContainerIdsToRemove:any = [];
+     let runningContainerIdsToRemove:any = [];
+     let cascheIdsToRemove:any = []; 
+     
+
+    // console.log(&#x27;storageSizeById image keys -&gt; ids&#x27;, Object.keys(storageSizeById[&#x27;dangling-images&#x27;]))
+    // console.log(&#x27;storageSizeById container keys -&gt; ids&#x27;, Object.keys(storageSizeById[&#x27;unused-containers&#x27;]))
+
+    /*we loop through the keys of the storageSizeId which are the id&#x27;s of each image, container etc. 
+    by the time we are prune whatever selections we have made through clicking on rows would have filled
+    the storageSizeById state object with key value pairs for all the types... unusedcontainer, dangling images etc.
+    we want to be able to access each type and get an array of all the ids that are filled within them so we can
+    run the pruning command on the ids of each type category on the code below this for loop. */
+    for(let key in storageSizeById){
+    //  console.log(key, &#x27;storageSizeById[key]&#x27;,storageSizeById[key])
+     if(key === &#x27;dangling-images&#x27;){
+      //  console.log(&#x27;dangling-image keys&#x27;, Object.keys(storageSizeById[key]))
+      danglingImageIdsToRemove = Object.keys(storageSizeById[key])
+    } else if(key === &#x27;in-use-images&#x27;){
+      //  console.log(&#x27;unused-contianer keys&#x27;, Object.keys(storageSizeById[key]))
+      inUseImageIdsToRemove= Object.keys(storageSizeById[key])
+    } else if(key === &#x27;unused-images&#x27;){
+      unusedImageIdsToRemove= Object.keys(storageSizeById[key])
+    } else if(key === &#x27;exited-containers&#x27;){
+      //  console.log(&#x27;unused-contianer keys&#x27;, Object.keys(storageSizeById[key]))
+      exitedContainerIdsToRemove = Object.keys(storageSizeById[key])
+    } else if(key === &#x27;paused-containers&#x27;){
+      //  console.log(&#x27;unused-contianer keys&#x27;, Object.keys(storageSizeById[key]))
+      pausedContainerIdsToRemove = Object.keys(storageSizeById[key])
+    } else if(key === &#x27;running-containers&#x27;){
+      //  console.log(&#x27;unused-contianer keys&#x27;, Object.keys(storageSizeById[key]))
+      runningContainerIdsToRemove = Object.keys(storageSizeById[key])
+    } 
+    }
+
+
+      
+     //DANGLING IMAGES
+     if(danglingImageIdsToRemove.length &gt; 0){
+       /* We then check if  imageIdsToRemove, containerIdsToRemove (which are the arrays of selected id) have
+       a length greater than 1. If so we know to run the prunning commands on all the ids for each type*/
+        await  ddClient.docker.cli.exec(&#x27;rmi&#x27;, [...danglingImageIdsToRemove])
+       .catch((err)=&gt;{
+        //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+        apiRef.current.setRowSelectionModel([])
+        console.log(&#x27;error in dangling image prune command ... currently in use by container&#x27;, 
+        alert(`Error in dangling image prune command ${err.stderr}`)) 
+        });
+        //dangling-images prune
+   
+        //if we having a dangling image that is in use we cant prune it... the containers using it will have to be pruned
+        //first. 
+    
+       danglingImageIdsToRemove = [];
+
+         setStorageSizeById(storageSize =&gt; ({
+          &#x27;running-containers&#x27;:  {...storageSize[&#x27;running-containers&#x27;]},
+          &#x27;exited-containers&#x27;:  {...storageSize[&#x27;exited-containers&#x27;]},
+          &#x27;paused-containers&#x27;:  {...storageSize[&#x27;paused-containers&#x27;]},
+          &#x27;dangling-images&#x27;: {},
+          &#x27;in-use-images&#x27;:  {...storageSize[ &#x27;in-use-images&#x27;]},
+          &#x27;unused-images&#x27;:  {...storageSize[ &#x27;unused-images&#x27;]},
+          &#x27;built-casche&#x27;:  {...storageSize[&#x27;built-casche&#x27;]},
+        }))
+    } 
+
+    
+    //INUSE IMAGES
+    if(inUseImageIdsToRemove.length &gt; 0){
+      await  ddClient.docker.cli.exec(&#x27;rmi&#x27;, [...inUseImageIdsToRemove])
+      .catch((err)=&gt;{
+        //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+        apiRef.current.setRowSelectionModel([])
+        console.log(&#x27;error in in-use image prune command ... image is in use&#x27;, 
+        alert(`error in in-use image prune command ${err.stderr}`)) 
+      });
+       
+       inUseImageIdsToRemove = [];
+
+        setStorageSizeById(storageSize =&gt; ({
+         &#x27;running-containers&#x27;:  {...storageSize[&#x27;running-containers&#x27;]},
+         &#x27;exited-containers&#x27;:  {...storageSize[&#x27;exited-containers&#x27;]},
+         &#x27;paused-containers&#x27;:  {...storageSize[&#x27;paused-containers&#x27;]},
+         &#x27;dangling-images&#x27;:  {...storageSize[&#x27;dangling-images&#x27;]},
+         &#x27;in-use-images&#x27;:  {},
+         &#x27;unused-images&#x27;:  {...storageSize[&#x27;unused-images&#x27;]},
+         &#x27;built-casche&#x27;:  {...storageSize[&#x27;built-casche&#x27;]},
+       }))
+       
+   }  
+
+   //UNUSED IMAGES 
+   if(unusedImageIdsToRemove.length &gt; 0){
+    
+      await  ddClient.docker.cli.exec(&#x27;rmi&#x27;, [...unusedImageIdsToRemove])
+      .catch((err)=&gt;{
+        //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+        apiRef.current.setRowSelectionModel([])
+        console.log(&#x27;error in unused image prune command ... image in use by container&#x27;,
+         alert(`error in in-use image prune command ${err.stderr}`)) 
+      });
+       
+   
+      unusedImageIdsToRemove = [];
+
+        setStorageSizeById(storageSize =&gt; ({
+         &#x27;running-containers&#x27;:  {...storageSize[&#x27;running-containers&#x27;]},
+         &#x27;exited-containers&#x27;:  {...storageSize[&#x27;exited-containers&#x27;]},
+         &#x27;paused-containers&#x27;:  {...storageSize[&#x27;paused-containers&#x27;]},
+         &#x27;dangling-images&#x27;:  {...storageSize[&#x27;dangling-images&#x27;]},
+         &#x27;in-use-images&#x27;:  {...storageSize[&#x27;in-use-images&#x27;]},
+         &#x27;unused-images&#x27;:  {},
+         &#x27;built-casche&#x27;:  {...storageSize[&#x27;built-casche&#x27;]},
+       }))
+       
+   }
+
+   //EXITED CONTAINERS
+   if(exitedContainerIdsToRemove.length &gt; 0){
+
+    await ddClient.docker.cli.exec(&#x27;rm&#x27;, [...exitedContainerIdsToRemove])
+    .catch((err)=&gt;{
+      //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+      apiRef.current.setRowSelectionModel([])
+      alert(`Error in container prune command ${err.stderr}`)});
+    //unsued-container prune
+  
+    exitedContainerIdsToRemove = [];
+
+    setStorageSizeById(storageSize =&gt; ({
+      &#x27;running-containers&#x27;:  {...storageSize[&#x27;running-containers&#x27;]},
+      &#x27;exited-containers&#x27;: {},
+      &#x27;paused-containers&#x27;:  {...storageSize[&#x27;paused-containers&#x27;]},
+      &#x27;in-use-images&#x27;:  {...storageSize[&#x27;in-use-images&#x27;]},
+      &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+      &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+      &#x27;built-casche&#x27;:  {...storageSize[&#x27;built-casche&#x27;]},
+    }))
+    
+ }
+  
+ //Paused CONTAINERS
+ if(pausedContainerIdsToRemove.length &gt; 0){
+
+  await ddClient.docker.cli.exec(&#x27;rm&#x27;, [...pausedContainerIdsToRemove])
+  .catch((err)=&gt;{
+    //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+    apiRef.current.setRowSelectionModel([])
+    console.log(&#x27;Error in container prune command Error response from daemon: container is paused and must be unpaused first&#x27;, 
+    alert(`Error in container prune command ${err.stderr}`))});
+  //unsued-container prune
+
+  pausedContainerIdsToRemove = [];
+
+  setStorageSizeById(storageSize =&gt; ({
+    &#x27;running-containers&#x27;: {...storageSize[&#x27;running-containers&#x27;]},
+    &#x27;exited-containers&#x27;: {...storageSize[&#x27;exited-containers&#x27;]},
+    &#x27;paused-containers&#x27;:  {},
+    &#x27;in-use-images&#x27;:  {...storageSize[&#x27;in-use-images&#x27;]},
+    &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+    &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+    &#x27;built-casche&#x27;:  {...storageSize[&#x27;built-casche&#x27;]},
+  }))
+  
+}
+
+
+ //RUNNING CONTAINERS
+ if(runningContainerIdsToRemove.length &gt; 0){
+
+  await ddClient.docker.cli.exec(&#x27;rm&#x27;, [...runningContainerIdsToRemove])
+  .catch((err)=&gt;{
+    //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+    apiRef.current.setRowSelectionModel([])
+    console.log(&#x27;Error in container prune command Error response from daemon: container is running: stop the container before removing or force remove&#x27;, 
+    alert(`Error in container prune command ${err.stderr}`))
+  });
+  //unsued-container prune
+
+  runningContainerIdsToRemove = [];
+
+  setStorageSizeById(storageSize =&gt; ({
+    &#x27;running-containers&#x27;:  {},
+    &#x27;exited-containers&#x27;: {...storageSize[&#x27;exited-containers&#x27;]},
+    &#x27;paused-containers&#x27;: {...storageSize[&#x27;paused-containers&#x27;]},
+    &#x27;in-use-images&#x27;:  {...storageSize[&#x27;in-use-images&#x27;]},
+    &#x27;dangling-images&#x27;: {...storageSize[&#x27;dangling-images&#x27;]},
+    &#x27;unused-images&#x27;: {...storageSize[&#x27;unused-images&#x27;]},
+    &#x27;built-casche&#x27;:  {...storageSize[&#x27;built-casche&#x27;]},
+  }))
+}
+ 
+    
+      //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
+      //all types - unused-containers, dangling-images and build-cache
+        setSelectedGridRowStorageSize({
+          &#x27;running-containers&#x27;: selectedGridRowStorageSize[&#x27;running-containers&#x27;],
+          &#x27;exited-containers&#x27;: selectedGridRowStorageSize[&#x27;exited-containers&#x27;],
+          &#x27;paused-containers&#x27;: selectedGridRowStorageSize[&#x27;paused-containers&#x27;],
+          &#x27;dangling-images&#x27;: selectedGridRowStorageSize[&#x27;dangling-images&#x27;],
+          &#x27;in-use-images&#x27;: selectedGridRowStorageSize[&#x27;in-use-images&#x27;],
+          &#x27;unused-images&#x27;: selectedGridRowStorageSize[&#x27;unused-images&#x27;],
+          &#x27;built-casche&#x27;: selectedGridRowStorageSize[&#x27;built-casche&#x27;],
+          &#x27;selectedTotal&#x27;: 0,
+        })
+      
+
+
+      //resets the dataForGridRows state to an empty array
+      setDataForGridRows([]);
+
+     
+      /*we have the conditional statement here because we want the grid to re-render the type we are in after clicking
+      the selected prune button...dangling images, unused containers and builtcasche.. otherwise it could get 
+      confusing if it re-renders back to dangling images everytime */
+
+      if(dataGridBlueButtonType === &#x27;dangling-images&#x27;){
+          //since we reset the dataForGridRows state above we want to refill this state with the remaining images
+          //so the dataGrid could fill the rows with the remaining data from the images.
+     
+           await GetAllStorage(ddClient, &#x27;data&#x27;).
+           then(res =&gt; {    
+           //  console.log(&#x27;res.data&#x27;, res.data[&#x27;in-use-images&#x27;])
+           setDataForGridRows(res.data[&#x27;dangling-images&#x27;])
+      })
+
+      } else if(dataGridBlueButtonType === &#x27;in-use-images&#x27;){
+
+        await GetAllStorage(ddClient, &#x27;data&#x27;).
+          then(res =&gt; {    
+          setDataForGridRows(res.data[&#x27;in-use-images&#x27;])
+        }) 
+
+      } else if (dataGridBlueButtonType === &#x27;unused-images&#x27;) {
+
+        await GetAllStorage(ddClient, &#x27;data&#x27;).
+        then(res =&gt; {    
+        setDataForGridRows(res.data[&#x27;unused-images&#x27;])
+        })
+
+      } else if(dataGridBlueButtonType === &#x27;exited-containers&#x27;){ //EXITED Containers
+       await ddClient.docker.cli.exec(&#x27;ps&#x27;, [&#x27;--all&#x27;, &#x27;--format&#x27;, &#x27;&quot;{{json .}}&quot;&#x27;, &#x27;--filter&#x27;, &quot;status=exited&quot;])
+        .then((result) =&gt; {
+          setDataForGridRows(result.parseJsonLines());
+        })
+
+      }  else if(dataGridBlueButtonType === &#x27;running-containers&#x27;){ 
+        await GetRunningContainers(ddClient).
+        then(res =&gt; { 
+          // console.log(&#x27;running containers&#x27;, res)   
+        setDataForGridRows(res)
+        })
+ 
+       } else if(dataGridBlueButtonType === &#x27;paused-containers&#x27;){ 
+        await ddClient.docker.cli.exec(&#x27;ps&#x27;, [&#x27;--all&#x27;, &#x27;--format&#x27;, &#x27;&quot;{{json .}}&quot;&#x27;, &#x27;--filter&#x27;, &quot;status=paused&quot;])
+         .then((result) =&gt; {
+           setDataForGridRows(result.parseJsonLines());
+         })
+         //command populates all built casche
+       } else if(dataGridBlueButtonType === &#x27;built-casche&#x27;){
+         await ddClient.docker.cli.exec(&#x27;builder&#x27;, [&#x27;du&#x27;, &#x27;--verbose&#x27;])
+         .then((result) =&gt; {
+          // console.log(&#x27;result.stdout within useEffect in prune file --&gt;&#x27;, result.stdout)
+          // console.log(&#x27;Parsed BuiltCascheRowDataParser(result) in prune useEffect&#x27;, JSON.parse(BuiltCascheRowDataParser(result.stdout)))
+          setDataForGridRows(JSON.parse(BuiltCascheRowDataParser(result.stdout)));
+        })
+      }  
+
+     
+
+   } else {
+   }
+   
+  }
+
+  //We are utilizing the rowColumnTypeHelper module to have a seperation of concerns. It will essentially
+  //return the string we are looking for in the column or row of the datagrid. 
+
+  //sets columns/headers in dataGrid 
+   const columns: GridColDef[] = [
+    { field: &#x27;status&#x27;, headerName: &#x27;Status&#x27;, width: 130 },
+    { field: &#x27;id&#x27;, headerName: &#x27;ID&#x27;, width: 135 },
+    { field: &#x27;size&#x27;, headerName: &#x27;Size&#x27;, width: 115},
+    { field: &#x27;created&#x27;, headerName: &#x27;Created&#x27;, width: 135 },
+    { field: &#x27;RepoOrImage&#x27;, headerName: rowColumnTypeHelper(dataGridBlueButtonType, &#x27;col&#x27;, &#x27;RepoOrImage&#x27;, {}), width: 145 },
+    { field: &#x27;TagOrName&#x27;, headerName: rowColumnTypeHelper(dataGridBlueButtonType, &#x27;col&#x27;, &#x27;TagOrName&#x27;, {}),width: 135}, 
+      //created a type field so we can utilize and be able to distinguish whether we are pruning 
+      //a container, image or cache within the pruning function. The getSelectedRows() returns
+      //an array of objects with these fields. We also need to distinguid because each type
+      //has different pruning commands. 
+    { field: &#x27;type&#x27;, headerName: &#x27;Type&#x27;, width: 130 },
+  ];
+
+  //sets row data in dataGrid 
+  const rows: GridRowsProp =  dataForGridRows.map((type) =&gt; ({
+    id:type.ID,
+    size: dataGridBlueButtonType === &#x27;exited-containers&#x27; ? containerVirtualSizeConverterToString(type.Size): 
+    dataGridBlueButtonType === &#x27;paused-containers&#x27; ? containerVirtualSizeConverterToString(type.Size) :
+    dataGridBlueButtonType === &#x27;running-containers&#x27; ? containerVirtualSizeConverterToString(type.Size): type.Size ,
+    created:  rowColumnTypeHelper(dataGridBlueButtonType, &#x27;row&#x27;, &#x27;created&#x27;, type),
+    TagOrName:  rowColumnTypeHelper(dataGridBlueButtonType, &#x27;row&#x27;, &#x27;TagOrName&#x27;, type),
+    RepoOrImage:  rowColumnTypeHelper(dataGridBlueButtonType, &#x27;row&#x27;, &#x27;RepoOrImage&#x27;, type),
+    status: rowColumnTypeHelper(dataGridBlueButtonType, &#x27;row&#x27;, &#x27;status&#x27;, type),
+    type: rowColumnTypeHelper(dataGridBlueButtonType, &#x27;row&#x27;, &#x27;type&#x27;, type)
+
+  }));
+
+
+  
+
+  //Build cache, in use images and paused containers are not selectable so we want to remove the checkboxes when we are in the rows of the buid cache
+  function selectDataGrid (strType:any) {
+    // console.log(&#x27;strType&#x27;, strType)
+    if(strType === &#x27;built-casche&#x27;){
+        return &lt;DataGrid 
+        rows={rows} 
+        columns={columns} 
+        apiRef={apiRef} 
+        sx={{
+          &quot;&amp; .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer&quot;: {
+            display: &quot;none&quot;
+          }
+        }}
+        /&gt;
+    } 
+
+    else {
+        return &lt;DataGrid 
+        rows={rows} 
+        columns={columns} 
+        checkboxSelection 
+        apiRef={apiRef} 
+        onCellClick={handleCellClick}
+        keepNonExistentRowsSelected
+        sx={{
+          &quot;&amp; .MuiDataGrid-columnHeaderCheckbox .MuiDataGrid-columnHeaderTitleContainer&quot;: {
+            display: &quot;none&quot;
+          }
+        }}
+        /&gt;
+    }
+}
+
+
+//THESE WERE IMPORTED AND ARE UTILIZED AS MEDIA QUERIES
+//  const theme = useTheme();
+const theme = createTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 875,
+      lg: 1200,
+      xl: 1536,
+    },
+  },
+});
+
+ const matches = useMediaQuery(theme.breakpoints.up(&#x27;md&#x27;));
+ 
+
+
+  return (
+    &lt;&gt;
+        &lt;Container
+            sx={{
+                width: matches === true ? &#x27;95vw&#x27; : &#x27;90vw&#x27;,
+                height: &#x27;85vh&#x27;,
+                bgcolor: blueGrey[50],
+                display: &#x27;flex&#x27;,
+                flexDirection: &#x27;column&#x27;,
+                border:2,
+                borderColor:&#x27;primary.main&#x27;
+            }}&gt;
+          &lt;Box 
+          sx={{
+            width: matches === true ? &#x27;90vw&#x27; : &#x27;85vw&#x27;,
+            height: &#x27;40vh&#x27;,
+            bgcolor: blueGrey[50],
+            display: &#x27;flex&#x27;,
+            justifyContent:&#x27;space-around&#x27;,
+            marginTop:4
+
+        }}&gt;
+            &lt;Box 
+            sx={{
+                bgcolor: blueGrey[50],
+                width:&#x27;25%&#x27;, 
+                height:&#x27;90%&#x27;,
+                borderRadius: 2,
+                border:2,
+                borderColor:&#x27;primary.main&#x27;,
+                overflow: &#x27;scroll&#x27;
+            }}
+            &gt;
+            &lt;Stack&gt;
+           
+        
+            &lt;ImageButtonComponent setDataGridBlueButtonType={setDataGridBlueButtonType} allImageAndContainerStorage={allImageAndContainerStorage} totalStorageTypes={totalStorageTypes}/&gt;
+           
+            
+            &lt;ContainerButtonComponent setDataGridBlueButtonType={setDataGridBlueButtonType} allImageAndContainerStorage={allImageAndContainerStorage} totalStorageTypes={totalStorageTypes}/&gt;
+
+              { matches === true ? 
+
+                &lt;ButtonGroup variant=&quot;contained&quot; aria-label=&quot;Basic button group&quot; sx={{m:2}}&gt; 
+                &lt;Button variant=&quot;contained&quot;  onClick={()=&gt;{setDataGridBlueButtonType(&#x27;built-casche&#x27;)}}&gt;
+                   Build Cache - β
+                &lt;/Button&gt;
+                &lt;Button variant=&quot;contained&quot; onClick={()=&gt;{}} sx={{color: &#x27;#FFD700&#x27;}}&gt;
+                {storageNumToStr(totalStorageTypes[&#x27;built-casche&#x27;])}
+                &lt;/Button&gt;
+                &lt;/ButtonGroup&gt; 
+                :
+                &lt;Button variant=&quot;contained&quot;  onClick={()=&gt;{setDataGridBlueButtonType(&#x27;built-casche&#x27;)}} sx={{m:2, marginBottom: 0}}&gt;
+                   Build Cache
+                &lt;/Button&gt;
+              }
+               
+            &lt;/Stack&gt;
+            &lt;/Box&gt;
+
+            &lt;Box sx={{
+                width:&#x27;70%&#x27;, 
+                height:&#x27;90%&#x27;,
+                bgcolor: blueGrey[50],
+                borderRadius: 2,
+                border:2,
+                borderColor:&#x27;primary.main&#x27;,
+                overflow: &#x27;auto&#x27;,
+                // display: &#x27;flex&#x27;,
+                // flexDirection: &#x27;column&#x27;,
+                // alignItems: &#x27;center&#x27;
+                
+                }}&gt;
+               
+                &lt;Box sx={{
+                  color: &#x27;primary.main&#x27;,
+                  fontWeight: &#x27;bold&#x27;,
+                  fontStyle: &#x27;italic&#x27;,
+                  textAlign: &#x27;center&#x27;,
+                  marginTop: 1,
+                  
+                   
+                }}
+                &gt;{dataGridTypeHeaderHelper(dataGridBlueButtonType)}
+                &lt;/Box&gt;
+
+                &lt;Box&gt;
+                {selectDataGrid(dataGridBlueButtonType)}
+                &lt;/Box&gt;
+                
+           &lt;/Box&gt;
+          &lt;/Box&gt;
+        
+        
+
+          &lt;Box sx={{
+            width: matches === true ? &#x27;90vw&#x27; : &#x27;85vw&#x27;,
+            height: matches === true ? &#x27;40vh&#x27; : &#x27;38vh&#x27;,
+            bgcolor: blueGrey[50],
+            display: &#x27;flex&#x27;,
+            justifyContent:&#x27;space-around&#x27;,
+        }}&gt;
+
+          &lt;Box
+            sx={{
+            bgcolor: blueGrey[50],
+            width:&#x27;25%&#x27;, 
+            height:&#x27;90%&#x27;,
+            borderRadius: 2,
+            border:2,
+            borderColor:&#x27;primary.main&#x27;,
+            overflow: &#x27;scroll&#x27;
+        }}&gt; 
+
+          &lt;Stack&gt;
+            &lt;PruneAllButtonComponent apiRef={apiRef} CLI={ddClient} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} setDataForGridRows={setDataForGridRows} /&gt;
+                
+            { matches === true ? 
+                &lt;Button variant=&quot;contained&quot; color=&#x27;error&#x27; onClick={()=&gt;{pruningFunc(&#x27;prune-selected&#x27;)}} sx={{
+                    m:2,
+                    p: 1,
+                    borderRadius: 2,
+                    
+                     
+                    }}&gt;
+                    Prune Selected
+                &lt;/Button&gt;
+                :
+                &lt;Button variant=&quot;contained&quot; color=&#x27;error&#x27; onClick={()=&gt;{pruningFunc(&#x27;prune-selected&#x27;)}} sx={{
+                  m:2,
+                  marginBottom:0,
+                  p: 1,
+                  borderRadius: 2,
+                   
+                  }}&gt;
+                  &lt;Box sx={{display:&#x27;flex&#x27;, flexDirection:&#x27;column&#x27;}}&gt;
+                    &lt;Box&gt;
+                       Prune 
+                    &lt;/Box&gt;
+                    &lt;Box&gt;
+                      Selected
+                    &lt;/Box&gt;
+                  &lt;/Box&gt; 
+              &lt;/Button&gt;
+              
+                }
+
+              { matches === true ? 
+                &lt;Button variant=&quot;contained&quot; color=&#x27;secondary&#x27;sx={{
+                    m:2,
+                    p: 1,
+                    borderRadius: 2,
+                
+                }}&gt;
+                    Scheduled Prune - β
+                &lt;/Button&gt;
+                :
+                &lt;Button variant=&quot;contained&quot; color=&#x27;secondary&#x27;sx={{
+                  m:2,
+                  marginBottom:0,
+                  p: 1,
+                  borderRadius: 2,
+              
+              }}&gt;
+                &lt;Box sx={{display:&#x27;flex&#x27;, flexDirection:&#x27;column&#x27;}}&gt;
+                    &lt;Box&gt;
+                      Scheduled 
+                    &lt;/Box&gt;
+                    &lt;Box&gt;
+                      Prune - β
+                    &lt;/Box&gt;
+                  &lt;/Box&gt; 
+              &lt;/Button&gt;
+              }
+
+            &lt;/Stack&gt;
+
+          &lt;/Box&gt;
+
+          &lt;Box
+          sx={{
+            width:&#x27;70%&#x27;, 
+            height:&#x27;90%&#x27;,
+            bgcolor: blueGrey[50],
+            borderRadius: 2,
+            border:2,
+            borderColor:&#x27;primary.main&#x27;,
+            display: &#x27;flex&#x27;,
+            alignItems: &#x27;center&#x27;,
+            justifyContent: &#x27;center&#x27;,
+            
+            
+            
+        }}&gt; 
+            &lt;ProgressbarChartComponent selectedTotal={selectedGridRowStorageSize[&#x27;selectedTotal&#x27;]} combinedTotal={totalStorageTypes[&#x27;combinedTotal&#x27;]}/&gt;
+            {/* {` Selected Storage: ${storageNumToStr(selectedGridRowStorageSize[&#x27;selectedTotal&#x27;])}  / Total Storage: ${storageNumToStr(totalStorageTypes[&#x27;combinedTotal&#x27;])} ` }         */}
+            
+            &lt;/Box&gt;
+          &lt;/Box&gt;
+        &lt;/Container&gt;
+    &lt;/&gt;
+  );
+} 
+
+
+</textarea><pre id="annotations" style="display:none">[{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:124,&quot;character&quot;:12,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:127,&quot;character&quot;:32,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:127,&quot;character&quot;:36,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:128,&quot;character&quot;:32,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:128,&quot;character&quot;:36,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:129,&quot;character&quot;:31,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:129,&quot;character&quot;:35,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:130,&quot;character&quot;:30,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:130,&quot;character&quot;:34,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:131,&quot;character&quot;:27,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:131,&quot;character&quot;:31,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:132,&quot;character&quot;:27,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:132,&quot;character&quot;:31,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:133,&quot;character&quot;:26,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:133,&quot;character&quot;:30,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:134,&quot;character&quot;:28,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:134,&quot;character&quot;:32,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:150,&quot;character&quot;:11,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:151,&quot;character&quot;:25,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:151,&quot;character&quot;:29,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:153,&quot;character&quot;:16,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:153,&quot;character&quot;:162,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:158,&quot;character&quot;:11,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:160,&quot;character&quot;:49,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:160,&quot;character&quot;:53,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:162,&quot;character&quot;:25,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:162,&quot;character&quot;:29,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:163,&quot;character&quot;:16,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:163,&quot;character&quot;:160,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:169,&quot;character&quot;:11,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:171,&quot;character&quot;:25,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:171,&quot;character&quot;:29,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:173,&quot;character&quot;:16,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:173,&quot;character&quot;:159,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:182,&quot;character&quot;:18,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:182,&quot;character&quot;:234,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:191,&quot;character&quot;:18,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:191,&quot;character&quot;:234,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:196,&quot;character&quot;:13,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:199,&quot;character&quot;:18,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:199,&quot;character&quot;:172,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:208,&quot;character&quot;:18,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:208,&quot;character&quot;:149,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:223,&quot;character&quot;:12,&quot;text&quot;:&quot;imageStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:223,&quot;character&quot;:38,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:223,&quot;character&quot;:42,&quot;text&quot;:&quot;size&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:227,&quot;character&quot;:46,&quot;text&quot;:&quot;imageStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:227,&quot;character&quot;:63,&quot;text&quot;:&quot;slice&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:230,&quot;character&quot;:67,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:230,&quot;character&quot;:71,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:236,&quot;character&quot;:73,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:236,&quot;character&quot;:77,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:274,&quot;character&quot;:57,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:274,&quot;character&quot;:61,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:300,&quot;character&quot;:12,&quot;text&quot;:&quot;imageStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:300,&quot;character&quot;:38,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:300,&quot;character&quot;:42,&quot;text&quot;:&quot;size&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:302,&quot;character&quot;:46,&quot;text&quot;:&quot;imageStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:302,&quot;character&quot;:63,&quot;text&quot;:&quot;slice&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:305,&quot;character&quot;:65,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:305,&quot;character&quot;:69,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:313,&quot;character&quot;:69,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:313,&quot;character&quot;:73,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:349,&quot;character&quot;:55,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:349,&quot;character&quot;:59,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:375,&quot;character&quot;:12,&quot;text&quot;:&quot;imageStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:375,&quot;character&quot;:38,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:375,&quot;character&quot;:42,&quot;text&quot;:&quot;size&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:377,&quot;character&quot;:46,&quot;text&quot;:&quot;imageStorageSize&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:377,&quot;character&quot;:63,&quot;text&quot;:&quot;slice&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:380,&quot;character&quot;:65,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:380,&quot;character&quot;:69,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:387,&quot;character&quot;:69,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:387,&quot;character&quot;:73,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:422,&quot;character&quot;:56,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:422,&quot;character&quot;:60,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:446,&quot;character&quot;:12,&quot;text&quot;:&quot;unusedContainerSizeStr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:446,&quot;character&quot;:44,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:446,&quot;character&quot;:48,&quot;text&quot;:&quot;size&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:452,&quot;character&quot;:69,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:452,&quot;character&quot;:73,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:456,&quot;character&quot;:76,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:456,&quot;character&quot;:80,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:494,&quot;character&quot;:60,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:494,&quot;character&quot;:64,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:517,&quot;character&quot;:13,&quot;text&quot;:&quot;pausedContainerSizeStr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:517,&quot;character&quot;:45,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:517,&quot;character&quot;:49,&quot;text&quot;:&quot;size&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:523,&quot;character&quot;:70,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:523,&quot;character&quot;:74,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:528,&quot;character&quot;:77,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:528,&quot;character&quot;:81,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:565,&quot;character&quot;:61,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:565,&quot;character&quot;:65,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:590,&quot;character&quot;:12,&quot;text&quot;:&quot;runningContainerSizeStr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:590,&quot;character&quot;:45,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:590,&quot;character&quot;:49,&quot;text&quot;:&quot;size&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:596,&quot;character&quot;:70,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:596,&quot;character&quot;:74,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:599,&quot;character&quot;:78,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:599,&quot;character&quot;:82,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:638,&quot;character&quot;:61,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:638,&quot;character&quot;:65,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:662,&quot;character&quot;:13,&quot;text&quot;:&quot;builtCascheSizeStr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:662,&quot;character&quot;:41,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:662,&quot;character&quot;:45,&quot;text&quot;:&quot;size&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:664,&quot;character&quot;:56,&quot;text&quot;:&quot;builtCascheSizeStr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:664,&quot;character&quot;:75,&quot;text&quot;:&quot;slice&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:667,&quot;character&quot;:65,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:667,&quot;character&quot;:69,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:676,&quot;character&quot;:68,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:676,&quot;character&quot;:72,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:708,&quot;character&quot;:58,&quot;text&quot;:&quot;row&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:708,&quot;character&quot;:62,&quot;text&quot;:&quot;id&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:749,&quot;character&quot;:12,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:751,&quot;character&quot;:32,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:751,&quot;character&quot;:36,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:752,&quot;character&quot;:32,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:752,&quot;character&quot;:36,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:753,&quot;character&quot;:31,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:753,&quot;character&quot;:35,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:754,&quot;character&quot;:30,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:754,&quot;character&quot;:34,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:755,&quot;character&quot;:27,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:755,&quot;character&quot;:31,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:756,&quot;character&quot;:27,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:756,&quot;character&quot;:31,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:757,&quot;character&quot;:26,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:757,&quot;character&quot;:30,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:758,&quot;character&quot;:28,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:758,&quot;character&quot;:32,&quot;text&quot;:&quot;storage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:772,&quot;character&quot;:12,&quot;text&quot;:&quot;cpuUsageCalculation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:772,&quot;character&quot;:72,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:772,&quot;character&quot;:82,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:772,&quot;character&quot;:94,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:772,&quot;character&quot;:100,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:795,&quot;character&quot;:13,&quot;text&quot;:&quot;cpuUsageCalculation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:795,&quot;character&quot;:73,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:795,&quot;character&quot;:83,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:795,&quot;character&quot;:95,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:795,&quot;character&quot;:101,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:819,&quot;character&quot;:13,&quot;text&quot;:&quot;cpuUsageCalculation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:819,&quot;character&quot;:73,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:819,&quot;character&quot;:83,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:819,&quot;character&quot;:95,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:819,&quot;character&quot;:101,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:844,&quot;character&quot;:13,&quot;text&quot;:&quot;cpuUsageCalculation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:844,&quot;character&quot;:77,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:844,&quot;character&quot;:87,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:844,&quot;character&quot;:99,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:844,&quot;character&quot;:105,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:868,&quot;character&quot;:13,&quot;text&quot;:&quot;cpuUsageCalculation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:868,&quot;character&quot;:77,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:868,&quot;character&quot;:87,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:868,&quot;character&quot;:99,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:868,&quot;character&quot;:105,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:892,&quot;character&quot;:13,&quot;text&quot;:&quot;cpuUsageCalculation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:892,&quot;character&quot;:77,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:892,&quot;character&quot;:87,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:892,&quot;character&quot;:99,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:892,&quot;character&quot;:105,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:913,&quot;character&quot;:13,&quot;text&quot;:&quot;cpuUsageCalculation&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:913,&quot;character&quot;:73,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:913,&quot;character&quot;:83,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:913,&quot;character&quot;:95,&quot;text&quot;:&quot;sum&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:913,&quot;character&quot;:101,&quot;text&quot;:&quot;num&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:934,&quot;character&quot;:43,&quot;text&quot;:&quot;selectedStorageArray&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:948,&quot;character&quot;:9,&quot;text&quot;:&quot;danglingImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:949,&quot;character&quot;:9,&quot;text&quot;:&quot;inUseImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:950,&quot;character&quot;:9,&quot;text&quot;:&quot;unusedImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:951,&quot;character&quot;:9,&quot;text&quot;:&quot;exitedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:952,&quot;character&quot;:9,&quot;text&quot;:&quot;pausedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:953,&quot;character&quot;:9,&quot;text&quot;:&quot;runningContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:954,&quot;character&quot;:9,&quot;text&quot;:&quot;cascheIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:969,&quot;character&quot;:6,&quot;text&quot;:&quot;danglingImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:972,&quot;character&quot;:6,&quot;text&quot;:&quot;inUseImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:974,&quot;character&quot;:6,&quot;text&quot;:&quot;unusedImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:977,&quot;character&quot;:6,&quot;text&quot;:&quot;exitedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:980,&quot;character&quot;:6,&quot;text&quot;:&quot;pausedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:983,&quot;character&quot;:6,&quot;text&quot;:&quot;runningContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:990,&quot;character&quot;:8,&quot;text&quot;:&quot;danglingImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:990,&quot;character&quot;:33,&quot;text&quot;:&quot;length&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:993,&quot;character&quot;:51,&quot;text&quot;:&quot;danglingImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:994,&quot;character&quot;:15,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:998,&quot;character&quot;:55,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:998,&quot;character&quot;:59,&quot;text&quot;:&quot;stderr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1005,&quot;character&quot;:7,&quot;text&quot;:&quot;danglingImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1020,&quot;character&quot;:7,&quot;text&quot;:&quot;inUseImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1020,&quot;character&quot;:29,&quot;text&quot;:&quot;length&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1021,&quot;character&quot;:49,&quot;text&quot;:&quot;inUseImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1022,&quot;character&quot;:14,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1026,&quot;character&quot;:53,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1026,&quot;character&quot;:57,&quot;text&quot;:&quot;stderr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1029,&quot;character&quot;:7,&quot;text&quot;:&quot;inUseImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1044,&quot;character&quot;:6,&quot;text&quot;:&quot;unusedImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1044,&quot;character&quot;:29,&quot;text&quot;:&quot;length&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1046,&quot;character&quot;:49,&quot;text&quot;:&quot;unusedImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1047,&quot;character&quot;:14,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1051,&quot;character&quot;:54,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1051,&quot;character&quot;:58,&quot;text&quot;:&quot;stderr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1055,&quot;character&quot;:6,&quot;text&quot;:&quot;unusedImageIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1070,&quot;character&quot;:6,&quot;text&quot;:&quot;exitedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1070,&quot;character&quot;:33,&quot;text&quot;:&quot;length&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1072,&quot;character&quot;:45,&quot;text&quot;:&quot;exitedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1073,&quot;character&quot;:12,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1076,&quot;character&quot;:48,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1076,&quot;character&quot;:52,&quot;text&quot;:&quot;stderr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1079,&quot;character&quot;:4,&quot;text&quot;:&quot;exitedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1094,&quot;character&quot;:4,&quot;text&quot;:&quot;pausedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1094,&quot;character&quot;:31,&quot;text&quot;:&quot;length&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1096,&quot;character&quot;:43,&quot;text&quot;:&quot;pausedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1097,&quot;character&quot;:10,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1101,&quot;character&quot;:46,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1101,&quot;character&quot;:50,&quot;text&quot;:&quot;stderr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1104,&quot;character&quot;:2,&quot;text&quot;:&quot;pausedContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1120,&quot;character&quot;:4,&quot;text&quot;:&quot;runningContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1120,&quot;character&quot;:32,&quot;text&quot;:&quot;length&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1122,&quot;character&quot;:43,&quot;text&quot;:&quot;runningContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1123,&quot;character&quot;:10,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1127,&quot;character&quot;:46,&quot;text&quot;:&quot;err&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1127,&quot;character&quot;:50,&quot;text&quot;:&quot;stderr&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1131,&quot;character&quot;:2,&quot;text&quot;:&quot;runningContainerIdsToRemove&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1173,&quot;character&quot;:16,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1175,&quot;character&quot;:30,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1175,&quot;character&quot;:34,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1181,&quot;character&quot;:15,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1182,&quot;character&quot;:29,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1182,&quot;character&quot;:33,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1188,&quot;character&quot;:13,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1189,&quot;character&quot;:27,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1189,&quot;character&quot;:31,&quot;text&quot;:&quot;data&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1200,&quot;character&quot;:13,&quot;text&quot;:&quot;res&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1251,&quot;character&quot;:4,&quot;text&quot;:&quot;created&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1252,&quot;character&quot;:4,&quot;text&quot;:&quot;TagOrName&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1253,&quot;character&quot;:4,&quot;text&quot;:&quot;RepoOrImage&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1254,&quot;character&quot;:4,&quot;text&quot;:&quot;status&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1255,&quot;character&quot;:4,&quot;text&quot;:&quot;type&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1263,&quot;character&quot;:27,&quot;text&quot;:&quot;strType&quot;,&quot;kind&quot;:1},{&quot;file&quot;:&quot;src/prune/prune.tsx&quot;,&quot;line&quot;:1265,&quot;character&quot;:7,&quot;text&quot;:&quot;strType&quot;,&quot;kind&quot;:1}]</pre></div>
+    <p class="footer-text">TypeScript Coverage Report generated by <a href="https://github.com/plantain-00/type-coverage">type-coverage</a> and <a href="https://github.com/alexcanessa/typescript-coverage-report">typescript-coverage-report</a> at Fri, 28 Jun 2024 22:01:27 GMT</p>
+    </body>
+  </html>
+  

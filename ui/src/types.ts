@@ -1,5 +1,5 @@
 //STATE TYPES
-export type GridRowsDataType = {
+export type ImageType = {
     CreatedSince: string;
     ID: String; 
     Repository: string;  
@@ -13,6 +13,7 @@ export type GridRowsDataType = {
     UniqueSize?: string; 
     VirtualSize?: string; 
 }[];
+
 
 // type GridRowsDataType = Array<{
 //    CreatedSince: string;
