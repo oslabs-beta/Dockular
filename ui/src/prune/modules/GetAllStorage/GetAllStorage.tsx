@@ -2,9 +2,9 @@ import getStorage from "./getStorage";
 import getData from "./getData";
 import {TotalStorageType} from '../../../types';
 
-import {ImageType} from '../../../types'
+type DataType = {}[]
 
-type allDataType = {storage:TotalStorageType; data: { [key:string]: ImageType[]}}
+type allDataType = {storage:TotalStorageType; data: any}
 
 
  async function GetAllStorage(CLI:any, storageOrData:string){
@@ -42,6 +42,7 @@ type allDataType = {storage:TotalStorageType; data: { [key:string]: ImageType[]}
 
     allData.data = await getData(CLI)
   }
+
 
  return allData;
 }
