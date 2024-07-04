@@ -1,10 +1,9 @@
-import { stringToNumConverter as strToNumb } from '../../utilities/StringToNumConverter'
+import {stringToNumConverter as strToNumb} from '../../utilities/StringToNumConverter'
 import { totalStorageParser } from '../totalStorageParser';
 import { containerVirtualSizeConverterToString } from '../ContainerVirtualSizeConverterToString';
 import { checkBytesAndConvertToNumber } from '../../utilities/ CheckBytesAndConvertToNumber';
 import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
 
-import {ImageType, TotalStorageType, ContainerType} from '../../../types';
 
  async function getStorage(CLI:any){
   const storage = {
@@ -18,26 +17,17 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
       'combinedTotal': 0
   };
 
-  const allImagesObj : {[key:string]:{[key:string]:string}} = {}; 
+  const allImagesObj :any = {}; 
   //we want to keep a track of all the repositorys that are not equal to <none>. This assists us in parsing out which images are in use. 
    
   //Obj that manages all Images with Repository and Tag
-  const allImageRepositoryAndTagObj:{[key:string]:{[key:string]:string}} = {}
+  const allImageRepositoryAndTagObj:any = {}
    //we want to keep a track of all the repositorys that are not equal to <none>. This assists us in parsing out which images are in use. 
-  const allImageRepositoriesOnlyObj:{[key:string]:{[key:string]:string}} = {}; // {Repository:{ID, Size}}
+  const allImageRepositoriesOnlyObj:any = {}; // {Repository:{ID, Size}}
 
-  const allUnusedImagesSet = new Set<string>(); 
+  const allUnusedImagesSet = new Set(); 
 
-  type DataType = {
-    ID: string;
-    Size: string; 
-    Repository: string;
-    Tag: string; 
-    Type: string;
-    CreatedSince?: string;
-  }
-
-  const allData:{storage:TotalStorageType; data:{[key:string]:DataType[]}} = {storage: storage, data: {
+  const allData:any = {storage: storage, data: {
     'running-containers': [], 
     'exited-containers': [], 
     'paused-containers': [], 
@@ -54,9 +44,10 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
   await CLI.docker.cli.exec('images', ['--format', '"{{json .}}"', '-a'])
   .then((result:any) => {
     // console.log('Dangling Result:', result)
-    const AllImgs:ImageType[] = result.parseJsonLines();
-    AllImgs.forEach((el) => {
-      
+    const AllImgs = result.parseJsonLines();
+    AllImgs.forEach((el:any) => {
+       
+
       //we only want to add to the allImageRepositoriesObj if the image repository within all the images has a repository ..we dont want the ones with <none> or any tag
       if(!el.Repository.match('<none>'))  {
         //tracks keys with repository and tag
@@ -75,14 +66,12 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
    
    
     //Set that contains allImagesUsedByConainer Ids
-  const idsForallImagesUsedByContainerSet= new Set<string>();
+  const idsForallImagesUsedByContainerSet= new Set();
   
    await CLI.docker.cli.exec('ps', ['--format', '"{{json .}}"', '-a'])
    .then((result:any) => {
-
-    
  
-     const allImagesUsedByContainer:ContainerType[] = result.parseJsonLines();
+     const allImagesUsedByContainer = result.parseJsonLines();
 
 
     //4Test Cases
@@ -98,7 +87,7 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
         
 
      //if index returns with -1 that could mean that either its a repostiory without a tag or an id.       
-     allImagesUsedByContainer.forEach((el) => {
+     allImagesUsedByContainer.forEach((el:any) => {
       const index = el.Image.indexOf(':')
       if(index !== -1){
        
@@ -146,7 +135,7 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
         }
      })
 
-     idsForallImagesUsedByContainerSet.forEach((id)=>{
+     idsForallImagesUsedByContainerSet.forEach((id:any)=>{
       //if the allUnusedImagesSet (which tracks in the begining all ids) contains an id from the idsForallImagesUsedByContainerSet we want to remove
       //that id with the goal of only having a set of ids for unused images. 
       if(allUnusedImagesSet.has(id)) allUnusedImagesSet.delete(id);
@@ -171,7 +160,7 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
    await CLI.docker.cli.exec('images', ['--format', '"{{json .}}"', '--filter', "dangling=true"])
    .then((result:any) => {
      // console.log('Dangling Result:', result)
-     const danglingImg:ImageType[] = result.parseJsonLines();
+     const danglingImg = result.parseJsonLines();
 
       for(let current of danglingImg){
         //if the allUnusedImagesSet (which tracks in the begining all ids) contains an current.ID from the idsForallImagesUsedByContainerSet we want to remove
@@ -198,7 +187,7 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
 
   //FOR UNUSED IMAGES*************************************************************************************************************************
    //we iterate through the allUnusedImageSet 
-  allUnusedImagesSet.forEach((unusedImageID:string) => {
+  allUnusedImagesSet.forEach((unusedImageID:any) => {
     //Get the Data from the allImagesObj .. and add it to storage as well as the allData obj.
     storage['unused-images'] += strToNumb(allImagesObj[unusedImageID].Size)
 
@@ -225,11 +214,9 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
 
   await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
   .then((result:any) => {
-
-    const exitedCont:ContainerType[] = result.parseJsonLines();
-    // console.log('exitedCont', exitedCont)
+    const exitedCont = result.parseJsonLines();
     //storage['unused-containers'] = 
-    const containerSum =  exitedCont.reduce((sum:number,current:ContainerType)=>{ 
+    const containerSum =  exitedCont.reduce((sum:any,current:any)=>{ 
       const virtualStringConverter = containerVirtualSizeConverterToString(current.Size)
       //The checkBytesAndConvertToNumber function checks the type of Bytes (kb, mb, gb or byte) & converts to megabytes 
       //in the form of a number */
@@ -249,13 +236,13 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
 
    //RUNNING CONTAINERS - also include paused containers so we want to create this set to conain all the paused container ids to 
   //be able to distinguish between paused and running containers. 
-  const pausedContainerIdSet = new Set<string>(); 
+  const pausedContainerIdSet = new Set(); 
 
   await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=paused"])
   .then((result:any) => {
-    const pausedCont: ContainerType[]= result.parseJsonLines();
+    const pausedCont = result.parseJsonLines();
     //storage['unused-containers'] = 
-    const containerSum =  pausedCont.reduce((sum:number,current:ContainerType)=>{ 
+    const containerSum =  pausedCont.reduce((sum:any,current:any)=>{ 
 
       //add paused container ids to the set
       pausedContainerIdSet.add(current.ID)
@@ -279,7 +266,7 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
 
 await CLI.docker.cli.exec('ps', ['--format', '"{{json .}}"'])
 .then((result:any) => {
-  const runningCont:ContainerType[] = result.parseJsonLines();
+  const runningCont = result.parseJsonLines();
   
   for(let container of runningCont){
     if(!pausedContainerIdSet.has(container.ID)){
