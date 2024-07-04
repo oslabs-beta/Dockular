@@ -5,7 +5,7 @@ import { checkBytesAndConvertToNumber } from '../../utilities/ CheckBytesAndConv
 import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
 import { useEffect } from 'react';
 
-import {ImageType} from '../../../types'
+import {ImageType, ContainerType} from '../../../types'
 
 type UniqueImageType = { [key:string]: {
   ID: string;
@@ -47,7 +47,10 @@ type DataType = {
 
  
 
-  const allData:{storage:{[key:string]: number}; data:{[key:string]: DataType[]}} = {
+  const allData: {
+    storage:{[key:string]: number}; 
+    data:{[key:string]: DataType[]}
+  } = {
     storage: storage, 
     data: {
     'in-use-images':[],
@@ -67,28 +70,28 @@ type DataType = {
     // {parseJsonLines: Function})
     // console.log('result before parse :', typeof result, result)
 
-    const AllImgs:ImageType = result.parseJsonLines();
+    const AllImgs:ImageType[] = result.parseJsonLines();
 
     // console.log('result after parse :', typeof AllImgs, AllImgs)
 
     AllImgs.forEach((el) => {
        //make sure el.ID is a string and not String(string wrapper)
-       const ID = el.ID.toString()
+      
 
       //we only want to add to the allImageRepositoriesObj if the image repository within all the images has a repository ..we dont want the ones with <none> or any tag
       if(!el.Repository.match('<none>'))  {
         //tracks keys with repository and tag
-        allImageRepositoryAndTagObj[`${el.Repository}:${el.Tag}`] = {ID: ID, Size: el.Size, Repository: el.Repository, Tag: el.Tag, RepTag: `${el.Repository}:${el.Tag}`}
+        allImageRepositoryAndTagObj[`${el.Repository}:${el.Tag}`] = {ID: el.ID, Size: el.Size, Repository: el.Repository, Tag: el.Tag, RepTag: `${el.Repository}:${el.Tag}`}
         // console.log('el.ID', el.ID)
         // console.log('el.ID typeof', typeof el.ID)
 
         //tracks keys with just repository only
-        allImageRepositoriesOnlyObj[el.Repository] = {ID: ID, Size: el.Size, Repository: el.Repository, Tag: el.Tag, RepTag: `${el.Repository}:${el.Tag}`}
+        allImageRepositoriesOnlyObj[el.Repository] = {ID: el.ID, Size: el.Size, Repository: el.Repository, Tag: el.Tag, RepTag: `${el.Repository}:${el.Tag}`}
       }
       
       //we need to have a list of all available images seperately to utlize in the code below when finding in use or dangling images. 
-      allImagesObj[ID] = {ID: ID, Size: el.Size, Repository: el.Repository, Tag: el.Tag, CreatedSince: el.CreatedSince}
-      allUnusedImagesSet.add(ID)
+      allImagesObj[el.ID] = {ID: el.ID, Size: el.Size, Repository: el.Repository, Tag: el.Tag, CreatedSince: el.CreatedSince}
+      allUnusedImagesSet.add(el.ID)
     })
   })
 
@@ -102,24 +105,9 @@ type DataType = {
    await CLI.docker.cli.exec('ps', ['--format', '"{{json .}}"', '-a'])
    .then((result:any) => {
 
-    type ContainerType = {
-      Command: string;
-      CreatedAt: string;
-      ID: string;
-      Image: string;
-      Labels: string; 
-      LocalVolumes: string; 
-      Mounts: string;
-      Names: string; 
-      Networks: string;
-      Ports: string; 
-      RunningFor: string; 
-      Size: string; 
-      State: string; 
-      Status: string; 
-    }[]
+  
  
-     const allImagesUsedByContainer: ContainerType = result.parseJsonLines();
+     const allImagesUsedByContainer: ContainerType[] = result.parseJsonLines();
     // console.log('allImagesUsedByContainer', allImagesUsedByContainer)
 
     //4Test Cases
@@ -208,20 +196,20 @@ type DataType = {
    await CLI.docker.cli.exec('images', ['--format', '"{{json .}}"', '--filter', "dangling=true"])
    .then((result:any) => {
      // console.log('Dangling Result:', result)
-     const danglingImg: ImageType = result.parseJsonLines();
+     const danglingImg: ImageType[] = result.parseJsonLines();
 
       for(let current of danglingImg){
-        const ID = current.ID.toString()
+     
         //if the allUnusedImagesSet (which tracks in the begining all ids) contains an current.ID from the idsForallImagesUsedByContainerSet we want to remove
         //that current.ID with the goal of only having a set of ids for unused images. 
-        if(allUnusedImagesSet.has(ID)) allUnusedImagesSet.delete(ID);
+        if(allUnusedImagesSet.has(current.ID)) allUnusedImagesSet.delete(current.ID);
 
        //IF THE ID FROM THE DANGLING IMAGES COMMAND EXISTS WITHIN THE idsForallImagesUsedByContainerSet we should not add it to our storage['dangling-images']
-       if(!idsForallImagesUsedByContainerSet.has(ID)){
+       if(!idsForallImagesUsedByContainerSet.has(current.ID)){
         //  console.log('NOT IN USE ID',current.ID)
         //PUSH DATA TO ALL DATA OBJ
          allData.data['dangling-images'].push({
-           ID: ID, 
+           ID: current.ID, 
            Size: current.Size, 
            CreatedSince: current.CreatedSince, 
            Repository: current.Repository, 
