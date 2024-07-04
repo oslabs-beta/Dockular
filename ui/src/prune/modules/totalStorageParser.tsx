@@ -1,14 +1,13 @@
 //UTILIZED BY: GetAllStorage component 
 
-export function totalStorageParser(output:string): number {
+export function totalStorageParser(output:any) {
 
     const lines = output.split('\n');
     const entries = [];
   
     // console.log("All Lines -> totalStorageParser: \n",lines)
-    let totalLine:string[] = [];
-
-    lines.forEach((ele:string)=>{
+    let totalLine:any= [];
+    lines.forEach((ele:any)=>{
       if(ele.match(/Total/g)){
         totalLine.push(ele)
       }

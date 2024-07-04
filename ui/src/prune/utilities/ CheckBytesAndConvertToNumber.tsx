@@ -1,7 +1,7 @@
  
 import { stringToNumConverter } from "./StringToNumConverter"
 
-export function checkBytesAndConvertToNumber(bytesStr:string):number {
+export function  checkBytesAndConvertToNumber(bytesStr:string) {
 
     // console.log('bytesStr-->', bytesStr, bytesStr.length)
     // console.log('bytesStr[bytesStr.length-1]', bytesStr[bytesStr.length-1])
