@@ -6,7 +6,7 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
 
 import {ImageType, TotalStorageType, ContainerType} from '../../../types';
 
- async function getStorage(CLI:any){
+ async function getStorage(CLI:any): Promise<TotalStorageType> {
   const storage = {
       'running-containers': 0,
       'exited-containers': 0, //EXITED
@@ -18,7 +18,7 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
       'combinedTotal': 0
   };
 
-  const allImagesObj : {[key:string]:{[key:string]:string}} = {}; 
+  const allImagesObj : {[key:string]: ImageType} = {}; 
   //we want to keep a track of all the repositorys that are not equal to <none>. This assists us in parsing out which images are in use. 
    
   //Obj that manages all Images with Repository and Tag
@@ -28,16 +28,7 @@ import {ImageType, TotalStorageType, ContainerType} from '../../../types';
 
   const allUnusedImagesSet = new Set<string>(); 
 
-  type DataType = {
-    ID: string;
-    Size: string; 
-    Repository: string;
-    Tag: string; 
-    Type: string;
-    CreatedSince?: string;
-  }
-
-  const allData:{storage:TotalStorageType; data:{[key:string]:DataType[]}} = {storage: storage, data: {
+  const allData:{storage:TotalStorageType; data:{[key:string]:ImageType[]}} = {storage: storage, data: {
     'running-containers': [], 
     'exited-containers': [], 
     'paused-containers': [], 

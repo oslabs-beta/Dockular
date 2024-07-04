@@ -1,10 +1,10 @@
 //STATE TYPES
 export type ImageType = {
-    CreatedSince: string;
     ID: string; 
     Repository: string;  
     Size:string;
     Tag: string; 
+    CreatedSince?: string;
     Type?: string;
     Containers?: string; 
     CreatedAt?: string;  

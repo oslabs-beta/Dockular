@@ -16,16 +16,7 @@ type UniqueImageType = { [key:string]: {
   RepTag?: string;
 }}
 
-type DataType = {
-  ID: string;
-  Size: string; 
-  Repository: string;
-  Tag: string; 
-  Type: string;
-  CreatedSince?: string;
-}
-
- async function getData(CLI:any): Promise<{[key: string]: DataType[];}> {
+ async function getData(CLI:any) : Promise<{[key: string]: ImageType[];}>{
   const storage = {
     'dangling-images': 0,
     'in-use-images': 0,
@@ -45,23 +36,21 @@ type DataType = {
 
   const allUnusedImagesSet = new Set<string>(); 
 
- 
-
   const allData: {
     storage:{[key:string]: number}; 
-    data:{[key:string]: DataType[]}
+    data:{[key:string]: ImageType[]}
   } = {
     storage: storage, 
     data: {
-    'in-use-images':[],
-    'dangling-images': [], 
-    'unused-images':  [], 
-    'exited-containers': [], 
-    'built-casche': [],
+      'running-containers': [], 
+      'exited-containers': [], 
+      'paused-containers': [], 
+      'in-use-images': [],
+      'dangling-images': [], 
+      'unused-images':  [], 
+      'built-casche': [],
    }
   }
-
- 
 
   //ALL IMAGES*******************************************************************************************************************************************************************************
  
