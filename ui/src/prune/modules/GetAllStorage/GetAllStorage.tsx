@@ -1,10 +1,13 @@
 import getStorage from "./getStorage";
 import getData from "./getData";
+import { TotalStorageType, ImageType } from "../../../types";
 
- async function GetAllStorage(CLI:any, storageOrData:any){
+type AllDataType = {storage: TotalStorageType; data: {[key:string]: ImageType[]}};
+
+ async function GetAllStorage(CLI:any, storageOrData:string){
  
 
-  const allData:any = {
+  const allData: AllDataType = {
     
     storage: {
       'running-containers': 0,
