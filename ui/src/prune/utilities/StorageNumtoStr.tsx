@@ -2,7 +2,7 @@ import { roundTwoDecimalPlaces } from "./RoundTwoDecimalPlaces"
 
 
 
-export function storageNumToStr(numb:number){
+export function storageNumToStr(numb:number):string{
   
   // console.log('numb in storageNumToStr', numb)
 

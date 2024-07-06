@@ -1,11 +1,15 @@
-import {stringToNumConverter as strToNumb} from '../../utilities/StringToNumConverter'
-import { totalStorageParser } from '../totalStorageParser';
-import { containerVirtualSizeConverterToString } from '../ContainerVirtualSizeConverterToString';
-import { checkBytesAndConvertToNumber } from '../../utilities/ CheckBytesAndConvertToNumber';
-import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
+import {ImageType, ContainerType} from '../../../types'
 
+type UniqueImageType = {[key:string]:{
+  ID: string;
+  Size: string;
+  Repository: string;
+  Tag: string;
+  CreatedSince?: string;
+  RepTag?: string; 
+}}
 
- async function getData(CLI:any){
+ async function getData(CLI:any) : Promise<{[key:string]:ImageType[]}>{
   const storage = {
     'dangling-images': 0,
     'in-use-images': 0,
@@ -15,17 +19,20 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
     'combinedTotal' : 0
   };
 
-  const allImagesObj :any = {}; 
+  const allImagesObj:UniqueImageType = {}; 
   //we want to keep a track of all the repositorys that are not equal to <none>. This assists us in parsing out which images are in use. 
    
   //Obj that manages all Images with Repository and Tag
-  const allImageRepositoryAndTagObj:any = {}
+  const allImageRepositoryAndTagObj:UniqueImageType = {}
    //we want to keep a track of all the repositorys that are not equal to <none>. This assists us in parsing out which images are in use. 
-  const allImageRepositoriesOnlyObj:any = {}; // {Repository:{ID, Size}}
+  const allImageRepositoriesOnlyObj:UniqueImageType = {}; // {Repository:{ID, Size}}
 
-  const allUnusedImagesSet = new Set(); 
+  const allUnusedImagesSet = new Set<string>(); 
 
-  const allData:any = {storage: storage, data: {
+  const allData:{
+    storage: {[key:string]: number};
+    data: {[key:string]: ImageType[]};
+  } = {storage: storage, data: {
     'in-use-images':[],
     'dangling-images': [], 
     'unused-images':  [], 
@@ -40,8 +47,8 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
   await CLI.docker.cli.exec('images', ['--format', '"{{json .}}"', '-a'])
   .then((result:any) => {
     // console.log('Dangling Result:', result)
-    const AllImgs = result.parseJsonLines();
-    AllImgs.forEach((el:any) => {
+    const AllImgs:ImageType[] = result.parseJsonLines();
+    AllImgs.forEach((el) => {
        
       // console.log('allImages', el)
       //we only want to add to the allImageRepositoriesObj if the image repository within all the images has a repository ..we dont want the ones with <none> or any tag
@@ -62,12 +69,12 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
    
    
     //Set that contains allImagesUsedByConainer Ids
-  const idsForallImagesUsedByContainerSet= new Set();
+  const idsForallImagesUsedByContainerSet= new Set<string>();
   
    await CLI.docker.cli.exec('ps', ['--format', '"{{json .}}"', '-a'])
    .then((result:any) => {
  
-     const allImagesUsedByContainer = result.parseJsonLines();
+     const allImagesUsedByContainer:ContainerType[] = result.parseJsonLines();
 
 
     //4Test Cases
@@ -83,7 +90,7 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
         
 
      //if index returns with -1 that could mean that either its a repostiory without a tag or an id.       
-     allImagesUsedByContainer.forEach((el:any) => {
+     allImagesUsedByContainer.forEach((el) => {
       const index = el.Image.indexOf(':')
       if(index !== -1){
        
@@ -131,7 +138,7 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
         }
      })
 
-     idsForallImagesUsedByContainerSet.forEach((id:any)=>{
+     idsForallImagesUsedByContainerSet.forEach((id)=>{
       //if the allUnusedImagesSet (which tracks in the begining all ids) contains an id from the idsForallImagesUsedByContainerSet we want to remove
       //that id with the goal of only having a set of ids for unused images. 
       if(allUnusedImagesSet.has(id)) allUnusedImagesSet.delete(id);
@@ -157,7 +164,7 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
    await CLI.docker.cli.exec('images', ['--format', '"{{json .}}"', '--filter', "dangling=true"])
    .then((result:any) => {
      // console.log('Dangling Result:', result)
-     const danglingImg = result.parseJsonLines();
+     const danglingImg: ImageType[] = result.parseJsonLines();
 
       for(let current of danglingImg){
         //if the allUnusedImagesSet (which tracks in the begining all ids) contains an current.ID from the idsForallImagesUsedByContainerSet we want to remove
@@ -184,7 +191,7 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
 
   //FOR UNUSED IMAGES*************************************************************************************************************************
    //we iterate through the allUnusedImageSet 
-  allUnusedImagesSet.forEach((unusedImageID:any) => {
+  allUnusedImagesSet.forEach((unusedImageID:string) => {
     //Get the Data from the allImagesObj .. and add it to storage as well as the allData obj.
     // storage['unused-images'] += strToNumb(allImagesObj[unusedImageID].Size)
     // console.log(' allImagesObj[unusedImageID]',  allImagesObj[unusedImageID])

@@ -35,7 +35,7 @@ import { storageNumToStr } from './utilities/StorageNumtoStr';
 import { checkBytesAndConvertToNumber } from './utilities/ CheckBytesAndConvertToNumber';
 
 //TYPES
-import { GridRowsDataType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType } from '../types'
+import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType } from '../types'
 
 //Docker Desktop Client
 const client = createDockerDesktopClient();
@@ -55,7 +55,7 @@ export function Prune() {
   const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
 
   //state that manages a list of all the dangling images, unused containers, and builtCasche
-  const [dataForGridRows, setDataForGridRows] = React.useState<GridRowsDataType>([]);
+  const [dataForGridRows, setDataForGridRows] = React.useState<ImageType[]>([]);
 
   //state that handles the size of each image and container. Data is utilized to calculate size...which affects datagrid etc. 
   //This state seems to only be utilized for tracking the value of the id selected for the given container/image. See if you can combine with other state? 

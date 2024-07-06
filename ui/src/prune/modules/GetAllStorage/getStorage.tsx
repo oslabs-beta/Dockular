@@ -4,8 +4,9 @@ import { containerVirtualSizeConverterToString } from '../ContainerVirtualSizeCo
 import { checkBytesAndConvertToNumber } from '../../utilities/ CheckBytesAndConvertToNumber';
 import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
 
+import { ImageType, TotalStorageType, ContainerType} from '../../../types';
 
- async function getStorage(CLI:any){
+ async function getStorage(CLI:any): Promise<TotalStorageType>{
   const storage = {
       'running-containers': 0,
       'exited-containers': 0, //EXITED
@@ -17,17 +18,17 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
       'combinedTotal': 0
   };
 
-  const allImagesObj :any = {}; 
+  const allImagesObj : {[key:string]:ImageType} = {}; 
   //we want to keep a track of all the repositorys that are not equal to <none>. This assists us in parsing out which images are in use. 
    
   //Obj that manages all Images with Repository and Tag
-  const allImageRepositoryAndTagObj:any = {}
+  const allImageRepositoryAndTagObj: {[key:string]:{[key:string]:string}} = {}
    //we want to keep a track of all the repositorys that are not equal to <none>. This assists us in parsing out which images are in use. 
-  const allImageRepositoriesOnlyObj:any = {}; // {Repository:{ID, Size}}
+  const allImageRepositoriesOnlyObj: {[key:string]:{[key:string]:string}} = {}; // {Repository:{ID, Size}}
 
-  const allUnusedImagesSet = new Set(); 
+  const allUnusedImagesSet = new Set<string>(); 
 
-  const allData:any = {storage: storage, data: {
+  const allData:{storage: TotalStorageType; data: {[key:string]:ImageType[]}} = {storage: storage, data: {
     'running-containers': [], 
     'exited-containers': [], 
     'paused-containers': [], 
@@ -44,8 +45,8 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
   await CLI.docker.cli.exec('images', ['--format', '"{{json .}}"', '-a'])
   .then((result:any) => {
     // console.log('Dangling Result:', result)
-    const AllImgs = result.parseJsonLines();
-    AllImgs.forEach((el:any) => {
+    const AllImgs:ImageType[] = result.parseJsonLines();
+    AllImgs.forEach((el) => {
        
 
       //we only want to add to the allImageRepositoriesObj if the image repository within all the images has a repository ..we dont want the ones with <none> or any tag
@@ -66,12 +67,12 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
    
    
     //Set that contains allImagesUsedByConainer Ids
-  const idsForallImagesUsedByContainerSet= new Set();
+  const idsForallImagesUsedByContainerSet= new Set<string>();
   
    await CLI.docker.cli.exec('ps', ['--format', '"{{json .}}"', '-a'])
    .then((result:any) => {
  
-     const allImagesUsedByContainer = result.parseJsonLines();
+     const allImagesUsedByContainer:ContainerType[] = result.parseJsonLines();
 
 
     //4Test Cases
@@ -87,7 +88,7 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
         
 
      //if index returns with -1 that could mean that either its a repostiory without a tag or an id.       
-     allImagesUsedByContainer.forEach((el:any) => {
+     allImagesUsedByContainer.forEach((el) => {
       const index = el.Image.indexOf(':')
       if(index !== -1){
        
@@ -160,7 +161,7 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
    await CLI.docker.cli.exec('images', ['--format', '"{{json .}}"', '--filter', "dangling=true"])
    .then((result:any) => {
      // console.log('Dangling Result:', result)
-     const danglingImg = result.parseJsonLines();
+     const danglingImg:ImageType[] = result.parseJsonLines();
 
       for(let current of danglingImg){
         //if the allUnusedImagesSet (which tracks in the begining all ids) contains an current.ID from the idsForallImagesUsedByContainerSet we want to remove
@@ -187,7 +188,7 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
 
   //FOR UNUSED IMAGES*************************************************************************************************************************
    //we iterate through the allUnusedImageSet 
-  allUnusedImagesSet.forEach((unusedImageID:any) => {
+  allUnusedImagesSet.forEach((unusedImageID:string) => {
     //Get the Data from the allImagesObj .. and add it to storage as well as the allData obj.
     storage['unused-images'] += strToNumb(allImagesObj[unusedImageID].Size)
 
@@ -214,9 +215,9 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
 
   await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
   .then((result:any) => {
-    const exitedCont = result.parseJsonLines();
+    const exitedCont:ContainerType[] = result.parseJsonLines();
     //storage['unused-containers'] = 
-    const containerSum =  exitedCont.reduce((sum:any,current:any)=>{ 
+    const containerSum =  exitedCont.reduce((sum:number,current:ContainerType)=>{ 
       const virtualStringConverter = containerVirtualSizeConverterToString(current.Size)
       //The checkBytesAndConvertToNumber function checks the type of Bytes (kb, mb, gb or byte) & converts to megabytes 
       //in the form of a number */
@@ -236,13 +237,13 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
 
    //RUNNING CONTAINERS - also include paused containers so we want to create this set to conain all the paused container ids to 
   //be able to distinguish between paused and running containers. 
-  const pausedContainerIdSet = new Set(); 
+  const pausedContainerIdSet = new Set<string>(); 
 
   await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=paused"])
   .then((result:any) => {
-    const pausedCont = result.parseJsonLines();
+    const pausedCont:ContainerType[] = result.parseJsonLines();
     //storage['unused-containers'] = 
-    const containerSum =  pausedCont.reduce((sum:any,current:any)=>{ 
+    const containerSum =  pausedCont.reduce((sum:number,current:ContainerType)=>{ 
 
       //add paused container ids to the set
       pausedContainerIdSet.add(current.ID)
@@ -266,7 +267,7 @@ import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
 
 await CLI.docker.cli.exec('ps', ['--format', '"{{json .}}"'])
 .then((result:any) => {
-  const runningCont = result.parseJsonLines();
+  const runningCont:ContainerType[] = result.parseJsonLines();
   
   for(let container of runningCont){
     if(!pausedContainerIdSet.has(container.ID)){
