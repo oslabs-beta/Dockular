@@ -35,7 +35,7 @@ import { storageNumToStr } from './utilities/StorageNumtoStr';
 import { checkBytesAndConvertToNumber } from './utilities/ CheckBytesAndConvertToNumber';
 
 //TYPES
-import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType } from '../types'
+import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, } from '../types'
 
 //Docker Desktop Client
 const client = createDockerDesktopClient();
@@ -55,7 +55,8 @@ export function Prune() {
   const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
 
   //state that manages a list of all the dangling images, unused containers, and builtCasche
-  const [dataForGridRows, setDataForGridRows] = React.useState<ImageType[]>([]);
+  type dataForGridRowType = ImageType[] | ContainerType[];
+  const [dataForGridRows, setDataForGridRows] = React.useState<dataForGridRowType>([]);
 
   //state that handles the size of each image and container. Data is utilized to calculate size...which affects datagrid etc. 
   //This state seems to only be utilized for tracking the value of the id selected for the given container/image. See if you can combine with other state? 
@@ -150,8 +151,8 @@ export function Prune() {
       GetAllStorage(ddClient, 'data').
       then(res => {    
       setDataForGridRows(res.data['dangling-images'])
-      
-      }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (DANGLING IMAGES) - Docker command in: GetAllStorage module ${err}`}) 
+      })
+      // .catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (DANGLING IMAGES) - Docker command in: GetAllStorage module ${err}`}) 
 
       //COMMAND POPULATES UNUSED IMAGES
      } else if(dataGridBlueButtonType === 'unused-images') {
@@ -161,7 +162,8 @@ export function Prune() {
         console.log("res.data['unused-images']", res.data['unused-images']); 
 
       setDataForGridRows(res.data['unused-images'])
-      }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (UNUSED IMAGES) - Docker command in: GetAllStorage module ${err}`})  
+      })
+      // .catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (UNUSED IMAGES) - Docker command in: GetAllStorage module ${err}`})  
 
     //command populates all 'in-use-images'
     } else if(dataGridBlueButtonType === 'in-use-images'){
@@ -171,7 +173,8 @@ export function Prune() {
         // console.log(res)
       setDataForGridRows(res.data['in-use-images'])
       
-      }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (IN USE IMAGES) - Docker command in: GetAllStorage module${err}`})  
+      })
+      // .catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (IN USE IMAGES) - Docker command in: GetAllStorage module${err}`})  
 
       //EXITED CONTAINERS 
     } else if(dataGridBlueButtonType === 'exited-containers'){
@@ -180,34 +183,38 @@ export function Prune() {
           // console.log('psAll',result.parseJsonLines())
           setDataForGridRows(result.parseJsonLines());
           
-        }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (EXITED CONTAINERS) - command: ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"]) ${err}`})
+        })
+        // .catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (EXITED CONTAINERS) - command: ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"]) ${err}`})
 
           //Paused Containers
       } else if(dataGridBlueButtonType === 'paused-containers'){
         ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=paused"])
         .then((result) => {
           // console.log('psAll',result.parseJsonLines())
-          setDataForGridRows(result.parseJsonLines());
+          const pausedContainers:ContainerType[] = result.parseJsonLines()
+          setDataForGridRows(pausedContainers);
           
-        }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (PAUSED CONTAINERS) - command: ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"]) ${err}`})
+        })
+        // .catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (PAUSED CONTAINERS) - command: ddClient.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"]) ${err}`})
 
         //RUNNING CONTAINERS
       }else if(dataGridBlueButtonType === 'running-containers'){
-        GetRunningContainers(ddClient).
-        then(res => { 
+        GetRunningContainers(ddClient)
+        .then(result => { 
           // console.log('running containers', res)   
-        setDataForGridRows(res)
-        }).catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (RUNNING CONTAINERS) Docker command in: GetRunningContainers module ${err}`})  
+        setDataForGridRows(result)
+        })
+        // .catch((err)=>{`Error in second use Effect tracking dataGridBlueButtonType within prune.tsx (RUNNING CONTAINERS) Docker command in: GetRunningContainers module ${err}`})  
        
         //command populates all built casche
       }else if(dataGridBlueButtonType === 'built-casche'){
         ddClient.docker.cli.exec('builder', ['du', '--verbose'])
         .then((result) => {
           // console.log('result.stdout within useEffect in prune file -->', result.stdout)
-          // console.log('Parsed BuiltCascheRowDataParser(result) in prune useEffect', JSON.parse(BuiltCascheRowDataParser(result.stdout)))
+          console.log('Parsed BuiltCascheRowDataParser(result) in prune useEffect', JSON.parse(BuiltCascheRowDataParser(result.stdout)))
           setDataForGridRows(JSON.parse(BuiltCascheRowDataParser(result.stdout)));
-        }).catch((err)=>{`Error in use Effect within prune.tsx for BUILD CACHE - command: ddClient.docker.cli.exec('builder', ['du', '--verbose']) ${err}`})
-
+        })
+        // .catch((err)=>{`Error in use Effect within prune.tsx for BUILD CACHE - command: ddClient.docker.cli.exec('builder', ['du', '--verbose']) ${err}`})
       }  
       
   },[dataGridBlueButtonType])
@@ -1234,8 +1241,8 @@ export function Prune() {
     { field: 'id', headerName: 'ID', width: 135 },
     { field: 'size', headerName: 'Size', width: 115},
     { field: 'created', headerName: 'Created', width: 135 },
-    { field: 'RepoOrImage', headerName: rowColumnTypeHelper(dataGridBlueButtonType, 'col', 'RepoOrImage', {}), width: 145 },
-    { field: 'TagOrName', headerName: rowColumnTypeHelper(dataGridBlueButtonType, 'col', 'TagOrName', {}),width: 135}, 
+    { field: 'RepoOrImage', headerName: rowColumnTypeHelper(dataGridBlueButtonType, 'col', 'RepoOrImage', {} ), width: 145 },
+    { field: 'TagOrName', headerName: rowColumnTypeHelper(dataGridBlueButtonType, 'col', 'TagOrName', {} ),width: 135}, 
       //created a type field so we can utilize and be able to distinguish whether we are pruning 
       //a container, image or cache within the pruning function. The getSelectedRows() returns
       //an array of objects with these fields. We also need to distinguid because each type
@@ -1254,7 +1261,6 @@ export function Prune() {
     RepoOrImage:  rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'RepoOrImage', type),
     status: rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'status', type),
     type: rowColumnTypeHelper(dataGridBlueButtonType, 'row', 'type', type)
-
   }));
 
 
@@ -1392,8 +1398,6 @@ const theme = createTheme({
                   fontStyle: 'italic',
                   textAlign: 'center',
                   marginTop: 1,
-                  
-                   
                 }}
                 >{dataGridTypeHeaderHelper(dataGridBlueButtonType)}
                 </Box>
@@ -1433,9 +1437,7 @@ const theme = createTheme({
                 <Button variant="contained" color='error' onClick={()=>{pruningFunc('prune-selected')}} sx={{
                     m:2,
                     p: 1,
-                    borderRadius: 2,
-                    
-                     
+                    borderRadius: 2, 
                     }}>
                     Prune Selected
                 </Button>

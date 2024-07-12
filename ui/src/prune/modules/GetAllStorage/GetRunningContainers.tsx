@@ -1,13 +1,13 @@
 
+ import { ContainerType } from "../../../types";
+
  async function GetRunningContainers(CLI:any){
  
-
- 
-  const runningContainerDataArray:any = [];
+  const runningContainerDataArray: ContainerType[] = [];
 
  //running containers also include paused containers so we want to create this set to conain all the paused container ids to 
   //be able to distinguish between paused and running containers. 
-  const pausedContainerIdSet = new Set(); 
+  const pausedContainerIdSet = new Set<string>(); 
  
 
   //For Paused Containers *******************************************************************************************************************
@@ -15,9 +15,9 @@
 
   await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=paused"])
   .then((result:any) => {
-    const pausedCont = result.parseJsonLines();
+    const pausedCont:ContainerType[] = result.parseJsonLines();
 
-    pausedCont.forEach((container:any) =>{
+    pausedCont.forEach((container:ContainerType) =>{
       //add paused container ids to the set
       pausedContainerIdSet.add(container.ID)
     })
@@ -30,9 +30,9 @@
 
   await CLI.docker.cli.exec('ps', ['--format', '"{{json .}}"'])
   .then((result:any) => {
-    const pausedCont = result.parseJsonLines();
-    //storage['unused-containers'] = 
-    pausedCont.forEach((container:any) =>{
+    const pausedCont:ContainerType[] = result.parseJsonLines();
+    
+    pausedCont.forEach((container: ContainerType) =>{
     if(!pausedContainerIdSet.has(container.ID)) {
       console.log('running container', container)
         runningContainerDataArray.push({

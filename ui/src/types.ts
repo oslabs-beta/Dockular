@@ -29,21 +29,31 @@ export type ImageType = {
     // VirtualSize?: string; 
 // }>;
 
+        
+
 export type ContainerType = {
-    Command: string;
-    CreatedAt: string;
     ID: string;
-    Image: string;
-    Labels: string; 
-    LocalVolumes: string; 
-    Mounts: string;
-    Names: string; 
-    Networks: string;
-    Ports: string; 
-    RunningFor: string; 
     Size: string; 
+    RunningFor: string; 
     State: string; 
-    Status: string; 
+    Names: string; 
+    Image: string;
+
+    Command?: string;
+    CreatedAt?: string;
+    Labels?: string; 
+    LocalVolumes?: string; 
+    Mounts?: string;
+    Networks?: string;
+    Ports?: string; 
+    Status?: string; 
+}
+
+export type BuildCacheType = {
+    CreatedSince:string;
+    ID:string;
+    Reclaimable:string;
+    Size: string;
 }
 
 export type StorageSizeType = {
@@ -55,7 +65,6 @@ export type StorageSizeType = {
     'unused-images': {[key:string]: number};
     'built-casche': {[key:string]: number};
 };
-
 
 export type SelectedRowSizeType = {
     'running-containers': number,
