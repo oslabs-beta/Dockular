@@ -1,8 +1,7 @@
-import { type } from "os";
+import {ImageType, ContainerType, BuildCacheType} from '../../../types'
 
 //Utilized in Prune.tsx 
-export function rowColumnTypeHelper (buttonType:any, rowOrCol:any, field:any, typeElement:any) {
-    // console.log('rowColumnTypeHelper buttonType', buttonType)
+export function rowColumnTypeHelper (buttonType:string, rowOrCol:string, field:string, typeElement: {[key:string]:string}) {
     
     if(rowOrCol === 'col'){
     //Images
