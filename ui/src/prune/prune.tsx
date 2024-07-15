@@ -13,6 +13,7 @@ import { createTheme } from '@mui/material';
 //mui grid
 import { DataGrid, GridRowsProp, GridColDef, GridEventListener} from '@mui/x-data-grid';
 import { useGridApiRef } from '@mui/x-data-grid';
+import { GridCellParams } from '@mui/x-data-grid'
 
 //components
 import { ProgressbarChartComponent } from './components/ProgressbarChartComponent';
@@ -35,7 +36,7 @@ import { storageNumToStr } from './utilities/StorageNumtoStr';
 import { checkBytesAndConvertToNumber } from './utilities/ CheckBytesAndConvertToNumber';
 
 //TYPES
-import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, } from '../types'
+import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from '../types'
 
 //Docker Desktop Client
 const client = createDockerDesktopClient();
@@ -55,7 +56,7 @@ export function Prune() {
   const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
 
   //state that manages a list of all the dangling images, unused containers, and builtCasche
-  type dataForGridRowType = ImageType[] | ContainerType[];
+  type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]
   const [dataForGridRows, setDataForGridRows] = React.useState<dataForGridRowType>([]);
 
   //state that handles the size of each image and container. Data is utilized to calculate size...which affects datagrid etc. 
@@ -219,11 +220,37 @@ export function Prune() {
       
   },[dataGridBlueButtonType])
 
+// type RowType = {
+//   RepoOrImage: string
+//   TagOrName: string
+//   created: string
+//   id: string
+//   size: string
+//   status: string
+//   type: string
+// }
+
+// type cellParam = {
+//   cellMode: string
+//   colDef: {}
+//   field: string
+//   formattedValue: string
+//   hasFocus: boolean
+//   id:string
+//   isEditable:boolean
+//   row: RowType
+//   rowNode: {}
+//   tabIndex: number
+//   value: string
+// }
+
 
   //This eventListener helps us keep track of the boxes selected/unselected in the grid by id and the size of each image based off id
-  const handleCellClick: GridEventListener<'cellClick'> = (params) => {
-    // const handleRowClick: GridEventListener<'rowClick'> = (params) => {
+  const handleCellClick: GridEventListener<'cellClick'> = (params: GridCellParams<any>) => {
+    //   const handleCellClick: GridEventListener<'cellClick'> = (params: GridCellParams<cellParam>) => {
 
+    // const handleRowClick: GridEventListener<'rowClick'> = (params) => {
+    console.log('params', params)
     
     if(dataGridBlueButtonType === 'dangling-images'){
 
