@@ -220,34 +220,34 @@ export function Prune() {
       
   },[dataGridBlueButtonType])
 
-// type RowType = {
-//   RepoOrImage: string
-//   TagOrName: string
-//   created: string
-//   id: string
-//   size: string
-//   status: string
-//   type: string
-// }
+type RowType = {
+  RepoOrImage: string
+  TagOrName: string
+  created: string
+  id: string
+  size: string
+  status: string
+  type: string
+}
 
-// type cellParam = {
-//   cellMode: string
-//   colDef: {}
-//   field: string
-//   formattedValue: string
-//   hasFocus: boolean
-//   id:string
-//   isEditable:boolean
-//   row: RowType
-//   rowNode: {}
-//   tabIndex: number
-//   value: string
-// }
+type cellParam = {
+  cellMode: string
+  colDef: {}
+  field: string
+  formattedValue: string
+  hasFocus: boolean
+  id:string
+  isEditable:boolean
+  row: RowType
+  rowNode: {}
+  tabIndex: number
+  value: string
+}
 
 
   //This eventListener helps us keep track of the boxes selected/unselected in the grid by id and the size of each image based off id
   const handleCellClick: GridEventListener<'cellClick'> = (params: GridCellParams<any>) => {
-    //   const handleCellClick: GridEventListener<'cellClick'> = (params: GridCellParams<cellParam>) => {
+      // const handleCellClick: GridEventListener<'cellClick'> = (params: GridCellParams<cellParam>) => {
 
     // const handleRowClick: GridEventListener<'rowClick'> = (params) => {
     console.log('params', params)

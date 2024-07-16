@@ -190,6 +190,10 @@ import { ImageType, TotalStorageType, ContainerType} from '../../../types';
    //we iterate through the allUnusedImageSet 
   allUnusedImagesSet.forEach((unusedImageID:string) => {
     //Get the Data from the allImagesObj .. and add it to storage as well as the allData obj.
+    // const num = strToNumb(allImagesObj[unusedImageID].Size)
+    // const str = allImagesObj[unusedImageID].Size
+    // console.log('str',str,'num',num)
+    
     storage['unused-images'] += strToNumb(allImagesObj[unusedImageID].Size)
 
     // allData.data['unused-images'].push({
