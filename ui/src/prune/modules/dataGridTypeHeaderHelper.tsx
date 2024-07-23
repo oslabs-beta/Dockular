@@ -1,5 +1,5 @@
 //Utilized in Prune.tsx 
-export function dataGridTypeHeaderHelper(buttonSelectedType:any) {
+export function dataGridTypeHeaderHelper(buttonSelectedType:string) {
 
     
     if(buttonSelectedType === 'exited-containers') {  
