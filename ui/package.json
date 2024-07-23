@@ -26,7 +26,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "test2": "jest src",
-    "test": "vitest --globals"
+    "test": "vitest --globals --run --reporter verbose",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@docker/extension-api-client-types": "0.3.4",

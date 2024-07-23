@@ -13,4 +13,5 @@ export function storageNumToStr(numb:number):string{
   } else {
     return `${roundTwoDecimalPlaces(numb)}MB`
   }
+
 }
