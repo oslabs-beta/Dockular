@@ -222,6 +222,7 @@ import { ImageType, TotalStorageType, ContainerType} from '../../../types';
     const exitedCont:ContainerType[] = result.parseJsonLines();
     //storage['unused-containers'] = 
     const containerSum =  exitedCont.reduce((sum:number,current:ContainerType)=>{ 
+      // console.log('Exited Container Size in getStorage.tsx',current.Size)
       const virtualStringConverter = containerVirtualSizeConverterToString(current.Size)
       //The checkBytesAndConvertToNumber function checks the type of Bytes (kb, mb, gb or byte) & converts to megabytes 
       //in the form of a number */
@@ -251,7 +252,7 @@ import { ImageType, TotalStorageType, ContainerType} from '../../../types';
 
       //add paused container ids to the set
       pausedContainerIdSet.add(current.ID)
-
+      // console.log('paused Container Size in getStorage.tsx',current.Size)
       const virtualStringConverter = containerVirtualSizeConverterToString(current.Size)
       //The checkBytesAndConvertToNumber function checks the type of Bytes (kb, mb, gb or byte) & converts to megabytes 
       //in the form of a number */
@@ -276,6 +277,7 @@ await CLI.docker.cli.exec('ps', ['--format', '"{{json .}}"'])
   for(let container of runningCont){
     if(!pausedContainerIdSet.has(container.ID)){
       // console.log(container.Size);
+      // console.log('Running Container Size in getStorage.tsx',container.Size)
       const virtualStringConverter = containerVirtualSizeConverterToString(container.Size);
       const sizeNum = checkBytesAndConvertToNumber(virtualStringConverter);
       // console.log('sizeNum', sizeNum)

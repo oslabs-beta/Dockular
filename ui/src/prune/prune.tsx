@@ -220,29 +220,6 @@ export function Prune() {
       
   },[dataGridBlueButtonType])
 
-type RowType = {
-  RepoOrImage: string
-  TagOrName: string
-  created: string
-  id: string
-  size: string
-  status: string
-  type: string
-}
-
-type cellParam = {
-  cellMode: string
-  colDef: {}
-  field: string
-  formattedValue: string
-  hasFocus: boolean
-  id:string
-  isEditable:boolean
-  row: RowType
-  rowNode: {}
-  tabIndex: number
-  value: string
-}
 
 
   //This eventListener helps us keep track of the boxes selected/unselected in the grid by id and the size of each image based off id
@@ -767,6 +744,7 @@ type cellParam = {
   //useEffect fires when we select or prune a dangling-image, unused-conatiner or built-casche
   //This useEffect is utilized to update our circular chart.
   //THIS MAY BE THE CONTAINER THAT HELPS US REFILL THE VALUES WITHIN THE DATA GRID? 
+
   useEffect(()=>{
     // we set the totalStorageTypes state with the most updated amount of storage size utilized by each type, ex: unused-containers, dangling images, etc. 
     // this shouldnt be called when we are only selecting but it is because everything is overlapping. Its also called everytime we render in general
@@ -804,7 +782,9 @@ type cellParam = {
       // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
 
       //we sum up all these values using the reduce method
-      const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+      const cpuUsageCalculation:number = selectedImageCpuSizeArray.reduce((sum: number, num: number)=> sum + num, 0); 
+
+      // console.log('cpuUsageCalculation', cpuUsageCalculation)
 
       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
         'running-containers': selectedGridRowStorageSize['running-containers'], 
@@ -827,7 +807,7 @@ type cellParam = {
        // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
  
        //we sum up all these values using the reduce method
-       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+       const cpuUsageCalculation:number = selectedImageCpuSizeArray.reduce((sum: number, num: number)=> sum + num, 0); 
  
        const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
          'running-containers': selectedGridRowStorageSize['running-containers'], 
@@ -851,7 +831,7 @@ type cellParam = {
        // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
  
        //we sum up all these values using the reduce method
-       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+       const cpuUsageCalculation:number = selectedImageCpuSizeArray.reduce((sum: number, num: number)=> sum + num, 0); 
  
        const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
          'running-containers': selectedGridRowStorageSize['running-containers'], 
@@ -876,7 +856,7 @@ type cellParam = {
        // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
  
        //we sum up all these values using the reduce method
-       const cpuUsageCalculation:any = selectedContainerCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+       const cpuUsageCalculation:number = selectedContainerCpuSizeArray.reduce((sum: number, num: number)=> sum + num, 0); 
  
        const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
          'running-containers': selectedGridRowStorageSize['running-containers'], 
@@ -900,7 +880,7 @@ type cellParam = {
        // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
  
        //we sum up all these values using the reduce method
-       const cpuUsageCalculation:any = selectedContainerCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+       const cpuUsageCalculation:number = selectedContainerCpuSizeArray.reduce((sum: number, num: number)=> sum + num, 0); 
  
        const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
          'running-containers': selectedGridRowStorageSize['running-containers'], 
@@ -924,7 +904,7 @@ type cellParam = {
        // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
  
        //we sum up all these values using the reduce method
-       const cpuUsageCalculation:any = selectedContainerCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+       const cpuUsageCalculation:number = selectedContainerCpuSizeArray.reduce((sum: number, num: number)=> sum + num, 0); 
        
        const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
          'running-containers': cpuUsageCalculation,
@@ -945,7 +925,7 @@ type cellParam = {
        const selectedImageCpuSizeArray = Object.values(storageSizeById['built-casche']); //Example: [14,14,30]
        //we sum up all these values using the reduce method
        //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
-       const cpuUsageCalculation:any = selectedImageCpuSizeArray.reduce((sum: any, num: any)=> sum + num, 0); 
+       const cpuUsageCalculation:number = selectedImageCpuSizeArray.reduce((sum: number, num: number)=> sum + num, 0); 
  
 
       const cpuUsageCalculationResult = setSelectedGridRowStorageSize({
