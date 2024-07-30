@@ -5,15 +5,13 @@ import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { Box, Container } from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
 import { Stack } from "@mui/material";
-
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { createTheme } from '@mui/material';
-
 
 //mui grid
 import { DataGrid, GridRowsProp, GridColDef, GridEventListener} from '@mui/x-data-grid';
 import { useGridApiRef } from '@mui/x-data-grid';
-import { GridCellParams } from '@mui/x-data-grid'
+import { GridCellParams } from '@mui/x-data-grid';
 
 //components
 import { ProgressbarChartComponent } from './components/ProgressbarChartComponent';
@@ -21,7 +19,6 @@ import { PruneAllButtonComponent } from './components/PruneAllButtonComponent';
 import { ImageButtonComponent } from './components/ImageButtonComponent';
 import { ContainerButtonComponent } from './components/ContainerButtonComponent';
  
-
 //modules
 import GetAllStorage from './modules/GetAllStorage/GetAllStorage';
 import GetRunningContainers from './modules/GetAllStorage/GetRunningContainers';
@@ -36,7 +33,7 @@ import { storageNumToStr } from './utilities/StorageNumtoStr';
 import { checkBytesAndConvertToNumber } from './utilities/ CheckBytesAndConvertToNumber';
 
 //TYPES
-import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from '../types'
+import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from '../types';
 
 //Docker Desktop Client
 const client = createDockerDesktopClient();
