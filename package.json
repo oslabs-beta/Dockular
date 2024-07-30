@@ -10,6 +10,7 @@
     "react-circular-progressbar": "^2.1.0"
   },
   "devDependencies": {
-    "@types/chart.js": "^2.9.41"
+    "@types/chart.js": "^2.9.41",
+    "@vitest/coverage-v8": "^2.0.4"
   }
 }
