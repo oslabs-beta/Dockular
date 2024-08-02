@@ -41,7 +41,6 @@ function useDockerDesktopClient() {
   return client;
 }
 
-
 export function Prune() {
 
   const ddClient = useDockerDesktopClient();
@@ -106,6 +105,11 @@ export function Prune() {
   // useEffect(()=>{
   //   console.log('selectedGridRowStorageSize', selectedGridRowStorageSize, 'storageSizeById', storageSizeById)
   // },[selectedGridRowStorageSize, ])
+
+  // useEffect(()=>{
+  //   console.log('totalStorageTypes',totalStorageTypes)
+  // },[totalStorageTypes])
+  
 
 
   useEffect(()=>{
