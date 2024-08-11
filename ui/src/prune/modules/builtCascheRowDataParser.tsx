@@ -3,12 +3,16 @@
 
 
 export function BuiltCascheRowDataParser(output:string) {
-  
+  // console.log('output', output)
   const lines = output.split('\n');
+  // console.log('lines', lines);
   const entriesFiltered: string[][] = []; //array of arrays
   const parsedBuiltCascheArray: Array<{[key:string]: string}> = []; //[{id: 'id', size: 'size', CreatedSince: '', reclaimable: false}]
 
+  // console.log('test', output.split('\n').filter((el:string)=> el.match(/ID/g) || el.match(/Size/g) || el.match(/Last/g) || el.match(/Reclaimable/g)))
   // console.log("All Lines: \n",lines)
+
+
 
   let totalLine:string[]= [];
 
@@ -18,6 +22,7 @@ export function BuiltCascheRowDataParser(output:string) {
 
   for(let i = 0; i < lines.length-1; i++){
     const ele = lines[i];
+    
     // console.log('ele', ele, typeof ele)
     /*each built-casche is seperated by an empty string due to the --verbose flag... 
     (Uncomment console.log("All Lines: \n",lines) on line 11 for representation)
@@ -38,6 +43,7 @@ export function BuiltCascheRowDataParser(output:string) {
         //we will have sizes of bytes, kilobytes as well.. 
         filteredElementsInTotalLine.forEach((element:string)=>{
           if(element.match(/MB/g)) {
+          // if(element.match(/GB/g) || element.match(/MB/g) || element.match(/kB/g)) {
             // console.log('element in filteredElementsInTotalLine -->', filteredElementsInTotalLine) 
             // console.log('totalLine', totalLine)
             // console.log('totalLine.filter((el:any)=> el.match(/ID/g) || el.match(/Size/g) || el.match(/Last/g) || el.match(/Reclaimable/g)', totalLine.filter((el:any)=> el.match(/ID/g) || el.match(/Size/g) || el.match(/Last/g) || el.match(/Reclaimable/g)))
