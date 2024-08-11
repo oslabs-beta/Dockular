@@ -213,7 +213,7 @@ export function Prune() {
         ddClient.docker.cli.exec('builder', ['du', '--verbose'])
         .then((result) => {
           // console.log('result.stdout within useEffect in prune file -->', result.stdout)
-          console.log('Parsed BuiltCascheRowDataParser(result) in prune useEffect', JSON.parse(BuiltCascheRowDataParser(result.stdout)))
+          // console.log('Parsed BuiltCascheRowDataParser(result) in prune useEffect', JSON.parse(BuiltCascheRowDataParser(result.stdout)))
           setDataForGridRows(JSON.parse(BuiltCascheRowDataParser(result.stdout)));
         })
         // .catch((err)=>{`Error in use Effect within prune.tsx for BUILD CACHE - command: ddClient.docker.cli.exec('builder', ['du', '--verbose']) ${err}`})
