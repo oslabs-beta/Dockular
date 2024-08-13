@@ -7,10 +7,14 @@ import { Box} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useEffect } from 'react';
 
+type ProgressbarChartComponentProps = {
+  selectedTotal: number,
+  combinedTotal: number
+}
 
-export function ProgressbarChartComponent(props:any) {
+export function ProgressbarChartComponent({selectedTotal, combinedTotal}:ProgressbarChartComponentProps ) {
 
-    const val:any = `${storageNumToStr(props.selectedTotal)} / ${storageNumToStr(props.combinedTotal)}`
+    const val:string = `${storageNumToStr(selectedTotal)} / ${storageNumToStr(combinedTotal)}`
     
     // const mediaQueryForMaxHeight = window.matchMedia("(max-height: 695px)");
     // useEffect(()=>{
@@ -34,25 +38,25 @@ export function ProgressbarChartComponent(props:any) {
     
     function byteGraph(){
       //kilobytes
-      if(props.selectedTotal < 1){
-        const comparison :any = `${storageNumToStr(props.selectedTotal)} / ${'1MB'}`
-        const value = props.selectedTotal;
-        const maxValue = 1;
-        const pathColor = "#D61A3C"
+      if(selectedTotal < 1){
+        const comparison:string = `${storageNumToStr(selectedTotal)} / ${'1MB'}`
+        const value:number = selectedTotal;
+        const maxValue:number = 1;
+        const pathColor:string = "#D61A3C"
         return <BytesGraph comparison={comparison} value={value} maxValue={maxValue} pathColor ={pathColor}/>
       //megabytes
-      } else if(props.selectedTotal > 1 && props.selectedTotal < 1000) {
-        const comparison:any = `${storageNumToStr(props.selectedTotal)} / ${'1GB'}`
-        const value = props.selectedTotal;
-        const maxValue = 1000;
-        const pathColor = "#E27429"
+      } else if(selectedTotal > 1 && selectedTotal < 1000) {
+        const comparison:string = `${storageNumToStr(selectedTotal)} / ${'1GB'}`
+        const value:number = selectedTotal;
+        const maxValue:number = 1000;
+        const pathColor:string = "#E27429"
         return <BytesGraph comparison={comparison} value={value} maxValue={maxValue} pathColor ={pathColor}/>
       //gigabytes
       } else {
-        const comparison:any = `${storageNumToStr(props.selectedTotal)} / ${'1TB'}`
-        const value = props.selectedTotal;
-        const maxValue = 1000;
-        const pathColor = "#68cd75"
+        const comparison:string = `${storageNumToStr(selectedTotal)} / ${'1TB'}`
+        const value:number = selectedTotal;
+        const maxValue:number = 1000;
+        const pathColor:string = "#68cd75"
         return <BytesGraph comparison={comparison} value={value} maxValue={maxValue} pathColor ={pathColor}/> 
       }
     }
@@ -78,7 +82,7 @@ export function ProgressbarChartComponent(props:any) {
             marginLeft: 2
           }}>
           
-           <CircularProgressbarWithChildren value={props.selectedTotal} maxValue={props.combinedTotal} text={val} strokeWidth={8} styles={buildStyles({
+           <CircularProgressbarWithChildren value={selectedTotal} maxValue={combinedTotal} text={val} strokeWidth={8} styles={buildStyles({
              strokeLinecap: "butt",
              textSize: '8px',
             })} >
