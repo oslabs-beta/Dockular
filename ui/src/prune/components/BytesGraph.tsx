@@ -1,18 +1,21 @@
 
 import {CircularProgressbarWithChildren, buildStyles} from 'react-circular-progressbar';
  
+type BytesGraphProps = {
+  comparison: string;
+  value: number;
+  maxValue: number;
+  pathColor: string;
+}
 
-export function BytesGraph(props:any) {
-
-  
-  
+export function BytesGraph({comparison, value, maxValue, pathColor}:BytesGraphProps) {
   
     return (
       
-        <CircularProgressbarWithChildren  value={props.value} maxValue={props.maxValue} text={props.comparison} strokeWidth={8} styles={buildStyles({
+        <CircularProgressbarWithChildren  value={value} maxValue={maxValue} text={comparison} strokeWidth={8} styles={buildStyles({
           strokeLinecap: "butt",
           textSize: '8px',
-          pathColor: `${props.pathColor}`,
+          pathColor: `${pathColor}`,
           })} >
         </CircularProgressbarWithChildren>
         
