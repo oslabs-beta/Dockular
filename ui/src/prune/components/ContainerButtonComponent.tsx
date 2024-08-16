@@ -7,32 +7,35 @@ import { storageNumToStr } from '../utilities/StorageNumtoStr';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { createTheme } from '@mui/material';
 
+type PropsType = {
+    setDataGridBlueButtonType: React.Dispatch<React.SetStateAction<string>>;
+    allImageAndContainerStorage: {[key:string]: number}; 
+    totalStorageTypes: {[key:string]: number}; 
+};
 
-
- 
-
-export function ContainerButtonComponent (props:any) {
+export function ContainerButtonComponent ({setDataGridBlueButtonType, allImageAndContainerStorage, totalStorageTypes} : PropsType) {
  
         const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
         const open = Boolean(anchorEl);
         const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
           setAnchorEl(event.currentTarget);
         };
+        
         const handleClose = () => {
-            console.log('handleclose event', event)
+            // console.log('handleclose event', event)
           setAnchorEl(null);
         };
     
         function containerType(strType:string){
             // console.log(strType)
             if(strType === 'exited-containers'){ //EXITED CONTAINERS
-                props.setDataGridBlueButtonType('exited-containers')
+                setDataGridBlueButtonType('exited-containers')
 
             } else if(strType === 'paused-containers') {
-                props.setDataGridBlueButtonType('paused-containers')
+                setDataGridBlueButtonType('paused-containers')
 
             } else if (strType === 'running-containers') {
-                props.setDataGridBlueButtonType('running-containers')
+                setDataGridBlueButtonType('running-containers')
             }
         }
        
@@ -68,7 +71,7 @@ export function ContainerButtonComponent (props:any) {
                 </Button>
 
                     <Button variant="contained" sx={{color: '#FFD700', marginRight: 2}}>
-                    { storageNumToStr(props.allImageAndContainerStorage['all-containers'])}
+                    { storageNumToStr(allImageAndContainerStorage['all-containers'])}
                     </Button>
            
                     
@@ -82,9 +85,9 @@ export function ContainerButtonComponent (props:any) {
                     'aria-labelledby': 'basic-button',
                 }}
                 >
-                <MenuItem onClick={()=>{handleClose(), containerType('running-containers')}}> {`Running Containers (${storageNumToStr(props.totalStorageTypes['running-containers'])})`} </MenuItem>
-                <MenuItem onClick={()=>{handleClose(), containerType('paused-containers')}}> {`Paused Containers (${storageNumToStr(props.totalStorageTypes['paused-containers'])})`} </MenuItem>
-                <MenuItem onClick={()=>{handleClose(), containerType('exited-containers')}}>{`Exited Containers (${storageNumToStr(props.totalStorageTypes['exited-containers'])})`}</MenuItem>
+                <MenuItem onClick={()=>{handleClose(), containerType('running-containers')}}> {`Running Containers (${storageNumToStr(totalStorageTypes['running-containers'])})`} </MenuItem>
+                <MenuItem onClick={()=>{handleClose(), containerType('paused-containers')}}> {`Paused Containers (${storageNumToStr(totalStorageTypes['paused-containers'])})`} </MenuItem>
+                <MenuItem onClick={()=>{handleClose(), containerType('exited-containers')}}>{`Exited Containers (${storageNumToStr(totalStorageTypes['exited-containers'])})`}</MenuItem>
                 </Menu>
         </>
         : 
@@ -109,9 +112,9 @@ export function ContainerButtonComponent (props:any) {
                 'aria-labelledby': 'basic-button',
             }}
             >
-            <MenuItem onClick={()=>{handleClose(), containerType('running-containers')}}> {`Running Containers (${storageNumToStr(props.totalStorageTypes['running-containers'])})`} </MenuItem>
-            <MenuItem onClick={()=>{handleClose(), containerType('paused-containers')}}> {`Paused Containers (${storageNumToStr(props.totalStorageTypes['paused-containers'])})`} </MenuItem>
-            <MenuItem onClick={()=>{handleClose(), containerType('exited-containers')}}>{`Exited Containers (${storageNumToStr(props.totalStorageTypes['exited-containers'])})`}</MenuItem>
+            <MenuItem onClick={()=>{handleClose(), containerType('running-containers')}}> {`Running Containers (${storageNumToStr(totalStorageTypes['running-containers'])})`} </MenuItem>
+            <MenuItem onClick={()=>{handleClose(), containerType('paused-containers')}}> {`Paused Containers (${storageNumToStr(totalStorageTypes['paused-containers'])})`} </MenuItem>
+            <MenuItem onClick={()=>{handleClose(), containerType('exited-containers')}}>{`Exited Containers (${storageNumToStr(totalStorageTypes['exited-containers'])})`}</MenuItem>
             </Menu>
         </>
         
