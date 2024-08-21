@@ -7,11 +7,16 @@ import { storageNumToStr } from '../utilities/StorageNumtoStr';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { createTheme } from '@mui/material';
 
+import { AllImageAndContainerStorageType, TotalStorageType }  from '../../types';
 
-
+interface ImageButtonComponentProps {
+    setDataGridBlueButtonType : React.Dispatch<React.SetStateAction<string>>,
+    allImageAndContainerStorage: AllImageAndContainerStorageType,
+    totalStorageTypes: TotalStorageType
+}
  
 
-export function ImageButtonComponent (props:any) {
+export function ImageButtonComponent ({setDataGridBlueButtonType, allImageAndContainerStorage, totalStorageTypes } : ImageButtonComponentProps) {
  
         const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
         const open = Boolean(anchorEl);
@@ -19,20 +24,20 @@ export function ImageButtonComponent (props:any) {
           setAnchorEl(event.currentTarget);
         };
         const handleClose = () => {
-            console.log('handleclose event', event)
+            // console.log('handleclose event', event)
           setAnchorEl(null);
         };
     
         function imageType(strType:string){
             // console.log(strType)
             if(strType === 'in-use-images'){
-                props.setDataGridBlueButtonType('in-use-images')
+                setDataGridBlueButtonType('in-use-images')
 
             } else if(strType === 'dangling-images') {
-                props.setDataGridBlueButtonType('dangling-images')
+                setDataGridBlueButtonType('dangling-images')
 
             } else if (strType === 'unused-images') {
-                props.setDataGridBlueButtonType('unused-images')
+                setDataGridBlueButtonType('unused-images')
             }
         }
 
@@ -67,7 +72,7 @@ export function ImageButtonComponent (props:any) {
             </Button>
 
                 <Button variant="contained" sx={{color: '#FFD700', marginRight: 2}}>
-                { storageNumToStr(props.allImageAndContainerStorage['all-images'])}
+                { storageNumToStr(allImageAndContainerStorage['all-images'])}
                 </Button>
                
                 
@@ -83,9 +88,9 @@ export function ImageButtonComponent (props:any) {
 
             //  `Dangling Images (${storageNumToStr(props.totalStorageTypes['in-use-images'])})`
              >
-            <MenuItem onClick={()=>{handleClose(), imageType('in-use-images')}}>{`In Use Images (${storageNumToStr(props.totalStorageTypes['in-use-images'])})`}</MenuItem>
-            <MenuItem onClick={()=>{handleClose(), imageType('dangling-images')}}> {`Dangling Images (${storageNumToStr(props.totalStorageTypes['dangling-images'])})`} </MenuItem>
-            <MenuItem onClick={()=>{handleClose(), imageType('unused-images')}}>{`Unused Images (${storageNumToStr(props.totalStorageTypes['unused-images'])})`}</MenuItem>
+            <MenuItem onClick={()=>{handleClose(), imageType('in-use-images')}}>{`In Use Images (${storageNumToStr(totalStorageTypes['in-use-images'])})`}</MenuItem>
+            <MenuItem onClick={()=>{handleClose(), imageType('dangling-images')}}> {`Dangling Images (${storageNumToStr(totalStorageTypes['dangling-images'])})`} </MenuItem>
+            <MenuItem onClick={()=>{handleClose(), imageType('unused-images')}}>{`Unused Images (${storageNumToStr(totalStorageTypes['unused-images'])})`}</MenuItem>
             </Menu>
            
             </>
@@ -115,9 +120,9 @@ export function ImageButtonComponent (props:any) {
 
             //  `Dangling Images (${storageNumToStr(props.totalStorageTypes['in-use-images'])})`
              >
-            <MenuItem onClick={()=>{handleClose(), imageType('in-use-images')}}>{`In Use Images (${storageNumToStr(props.totalStorageTypes['in-use-images'])})`}</MenuItem>
-            <MenuItem onClick={()=>{handleClose(), imageType('dangling-images')}}> {`Dangling Images (${storageNumToStr(props.totalStorageTypes['dangling-images'])})`} </MenuItem>
-            <MenuItem onClick={()=>{handleClose(), imageType('unused-images')}}>{`Unused Images (${storageNumToStr(props.totalStorageTypes['unused-images'])})`}</MenuItem>
+            <MenuItem onClick={()=>{handleClose(), imageType('in-use-images')}}>{`In Use Images (${storageNumToStr(totalStorageTypes['in-use-images'])})`}</MenuItem>
+            <MenuItem onClick={()=>{handleClose(), imageType('dangling-images')}}> {`Dangling Images (${storageNumToStr(totalStorageTypes['dangling-images'])})`} </MenuItem>
+            <MenuItem onClick={()=>{handleClose(), imageType('unused-images')}}>{`Unused Images (${storageNumToStr(totalStorageTypes['unused-images'])})`}</MenuItem>
             </Menu>
            
             </>

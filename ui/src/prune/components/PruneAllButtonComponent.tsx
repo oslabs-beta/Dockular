@@ -16,6 +16,9 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
+import { StorageSizeType, SelectedRowSizeType, ImageType, ContainerType, BuildCacheType} from '../../types';
+type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]
+
 const style = {
     position: 'absolute' as 'absolute',
     top: '50%',
@@ -30,11 +33,20 @@ const style = {
     borderColor: 'primary.main'
   };
 
-  
-export function PruneAllButtonComponent(props:any) {
+
+  interface PruneAllButtonComponentProps {
+    apiRef: any,
+    CLI : any, 
+    setStorageSizeById: React.Dispatch<React.SetStateAction<StorageSizeType>>,
+    selectedGridRowStorageSize: SelectedRowSizeType,
+    setSelectedGridRowStorageSize: React.Dispatch<React.SetStateAction<SelectedRowSizeType>>,
+    setDataForGridRows:  React.Dispatch<React.SetStateAction<dataForGridRowType>>
+  }
+
+export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, selectedGridRowStorageSize, setSelectedGridRowStorageSize, setDataForGridRows}:PruneAllButtonComponentProps) {
   // PROPS: apiRef={apiRef} CLI={ddClient} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} setDataForGridRows={setDataForGridRows} 
 
-    const [selectedTypes, SetSelectedTypes] = React.useState<{ [key: string]: any }>({
+    const [selectedTypes, SetSelectedTypes] = React.useState<{ [key: string]: boolean }>({
       'built-casche' : false, 
       'running-containers' : false,
       'paused-containers' : false, 
@@ -67,7 +79,7 @@ export function PruneAllButtonComponent(props:any) {
           
           let exitedContainerIdSet = new Set();
 
-          await props.CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
+          await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
            .then((result:any) => {
             const exitedContainers = result.parseJsonLines()
             exitedContainers.forEach((container:any) => {
@@ -76,13 +88,13 @@ export function PruneAllButtonComponent(props:any) {
           })
 
            //prune all exited containers
-           await props.CLI.docker.cli.exec('rm', [...exitedContainerIdSet])
+           await CLI.docker.cli.exec('rm', [...exitedContainerIdSet])
            .catch((err:any)=>{
             //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
-            props.apiRef.current.setRowSelectionModel([])
+            apiRef.current.setRowSelectionModel([])
             alert(`Error in container prune command ${err.stderr}`)});
 
-          props.setStorageSizeById((storageSize:any) => ({
+          setStorageSizeById((storageSize:any) => ({
             'running-containers':  {...storageSize['running-containers']},
             'exited-containers': {},
             'paused-containers': {...storageSize['paused-containers']},
@@ -95,19 +107,19 @@ export function PruneAllButtonComponent(props:any) {
        
           //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
           //all types - unused-containers, dangling-images and build-cache
-              props.setSelectedGridRowStorageSize({
-                'running-containers': props.selectedGridRowStorageSize['running-containers'],
-                'exited-containers': props.selectedGridRowStorageSize['exited-containers'],
-                'paused-containers': props.selectedGridRowStorageSize['paused-containers'],
-                'dangling-images': props.selectedGridRowStorageSize['dangling-images'],
-                'in-use-images': props.selectedGridRowStorageSize['in-use-images'],
-                'unused-images': props.selectedGridRowStorageSize['unused-images'],
-                'built-casche': props.selectedGridRowStorageSize['built-casche'],
+              setSelectedGridRowStorageSize({
+                'running-containers': selectedGridRowStorageSize['running-containers'],
+                'exited-containers': selectedGridRowStorageSize['exited-containers'],
+                'paused-containers': selectedGridRowStorageSize['paused-containers'],
+                'dangling-images': selectedGridRowStorageSize['dangling-images'],
+                'in-use-images': selectedGridRowStorageSize['in-use-images'],
+                'unused-images': selectedGridRowStorageSize['unused-images'],
+                'built-casche': selectedGridRowStorageSize['built-casche'],
                 'selectedTotal': 0,
               })
        
           //resets the dataForGridRows state to an empty array
-            props.setDataForGridRows([]);
+            setDataForGridRows([]);
             
 
         }
@@ -119,7 +131,7 @@ export function PruneAllButtonComponent(props:any) {
         
         let danglingImageIdSet = new Set();
 
-        await GetAllStorage(props.CLI, 'data').
+        await GetAllStorage(CLI, 'data').
           then(res => {    
             res.data['dangling-images'].forEach((image:any)=>{
               // console.log('images',image)
@@ -128,15 +140,15 @@ export function PruneAllButtonComponent(props:any) {
           })
 
          //prune all Dangling Images
-         await props.CLI.docker.cli.exec('rmi', [...danglingImageIdSet])
+         await CLI.docker.cli.exec('rmi', [...danglingImageIdSet])
          .catch((err:any)=>{
           //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
-          props.apiRef.current.setRowSelectionModel([])
+          apiRef.current.setRowSelectionModel([])
           console.log('Unable to prune... Dangling Image is being utilized by container',
            alert(`Error in container prune command ${err.stderr}`))
           });
 
-        props.setStorageSizeById((storageSize:any) => ({
+        setStorageSizeById((storageSize:any) => ({
           'running-containers':  {...storageSize['running-containers']},
           'exited-containers': {...storageSize['running-containers']},
           'paused-containers': {...storageSize['paused-containers']},
@@ -149,19 +161,19 @@ export function PruneAllButtonComponent(props:any) {
      
         //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
         //all types - unused-containers, dangling-images and build-cache
-            props.setSelectedGridRowStorageSize({
-              'running-containers': props.selectedGridRowStorageSize['running-containers'],
-              'exited-containers': props.selectedGridRowStorageSize['exited-containers'],
-              'paused-containers': props.selectedGridRowStorageSize['paused-containers'],
-              'dangling-images': props.selectedGridRowStorageSize['dangling-images'],
-              'in-use-images': props.selectedGridRowStorageSize['in-use-images'],
-              'unused-images': props.selectedGridRowStorageSize['unused-images'],
-              'built-casche': props.selectedGridRowStorageSize['built-casche'],
+            setSelectedGridRowStorageSize({
+              'running-containers': selectedGridRowStorageSize['running-containers'],
+              'exited-containers': selectedGridRowStorageSize['exited-containers'],
+              'paused-containers': selectedGridRowStorageSize['paused-containers'],
+              'dangling-images': selectedGridRowStorageSize['dangling-images'],
+              'in-use-images': selectedGridRowStorageSize['in-use-images'],
+              'unused-images': selectedGridRowStorageSize['unused-images'],
+              'built-casche': selectedGridRowStorageSize['built-casche'],
               'selectedTotal': 0,
             })
      
         //resets the dataForGridRows state to an empty array
-          props.setDataForGridRows([]);
+          setDataForGridRows([]);
             
       }
 
@@ -172,7 +184,7 @@ export function PruneAllButtonComponent(props:any) {
         
         let unusedImageIdSet = new Set();
 
-        await GetAllStorage(props.CLI, 'data').
+        await GetAllStorage(CLI, 'data').
           then(res => {    
             res.data['unused-images'].forEach((image:any)=>{
               // console.log('images',image)
@@ -182,14 +194,14 @@ export function PruneAllButtonComponent(props:any) {
     
 
          //prune all unused images
-         await props.CLI.docker.cli.exec('rmi', [...unusedImageIdSet])
+         await CLI.docker.cli.exec('rmi', [...unusedImageIdSet])
          .catch((err:any)=>{
           //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
-          props.apiRef.current.setRowSelectionModel([])
+          apiRef.current.setRowSelectionModel([])
           console.log('Unable to prune... Unused Image is being utilized by container',
           alert(`Error in unused image prune command ${err.stderr}`))});
 
-        props.setStorageSizeById((storageSize:any) => ({
+        setStorageSizeById((storageSize:any) => ({
           'running-containers':  {...storageSize['running-containers']},
           'exited-containers': {...storageSize['running-containers']},
           'paused-containers': {...storageSize['paused-containers']},
@@ -202,19 +214,19 @@ export function PruneAllButtonComponent(props:any) {
      
         //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
         //all types - unused-containers, dangling-images and build-cache
-            props.setSelectedGridRowStorageSize({
-              'running-containers': props.selectedGridRowStorageSize['running-containers'],
-              'exited-containers': props.selectedGridRowStorageSize['exited-containers'],
-              'paused-containers': props.selectedGridRowStorageSize['paused-containers'],
-              'dangling-images': props.selectedGridRowStorageSize['dangling-images'],
-              'in-use-images': props.selectedGridRowStorageSize['in-use-images'],
-              'unused-images': props.selectedGridRowStorageSize['unused-images'],
-              'built-casche': props.selectedGridRowStorageSize['built-casche'],
+            setSelectedGridRowStorageSize({
+              'running-containers': selectedGridRowStorageSize['running-containers'],
+              'exited-containers': selectedGridRowStorageSize['exited-containers'],
+              'paused-containers': selectedGridRowStorageSize['paused-containers'],
+              'dangling-images': selectedGridRowStorageSize['dangling-images'],
+              'in-use-images': selectedGridRowStorageSize['in-use-images'],
+              'unused-images': selectedGridRowStorageSize['unused-images'],
+              'built-casche': selectedGridRowStorageSize['built-casche'],
               'selectedTotal': 0,
             })
      
         //resets the dataForGridRows state to an empty array
-          props.setDataForGridRows([]);
+          setDataForGridRows([]);
       }
 
 
