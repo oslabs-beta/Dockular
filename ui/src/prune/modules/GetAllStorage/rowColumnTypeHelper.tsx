@@ -3,7 +3,7 @@ import {ImageType, ContainerType, BuildCacheType} from '../../../types'
 //Utilized in Prune.tsx 
 export function rowColumnTypeHelper (buttonType:string, rowOrCol:string, field:string, typeElement: {[key:string]:string}) {
 
-    console.log('typeElement', typeElement)
+    // console.log('typeElement', typeElement)
     
     if(rowOrCol === 'col'){
     //Images
