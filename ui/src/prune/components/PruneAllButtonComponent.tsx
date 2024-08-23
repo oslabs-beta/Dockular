@@ -77,12 +77,15 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
         if(key === 'exited-containers'){
           // console.log('Selected KEY', key)
           
-          let exitedContainerIdSet = new Set();
+          let exitedContainerIdSet = new Set<string>();
 
           await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
            .then((result:any) => {
-            const exitedContainers = result.parseJsonLines()
-            exitedContainers.forEach((container:any) => {
+            // console.log('result exited containers', result)
+            const exitedContainers:ContainerType[] = result.parseJsonLines()
+            // console.log('result exited containers', exitedContainers)
+
+            exitedContainers.forEach((container:ContainerType) => {
               exitedContainerIdSet.add(container.ID)
             })
           })
@@ -94,7 +97,7 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
             apiRef.current.setRowSelectionModel([])
             alert(`Error in container prune command ${err.stderr}`)});
 
-          setStorageSizeById((storageSize:any) => ({
+          setStorageSizeById((storageSize:StorageSizeType) => ({
             'running-containers':  {...storageSize['running-containers']},
             'exited-containers': {},
             'paused-containers': {...storageSize['paused-containers']},
@@ -129,11 +132,11 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
       if(key === 'dangling-images'){
         // console.log('Selected KEY', key)
         
-        let danglingImageIdSet = new Set();
+        let danglingImageIdSet = new Set<string>();
 
         await GetAllStorage(CLI, 'data').
           then(res => {    
-            res.data['dangling-images'].forEach((image:any)=>{
+            res.data['dangling-images'].forEach((image:ImageType)=>{
               // console.log('images',image)
               danglingImageIdSet.add(image.ID)
             })
@@ -148,7 +151,7 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
            alert(`Error in container prune command ${err.stderr}`))
           });
 
-        setStorageSizeById((storageSize:any) => ({
+        setStorageSizeById((storageSize:StorageSizeType) => ({
           'running-containers':  {...storageSize['running-containers']},
           'exited-containers': {...storageSize['running-containers']},
           'paused-containers': {...storageSize['paused-containers']},
@@ -182,11 +185,11 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
       if(key === 'unused-images'){
         // console.log('Selected KEY', key)
         
-        let unusedImageIdSet = new Set();
+        let unusedImageIdSet = new Set<string>();
 
         await GetAllStorage(CLI, 'data').
           then(res => {    
-            res.data['unused-images'].forEach((image:any)=>{
+            res.data['unused-images'].forEach((image:ImageType)=>{
               // console.log('images',image)
               unusedImageIdSet.add(image.ID)
             })
@@ -201,7 +204,7 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
           console.log('Unable to prune... Unused Image is being utilized by container',
           alert(`Error in unused image prune command ${err.stderr}`))});
 
-        setStorageSizeById((storageSize:any) => ({
+        setStorageSizeById((storageSize:StorageSizeType) => ({
           'running-containers':  {...storageSize['running-containers']},
           'exited-containers': {...storageSize['running-containers']},
           'paused-containers': {...storageSize['paused-containers']},
