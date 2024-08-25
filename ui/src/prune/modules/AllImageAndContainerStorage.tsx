@@ -4,6 +4,7 @@ import { containerVirtualSizeConverterToString } from './ContainerVirtualSizeCon
 import { checkBytesAndConvertToNumber } from '../utilities/ CheckBytesAndConvertToNumber';
 import { roundTwoDecimalPlaces } from '../utilities/RoundTwoDecimalPlaces';
 
+import { ImageType, ContainerType } from '../../types';
 
  async function AllImageAndContainerStorage(CLI:any){
 
@@ -15,9 +16,9 @@ import { roundTwoDecimalPlaces } from '../utilities/RoundTwoDecimalPlaces';
     await CLI.docker.cli.exec('images', ['--format', '"{{json .}}"', '-a'])
     .then((result:any) => {
       // console.log('Dangling Result:', result)
-      const allImgs = result.parseJsonLines();
-      console.log('images',allImgs)
-      storage['all-images'] = allImgs.reduce((sum:any,current:any)=>{
+      const allImgs:ImageType[] = result.parseJsonLines();
+      // console.log('images',allImgs)
+      storage['all-images'] = allImgs.reduce((sum:number,current:ImageType)=>{
         // console.log('current image in AllImageStorage module', current)
         return sum + strToNumb(current.Size);
       }, 0);
@@ -26,11 +27,11 @@ import { roundTwoDecimalPlaces } from '../utilities/RoundTwoDecimalPlaces';
     //EXITED CONTAINERS *******************************************************************************************************************
     await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
    .then((result:any) => {
-    const unusedCont = result.parseJsonLines();
-    console.log('containers',unusedCont)
+    const unusedCont:ContainerType[] = result.parseJsonLines();
+    // console.log('containers',unusedCont)
 
     //storage['unused-containers'] = 
-    const containerSum =  unusedCont.reduce((sum:any,current:any)=>{ 
+    const containerSum:number =  unusedCont.reduce((sum:number,current:ContainerType)=>{ 
       const virtualStringConverter = containerVirtualSizeConverterToString(current.Size)
       //The checkBytesAndConvertToNumber function checks the type of Bytes (kb, mb, gb or byte) & converts to megabytes 
       //in the form of a number */
@@ -49,13 +50,13 @@ import { roundTwoDecimalPlaces } from '../utilities/RoundTwoDecimalPlaces';
 
    //RUNNING CONTAINERS - also include paused containers so we want to create this set to conain all the paused container ids to 
   //be able to distinguish between paused and running containers. 
-  const pausedContainerIdSet = new Set(); 
+  const pausedContainerIdSet = new Set<string>(); 
 
   await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=paused"])
   .then((result:any) => {
-    const pausedCont = result.parseJsonLines();
+    const pausedCont:ContainerType[] = result.parseJsonLines();
     //storage['unused-containers'] = 
-    const containerSum =  pausedCont.reduce((sum:any,current:any)=>{ 
+    const containerSum:number =  pausedCont.reduce((sum:number,current:ContainerType)=>{ 
 
       //add paused container ids to the set
       pausedContainerIdSet.add(current.ID)
@@ -79,7 +80,7 @@ import { roundTwoDecimalPlaces } from '../utilities/RoundTwoDecimalPlaces';
 
 await CLI.docker.cli.exec('ps', ['--format', '"{{json .}}"'])
 .then((result:any) => {
-  const runningCont = result.parseJsonLines();
+  const runningCont:ContainerType[] = result.parseJsonLines();
   
   for(let container of runningCont){
     if(!pausedContainerIdSet.has(container.ID)){

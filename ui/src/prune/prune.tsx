@@ -161,7 +161,7 @@ export function Prune() {
       GetAllStorage(ddClient, 'data').
       then(res => {    
 
-        console.log("res.data['unused-images']", res.data['unused-images']); 
+        // console.log("res.data['unused-images']", res.data['unused-images']); 
 
       setDataForGridRows(res.data['unused-images'])
       })
@@ -228,12 +228,12 @@ export function Prune() {
       // const handleCellClick: GridEventListener<'cellClick'> = (params: GridCellParams<cellParam>) => {
 
     // const handleRowClick: GridEventListener<'rowClick'> = (params) => {
-    console.log('params', params)
+    // console.log('params', params)
     
     if(dataGridBlueButtonType === 'dangling-images'){
 
       //user has selected row in dangling-images
-      const imageStorageSize = params.row.size; //storage size
+      const imageStorageSize:string = params.row.size; //storage size
       
       
       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
@@ -310,7 +310,7 @@ export function Prune() {
     } else if(dataGridBlueButtonType === 'unused-images'){
 
       //user has selected row in dangling-images
-      const imageStorageSize = params.row.size; //storage size
+      const imageStorageSize:string = params.row.size; //storage size
       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
       const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
 
@@ -385,7 +385,7 @@ export function Prune() {
     else if(dataGridBlueButtonType === 'in-use-images'){
 
       //user has selected row in dangling-images
-      const imageStorageSize = params.row.size; //storage size
+      const imageStorageSize:string = params.row.size; //storage size
       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
       const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
 
@@ -456,7 +456,7 @@ export function Prune() {
     }  else if (dataGridBlueButtonType === 'exited-containers'){ //EXITED
       //user has selected row in unused-containers
       
-      const unusedContainerSizeStr = params.row.size; //storage size
+      const unusedContainerSizeStr:string = params.row.size; //storage size
       // console.log('unusedContainerSizeStr', checkBytesAndConvertToNumber(unusedContainerSizeStr))
       // const currbuiltCascheStorage = Math.trunc(Number(unusedContainerSizeStr.slice(0, length-2))); // storageSize converted to #
       const currContainerStorage = checkBytesAndConvertToNumber(unusedContainerSizeStr)
@@ -527,7 +527,7 @@ export function Prune() {
     } else if (dataGridBlueButtonType === 'paused-containers'){
        //user has selected row in unused-containers
       
-       const pausedContainerSizeStr = params.row.size; //storage size
+       const pausedContainerSizeStr:string = params.row.size; //storage size
        // console.log('unusedContainerSizeStr', checkBytesAndConvertToNumber(unusedContainerSizeStr))
        // const currbuiltCascheStorage = Math.trunc(Number(unusedContainerSizeStr.slice(0, length-2))); // storageSize converted to #
        const currContainerStorage = checkBytesAndConvertToNumber(pausedContainerSizeStr)
@@ -600,7 +600,7 @@ export function Prune() {
     }  else if (dataGridBlueButtonType === 'running-containers'){
       //user has selected row in unused-containers
      
-      const runningContainerSizeStr = params.row.size; //storage size
+      const runningContainerSizeStr:string = params.row.size; //storage size
       // console.log('unusedContainerSizeStr', checkBytesAndConvertToNumber(unusedContainerSizeStr))
       // const currbuiltCascheStorage = Math.trunc(Number(unusedContainerSizeStr.slice(0, length-2))); // storageSize converted to #
       const currContainerStorage = checkBytesAndConvertToNumber(runningContainerSizeStr)
@@ -672,7 +672,7 @@ export function Prune() {
       //No NEED TO HAVE THIS CALC FOR BUILT-CASCHE? 
 
       //user has selected row in 'built-casche'
-       const builtCascheSizeStr = params.row.size; //storage size
+       const builtCascheSizeStr:string = params.row.size; //storage size
        
        const currbuiltCascheStorage = Math.trunc(Number(builtCascheSizeStr.slice(0, length-2))); // storageSize converted to #
  
@@ -961,13 +961,13 @@ export function Prune() {
     } else if(prune === 'prune-selected') {
       //we utilize the type field within the object to determine whether the key value pair represents and image, cache or container
       //we then split them up appropriately to be able to prune them with their associated commands. 
-     let danglingImageIdsToRemove:any = [];
-     let inUseImageIdsToRemove:any = [];
-     let unusedImageIdsToRemove:any = [];
-     let exitedContainerIdsToRemove:any = [];
-     let pausedContainerIdsToRemove:any = [];
-     let runningContainerIdsToRemove:any = [];
-     let cascheIdsToRemove:any = []; 
+     let danglingImageIdsToRemove:string[] = [];
+     let inUseImageIdsToRemove:string[] = [];
+     let unusedImageIdsToRemove:string[] = [];
+     let exitedContainerIdsToRemove:string[] = [];
+     let pausedContainerIdsToRemove:string[] = [];
+     let runningContainerIdsToRemove:string[] = [];
+     let cascheIdsToRemove:string[] = []; 
      
 
     // console.log('storageSizeById image keys -> ids', Object.keys(storageSizeById['dangling-images']))
@@ -1275,7 +1275,7 @@ export function Prune() {
   
 
   //Build cache, in use images and paused containers are not selectable so we want to remove the checkboxes when we are in the rows of the buid cache
-  function selectDataGrid (strType:any) {
+  function selectDataGrid (strType:string) {
     // console.log('strType', strType)
     if(strType === 'built-casche'){
         return <DataGrid 
