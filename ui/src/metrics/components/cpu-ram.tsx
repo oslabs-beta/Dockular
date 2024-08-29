@@ -42,22 +42,37 @@ function getCurrentDateTime() {
 // Metrics component
 export function Metrics() {
   // State variables
-  const [dataCPU, setCPU] = useState<any>([{ id: 'Sample Dataset', data: [{ x: 0, y: 0 }] }]);
-  const [dataRAM, setRAM] = useState<any>([{ id: 'Sample Dataset', data: [{ x: 0, y: 0 }] }]);
-  const [isStarted, setIsStarted] = useState(false);
-  const [containerList, setContainerList] = useState<any[]>([]);
-  const [containerNamesList, setContainerNamesList] = useState<any[]>([]);
+
+  //TYPES: 
+  type DataCPUType = {
+    'id': string,
+    'data': {x:number, y:number}[]
+  }[];
+
+   type DataRAMType = {
+    'id': string,
+    'data': {x:number, y:number}[]
+  }[];
+
+  const [dataCPU, setCPU] = useState<DataCPUType>([ { id: 'Sample Dataset', data: [{ x: 0, y: 0 }] } ]);
+  const [dataRAM, setRAM] = useState<DataRAMType>([{ id: 'Sample Dataset', data: [{ x: 0, y: 0 }] }]);
+  const [isStarted, setIsStarted] = useState<boolean>(false);
+  const [containerList, setContainerList] = useState<string[]>([]);
+  const [containerNamesList, setContainerNamesList] = useState<string[][]>([]);
   const [selectedContainerIndex, setSelectedContainerIndex] = useState<number | null>(null); 
-  const [selectedMemory, setSelectedMemory] = useState(512); // Initial value is 512 MB
-  const [currentContainerName, setCurrentContainerName] = useState<any[]>([]);
-  const [containerImageList, setImageList] = useState<any[]>([]);
-  const [open, setOpen] = useState(false)
+  const [selectedMemory, setSelectedMemory] = useState<number>(512); // Initial value is 512 MB
+  const [currentContainerName, setCurrentContainerName] = useState<string[]>([]);
+  const [containerImageList, setImageList] = useState<string[]>([]);
+  const [open, setOpen] = useState<boolean>(false)
 
   // Docker desktop client
   const ddClient = useDockerDesktopClient();
 
   // Effect to fetch container list
   useEffect(() => {
+
+    // console.log('containerList', containerList)
+
     if (!containerList[0]) {
       ddClient.docker.cli.exec("ps", ["--all", "--format", '"{{json .}}"']).then((result) => {
         const statsContainerData = result.parseJsonLines();
@@ -76,6 +91,10 @@ export function Metrics() {
       });
     }
   }, [containerList]);
+
+  // useEffect(()=>{
+  //   console.log('containerNamesList', containerNamesList)
+  // },[containerNamesList])
 
   // Function to fetch and display container stats
   const fetchAndDisplayResponse1 = async () => {
