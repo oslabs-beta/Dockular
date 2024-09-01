@@ -41,6 +41,10 @@ function useDockerDesktopClient() {
   return client;
 }
 
+//contextApi
+import { CentralizedStateContext } from './context/CentralizedStateContext';
+import { useContext } from 'react';
+
 export function Prune() {
 
   const ddClient = useDockerDesktopClient();
@@ -48,70 +52,134 @@ export function Prune() {
   //state for dataGrid
   const apiRef = useGridApiRef();
  
+  //ORIGINAL: 
   //state trackings whether we have clicked dangling-images, unsused containers or built-casche
-  const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
+  //const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
 
+  interface dataGridBlueButtonTypeInterface {
+    dataGridBlueButtonType: string,
+    setDataGridBlueButtonType :React.Dispatch<React.SetStateAction<string>>
+  }
+  const {dataGridBlueButtonType, setDataGridBlueButtonType} = useContext<dataGridBlueButtonTypeInterface>(CentralizedStateContext)
+
+
+  //ORIGINAL:
   //state that manages a list of all the dangling images, unused containers, and builtCasche
-  type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]
-  const [dataForGridRows, setDataForGridRows] = React.useState<dataForGridRowType>([]);
+  type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]; 
+   //const [dataForGridRows, setDataForGridRows] = React.useState<dataForGridRowType>([]);
 
+  interface dataForGridRowsInterface {
+    dataForGridRows: dataForGridRowType,
+    setDataForGridRows: React.Dispatch<React.SetStateAction<dataForGridRowType>>
+  }
+
+  const {dataForGridRows, setDataForGridRows} = useContext<dataForGridRowsInterface>(CentralizedStateContext)
+
+  //ORIGINAL: 
   //state that handles the size of each image and container. Data is utilized to calculate size...which affects datagrid etc. 
   //This state seems to only be utilized for tracking the value of the id selected for the given container/image. See if you can combine with other state? 
   //helps us keep track of the ids of selected images/containers so we know what to prune. 
   //{ [key: string] : { [key: string]: string }
-  const [storageSizeById, setStorageSizeById] = React.useState<StorageSizeType>({
-    'running-containers':{},
-    'exited-containers':{},  
-    'paused-containers':{},
-    'dangling-images': {}, 
-    'in-use-images': {},
-    'unused-images':{},
-    'built-casche': {},
-  })
+  // const [storageSizeById, setStorageSizeById] = React.useState<StorageSizeType>({
+  //   'running-containers':{},
+  //   'exited-containers':{},  
+  //   'paused-containers':{},
+  //   'dangling-images': {}, 
+  //   'in-use-images': {},
+  //   'unused-images':{},
+  //   'built-casche': {},
+  // })
 
+  interface storageSizeByIdInterface { 
+    storageSizeById: StorageSizeType
+    setStorageSizeById :  (value: React.SetStateAction<StorageSizeType>) => void
+  };
+
+  const { storageSizeById, setStorageSizeById} = useContext<storageSizeByIdInterface>(CentralizedStateContext); 
+
+  //ORIGINAL:
   //state that manages the current amount of storage size used from each selected image/container/builtCasche from the Data Grid component
   //The storage you've selected within each category. Helps us calcualte the total selected within each category. 
   //{ [key: string]: number }
-  const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState<SelectedRowSizeType>({
-    'running-containers': 0,
-    'exited-containers': 0, 
-    'paused-containers':0,
-    'dangling-images': 0, 
-    'in-use-images': 0,
-    'unused-images':0,
-    'built-casche': 0,
-    'selectedTotal': 0, 
-  })
+  // const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState<SelectedRowSizeType>({
+  //   'running-containers': 0,
+  //   'exited-containers': 0, 
+  //   'paused-containers':0,
+  //   'dangling-images': 0, 
+  //   'in-use-images': 0,
+  //   'unused-images':0,
+  //   'built-casche': 0,
+  //   'selectedTotal': 0, 
+  // })
 
+  interface selectedGridRowStorageSizeInterface {
+    selectedGridRowStorageSize: SelectedRowSizeType,
+    setSelectedGridRowStorageSize :React.Dispatch<React.SetStateAction<SelectedRowSizeType>>
+  }
+  const { selectedGridRowStorageSize, setSelectedGridRowStorageSize} = useContext<selectedGridRowStorageSizeInterface>(CentralizedStateContext); 
+
+
+  //ORIGINAL:
   //state that manages the total amount of storage being used by unused-containers, dangling-images, built-casche and the combined-total
   //{ [key: string]: number }
-  const [totalStorageTypes, setTotalStorageTypes] = React.useState<TotalStorageType>({
-    'running-containers': 0,
-    'exited-containers': 0,  
-    'paused-containers':0,
-    'dangling-images': 0,
-    'in-use-images': 0,
-    'unused-images':0,
-    'built-casche': 0,
-    'combinedTotal': 0
-  });
+  // const [totalStorageTypes, setTotalStorageTypes] = React.useState<TotalStorageType>({
+  //   'running-containers': 0,
+  //   'exited-containers': 0,  
+  //   'paused-containers':0,
+  //   'dangling-images': 0,
+  //   'in-use-images': 0,
+  //   'unused-images':0,
+  //   'built-casche': 0,
+  //   'combinedTotal': 0
+  // });
 
+  interface totalStorageTypesInterface {
+    totalStorageTypes :  TotalStorageType,
+    setTotalStorageTypes: React.Dispatch<React.SetStateAction<TotalStorageType>>
+  }
+
+  const {totalStorageTypes, setTotalStorageTypes} = useContext<totalStorageTypesInterface>(CentralizedStateContext); 
+
+
+  //ORIGINAL:
   //{ [key: string]: number }
-  const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState<AllImageAndContainerStorageType>({
-    'all-images': 0, 
-    'all-containers': 0
-  });
+  // const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState<AllImageAndContainerStorageType>({
+  //   'all-images': 0, 
+  //   'all-containers': 0
+  // });
+
+  interface allImageAndContainerStorageInterface {
+    allImageAndContainerStorage: AllImageAndContainerStorageType,
+    setAllImageAndContainerStorage: React.Dispatch<React.SetStateAction<AllImageAndContainerStorageType>>
+  }
+  const {allImageAndContainerStorage, setAllImageAndContainerStorage} = useContext<allImageAndContainerStorageInterface>(CentralizedStateContext); 
+
 
   // useEffect(()=>{
-  //   console.log('selectedGridRowStorageSize', selectedGridRowStorageSize, 'storageSizeById', storageSizeById)
+  //   console.log('dataGridBlueButtonType', dataGridBlueButtonType)
+  // },[dataGridBlueButtonType]);
+  
+  // useEffect(()=>{
+  //   console.log('dataForGridRows', dataForGridRows)
+  // },[dataForGridRows]);
+
+  // useEffect(()=>{
+  //   console.log('storageSizeById', storageSizeById)
+  // },[storageSizeById]);
+  
+  // useEffect(()=>{
+  //   console.log('selectedGridRowStorageSize', selectedGridRowStorageSize)
   // },[selectedGridRowStorageSize, ])
 
   // useEffect(()=>{
   //   console.log('totalStorageTypes',totalStorageTypes)
   // },[totalStorageTypes])
   
+  // useEffect(()=>{
+  //   console.log('allImageAndContainerStorage',allImageAndContainerStorage)
+  // },[allImageAndContainerStorage])
 
-
+  
   useEffect(()=>{
     AllImageAndContainerStorage(ddClient).
     then(res => {    
@@ -141,8 +209,6 @@ export function Prune() {
        
   }, [])
 
- 
-   
   
   //keeps track of state change in dataGridBlueButtonType and changes state in dataForGridRows state depending on selection of dangling-images,unused-container, or built casche
   useEffect(()=>{
