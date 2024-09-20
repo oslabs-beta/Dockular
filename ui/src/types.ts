@@ -75,6 +75,7 @@ export type SelectedRowSizeType = {
     'unused-images': number,
     'built-casche': number,
     'selectedTotal': number, 
+    dataGridBlueButtonType? : number;
 }
 
 export type TotalStorageType = {

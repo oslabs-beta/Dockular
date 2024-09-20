@@ -2,29 +2,58 @@ import { Box, Stack } from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
-
-//components
+import { storageNumToStr } from '../../utilities/StorageNumtoStr';
 import { ImageButtonComponent } from '../ImageButtonComponent';
 import { ContainerButtonComponent } from '../ContainerButtonComponent';
 
-//utility
-import { storageNumToStr } from '../../utilities/StorageNumtoStr';
+//modules
+import AllImageAndContainerStorage from '../../modules/AllImageAndContainerStorage';
+import GetAllStorage from '../../modules/GetAllStorage/GetAllStorage';
 
 //contextApi
 import { CentralizedStateContext } from '../../context/CentralizedStateContext';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 
 //types
-import { TotalStorageType, AllImageAndContainerStorageType } from '../../../types';
+import { TotalStorageType, AllImageAndContainerStorageType, StorageSizeType} from '../../../types';
+
+//Docker Desktop Client
+import { createDockerDesktopClient } from '@docker/extension-api-client';
+
+const client = createDockerDesktopClient();
+function useDockerDesktopClient() {
+  return client;
+}
+
+
 
 
 export function TopLeftComponent(props:any) {
+
+  const ddClient = useDockerDesktopClient();
+  
+
+  type BlueButtonType = 
+    'running-containers' |
+    'exited-containers' |
+    'paused-containers'| 
+    'dangling-images'| 
+    'in-use-images'|
+    'unused-images' |
+    'built-casche' ;
    
     interface dataGridBlueButtonTypeInterface {
-        dataGridBlueButtonType: string,
+        dataGridBlueButtonType: BlueButtonType,
         setDataGridBlueButtonType :React.Dispatch<React.SetStateAction<string>>
       }
       const {dataGridBlueButtonType, setDataGridBlueButtonType} = useContext<dataGridBlueButtonTypeInterface>(CentralizedStateContext)
+
+      interface storageSizeByIdInterface { 
+        storageSizeById: StorageSizeType
+        setStorageSizeById :  (value: React.SetStateAction<StorageSizeType>) => void
+      };
+    
+      const { storageSizeById, setStorageSizeById} = useContext<storageSizeByIdInterface>(CentralizedStateContext); 
 
       interface allImageAndContainerStorageInterface {
         allImageAndContainerStorage: AllImageAndContainerStorageType,
@@ -37,8 +66,35 @@ export function TopLeftComponent(props:any) {
         setTotalStorageTypes: React.Dispatch<React.SetStateAction<TotalStorageType>>
       }
     
-      const {totalStorageTypes, setTotalStorageTypes} = useContext<totalStorageTypesInterface>(CentralizedStateContext);     
-      
+      const {totalStorageTypes, setTotalStorageTypes} = useContext<totalStorageTypesInterface>(CentralizedStateContext); 
+
+
+      useEffect(()=>{
+        AllImageAndContainerStorage(ddClient).
+        then(res => {    
+         // console.log('res in useEffect - GetAllStorage(ddClient).', res)
+         setAllImageAndContainerStorage({
+          'all-images': res['all-images'],
+          'all-containers' : res['all-containers'],
+        }) 
+       })
+    
+        GetAllStorage(ddClient, 'storage').
+           then(res => {
+            setTotalStorageTypes({
+              'running-containers': res.storage['running-containers'], 
+              'exited-containers':  res.storage['exited-containers'], //EXITED
+              'paused-containers': res.storage['paused-containers'], 
+              'dangling-images':  res.storage['dangling-images'],
+              'in-use-images': res.storage['in-use-images'],
+              'unused-images': res.storage['unused-images'],
+              'built-casche': res.storage['built-casche'],
+              'combinedTotal':  res.storage['combinedTotal'], 
+            })
+           })
+    
+      },[storageSizeById]);
+
     return (
       
         <Box 

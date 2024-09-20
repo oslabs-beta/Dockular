@@ -26,8 +26,17 @@ export function BottomLeftComponent(props:any) {
 
     const ddClient = useDockerDesktopClient();
 
+    type BlueButtonType = 
+    'running-containers' |
+    'exited-containers' |
+    'paused-containers'| 
+    'dangling-images'| 
+    'in-use-images'|
+    'unused-images' |
+    'built-casche' ;
+
     interface dataGridBlueButtonTypeInterface {
-        dataGridBlueButtonType: string,
+        dataGridBlueButtonType: BlueButtonType,
         setDataGridBlueButtonType :React.Dispatch<React.SetStateAction<string>>
       }
       const {dataGridBlueButtonType, setDataGridBlueButtonType} = useContext<dataGridBlueButtonTypeInterface>(CentralizedStateContext)
