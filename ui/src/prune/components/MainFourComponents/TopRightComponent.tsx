@@ -19,8 +19,6 @@ import { BuiltCascheRowDataParser } from '../../modules/builtCascheRowDataParser
 import GetRunningContainers from '../../modules/GetAllStorage/GetRunningContainers';
 import GetAllStorage from '../../modules/GetAllStorage/GetAllStorage';
 
-import { checkBytesAndConvertToNumber } from '../../utilities/ CheckBytesAndConvertToNumber';
-
 //Docker Desktop Client
 const client = createDockerDesktopClient();
 function useDockerDesktopClient() {
@@ -167,29 +165,21 @@ export function TopRightComponent(props:any) {
 
       // user has selected row in dangling-images
       const imageStorageSize:string = params.row.size; //storage size
-      // console.log('dataGridBlueButtonType',dataGridBlueButtonType)
-      // console.log('storageSizeById', storageSizeById)
-      // console.log('storageSizeById[dataGridBlueButtonType]', storageSizeById[dataGridBlueButtonType])
+
       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
       const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
-      // console.log('currImageSize',currImageSize)
 
-      // console.log('storageSizeById[dataGridBlueButtonType]', dataGridBlueButtonType)
-      // if image id is NOT in the object
+       // if image id is NOT in the object
       if(!storageSizeById[dataGridBlueButtonType].hasOwnProperty(params.row.id)){
-        // console.log('storageSizeById',storageSizeById)
-        // console.log('storageSizeById[dataGridBlueButtonType].hasOwnProperty(params.row.id)', storageSizeById[dataGridBlueButtonType].hasOwnProperty(params.row.id))
+        
         //key is id and the value is the storage size 
-      
         setStorageSizeById(storageSize => (
-          
           {
           ...storageSize,
           [dataGridBlueButtonType]: {...storageSize[dataGridBlueButtonType], [params.row.id] : currImageSize},
     
-        }))
+        }));
         
-  
         /*we want to add to the selectedTotal - selectedGridRowStorageSize - within here because this is the logic
          that controls whether we SELECT the row. */
          setSelectedGridRowStorageSize(currSelectedStorage => ({
@@ -200,10 +190,6 @@ export function TopRightComponent(props:any) {
       } else {
         //else user has unselected row. Remove the key/value pair from storageSizeById.
         const copyOfImgCpuObj = {...storageSizeById };
-        
-        // console.log('copyOfImgCpuObj[dataGridBlueButtonType][params.row.id]', copyOfImgCpuObj[dataGridBlueButtonType][params.row.id])
-        
-       
         delete copyOfImgCpuObj[dataGridBlueButtonType][params.row.id]; 
   
         setStorageSizeById(imgStorageSize=>({
@@ -216,10 +202,7 @@ export function TopRightComponent(props:any) {
           ...currSelectedStorage,
           'selectedTotal': currSelectedStorage['selectedTotal'] - currImageSize, 
         }))
-        
-       
       }
-         
   };
 
   //Fires in general? Because the storage size is being filled.  YES IT DOES !!!
@@ -230,8 +213,24 @@ export function TopRightComponent(props:any) {
   useEffect(()=>{
     // we set the totalStorageTypes state with the most updated amount of storage size utilized by each type, ex: unused-containers, dangling images, etc. 
     // this shouldnt be called when we are only selecting but it is because everything is overlapping. Its also called everytime we render in general
-    useDataForCircularProgressBar(dataGridBlueButtonType, storageSizeById, selectedGridRowStorageSize, setSelectedGridRowStorageSize)
+    // useDataForCircularProgressBar(dataGridBlueButtonType, storageSizeById, selectedGridRowStorageSize, setSelectedGridRowStorageSize)
        
+        //if the selected rows are within the images/containers/casche etc.. 
+        //we get all the number values from the storageSizeById object in an array format
+        const selectedImageCpuSizeArray = Object.values(storageSizeById[dataGridBlueButtonType]); //Example: [14,14,30]
+  
+        // console.log('selectedImageCpuSizeArray', selectedImageCpuSizeArray)
+  
+        //we sum up all these values using the reduce method
+        const cpuUsageCalculation:number = selectedImageCpuSizeArray.reduce((sum: number, num: number)=> sum + num, 0); 
+  
+        // console.log('cpuUsageCalculation', cpuUsageCalculation)
+  
+        setSelectedGridRowStorageSize({
+           ...selectedGridRowStorageSize,
+           dataGridBlueButtonType: cpuUsageCalculation,
+        }) ;
+
   }, [storageSizeById]);
 
 

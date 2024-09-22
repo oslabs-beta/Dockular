@@ -137,13 +137,8 @@ export function BottomLeftComponent(props:any) {
            danglingImageIdsToRemove = [];
     
              setStorageSizeById(storageSize => ({
-              'running-containers':  {...storageSize['running-containers']},
-              'exited-containers':  {...storageSize['exited-containers']},
-              'paused-containers':  {...storageSize['paused-containers']},
+              ...storageSize,
               'dangling-images': {},
-              'in-use-images':  {...storageSize[ 'in-use-images']},
-              'unused-images':  {...storageSize[ 'unused-images']},
-              'built-casche':  {...storageSize['built-casche']},
             }))
         } 
     
@@ -161,13 +156,8 @@ export function BottomLeftComponent(props:any) {
            inUseImageIdsToRemove = [];
     
             setStorageSizeById(storageSize => ({
-             'running-containers':  {...storageSize['running-containers']},
-             'exited-containers':  {...storageSize['exited-containers']},
-             'paused-containers':  {...storageSize['paused-containers']},
-             'dangling-images':  {...storageSize['dangling-images']},
+              ...storageSize,
              'in-use-images':  {},
-             'unused-images':  {...storageSize['unused-images']},
-             'built-casche':  {...storageSize['built-casche']},
            }))
            
        }  
@@ -187,13 +177,8 @@ export function BottomLeftComponent(props:any) {
           unusedImageIdsToRemove = [];
     
             setStorageSizeById(storageSize => ({
-             'running-containers':  {...storageSize['running-containers']},
-             'exited-containers':  {...storageSize['exited-containers']},
-             'paused-containers':  {...storageSize['paused-containers']},
-             'dangling-images':  {...storageSize['dangling-images']},
-             'in-use-images':  {...storageSize['in-use-images']},
+              ...storageSize,
              'unused-images':  {},
-             'built-casche':  {...storageSize['built-casche']},
            }))
            
        }
@@ -211,13 +196,8 @@ export function BottomLeftComponent(props:any) {
         exitedContainerIdsToRemove = [];
     
         setStorageSizeById(storageSize => ({
-          'running-containers':  {...storageSize['running-containers']},
+          ...storageSize,
           'exited-containers': {},
-          'paused-containers':  {...storageSize['paused-containers']},
-          'in-use-images':  {...storageSize['in-use-images']},
-          'dangling-images': {...storageSize['dangling-images']},
-          'unused-images': {...storageSize['unused-images']},
-          'built-casche':  {...storageSize['built-casche']},
         }))
         
      }
@@ -236,13 +216,8 @@ export function BottomLeftComponent(props:any) {
       pausedContainerIdsToRemove = [];
     
       setStorageSizeById(storageSize => ({
-        'running-containers': {...storageSize['running-containers']},
-        'exited-containers': {...storageSize['exited-containers']},
+        ...storageSize,
         'paused-containers':  {},
-        'in-use-images':  {...storageSize['in-use-images']},
-        'dangling-images': {...storageSize['dangling-images']},
-        'unused-images': {...storageSize['unused-images']},
-        'built-casche':  {...storageSize['built-casche']},
       }))
       
     }
@@ -263,13 +238,8 @@ export function BottomLeftComponent(props:any) {
       runningContainerIdsToRemove = [];
     
       setStorageSizeById(storageSize => ({
-        'running-containers':  {},
-        'exited-containers': {...storageSize['exited-containers']},
-        'paused-containers': {...storageSize['paused-containers']},
-        'in-use-images':  {...storageSize['in-use-images']},
-        'dangling-images': {...storageSize['dangling-images']},
-        'unused-images': {...storageSize['unused-images']},
-        'built-casche':  {...storageSize['built-casche']},
+        ...storageSize,
+        'running-containers':  {}
       }))
     }
      
@@ -277,13 +247,7 @@ export function BottomLeftComponent(props:any) {
           //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
           //all types - unused-containers, dangling-images and build-cache
             setSelectedGridRowStorageSize({
-              'running-containers': selectedGridRowStorageSize['running-containers'],
-              'exited-containers': selectedGridRowStorageSize['exited-containers'],
-              'paused-containers': selectedGridRowStorageSize['paused-containers'],
-              'dangling-images': selectedGridRowStorageSize['dangling-images'],
-              'in-use-images': selectedGridRowStorageSize['in-use-images'],
-              'unused-images': selectedGridRowStorageSize['unused-images'],
-              'built-casche': selectedGridRowStorageSize['built-casche'],
+              ...selectedGridRowStorageSize,
               'selectedTotal': 0,
             })
           
@@ -368,7 +332,7 @@ export function BottomLeftComponent(props:any) {
 
           <Stack>
 
-            <PruneAllButtonComponent apiRef={props.apiRef} CLI={ddClient} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} setDataForGridRows={setDataForGridRows} />
+            <PruneAllButtonComponent apiRef={props.apiRef} CLI={ddClient} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} dataForGridRows={dataForGridRows} setDataForGridRows={setDataForGridRows} />
             
             { props.matches === true ? 
                 <Button variant="contained" color='error' onClick={ ()=>{pruningFunc('prune-selected')} } sx={{

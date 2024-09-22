@@ -83,7 +83,7 @@ export function TopLeftComponent(props:any) {
            then(res => {
             setTotalStorageTypes({
               'running-containers': res.storage['running-containers'], 
-              'exited-containers':  res.storage['exited-containers'], //EXITED
+              'exited-containers':  res.storage['exited-containers'],  
               'paused-containers': res.storage['paused-containers'], 
               'dangling-images':  res.storage['dangling-images'],
               'in-use-images': res.storage['in-use-images'],
