@@ -1,13 +1,13 @@
 import { Box, Stack } from "@mui/system"
 import Button from '@mui/material/Button';
-import { PruneAllButtonComponent } from "../PruneAllButtonComponent";
+import { PruneAllButtonComponent } from "../../modules/PruneAllButtonComponent";
 import { blueGrey } from '@mui/material/colors';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 
 //modules
-import GetAllStorage from '../../modules/GetAllStorage/GetAllStorage';
-import GetRunningContainers from '../../modules/GetAllStorage/GetRunningContainers';
-import { BuiltCascheRowDataParser } from '../../modules/builtCascheRowDataParser';
+import GetAllStorage from '../../utilities/GetAllStorage/GetAllStorage';
+import GetRunningContainers from '../../utilities/GetAllStorage/GetRunningContainers';
+import { BuiltCascheRowDataParser } from '../../utilities/builtCascheRowDataParser';
 
 //contextApi
 import { CentralizedStateContext } from '../../context/CentralizedStateContext';

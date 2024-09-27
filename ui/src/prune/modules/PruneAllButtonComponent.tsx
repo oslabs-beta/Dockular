@@ -6,7 +6,7 @@ import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import FormLabel from '@mui/material/FormLabel';
-import GetAllStorage from '../modules/GetAllStorage/GetAllStorage';
+import GetAllStorage from '../utilities/GetAllStorage/GetAllStorage';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { createTheme } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
@@ -15,6 +15,7 @@ import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+
 
 import { StorageSizeType, SelectedRowSizeType, ImageType, ContainerType, BuildCacheType} from '../../types';
 type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]
@@ -56,6 +57,8 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
       'unused-images' : false 
     })
 
+
+
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -90,10 +93,13 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
             })
           })
 
+          let pruneError = false;
+
            //prune all exited containers
            await CLI.docker.cli.exec('rm', [...exitedContainerIdSet])
            .catch((err:any)=>{
-            //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+            pruneError = true;
+             //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
             apiRef.current.setRowSelectionModel([])
             alert(`Error in container prune command ${err.stderr}`)});
 
@@ -111,7 +117,19 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
               })
        
           //resets the dataForGridRows state to an empty array
+           
+          if(pruneError === false){
             setDataForGridRows([]);
+          } else {
+            //IF THE IDS ARE NOT PRUNABLE THE GRID WILL NOT BE RESET TO EMPTY
+            await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
+            .then((result:any) => {
+              // console.log('psAll',result.parseJsonLines())
+              setDataForGridRows(result.parseJsonLines());
+              
+            })
+          }
+            
             
 
         }
@@ -131,9 +149,12 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
             })
           })
 
+          let pruneError = false; 
+
          //prune all Dangling Images
          await CLI.docker.cli.exec('rmi', [...danglingImageIdSet])
          .catch((err:any)=>{
+          pruneError=true;
           //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
           apiRef.current.setRowSelectionModel([])
           console.log('Unable to prune... Dangling Image is being utilized by container',
@@ -154,7 +175,17 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
             })
      
         //resets the dataForGridRows state to an empty array
-          setDataForGridRows([]);
+          // setDataForGridRows([]);
+
+          if(pruneError === false){
+            setDataForGridRows([]);
+          } else {
+              //IF THE IDS ARE NOT PRUNABLE THE GRID WILL NOT BE RESET TO EMPTY
+             await GetAllStorage(CLI, 'data').
+              then(res => {    
+                setDataForGridRows(res.data['dangling-images'])
+            })
+          }
             
       }
 
@@ -174,11 +205,15 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
           })
     
 
-       
+          let pruneError = false;
+
          //prune all unused images
          await CLI.docker.cli.exec('rmi', [...unusedImageIdSet])
          .catch((err:any)=>{
-          
+          // console.log('err.stderr',err.stderr.slice(53, 65));
+          // setPruneErrorArr(unusedImagesPruneErrorUtil(err.stderr))
+          pruneError = true;
+           
           //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
           apiRef.current.setRowSelectionModel([])
           console.log('Unable to prune... Unused Image is being utilized by container',
@@ -199,8 +234,15 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
      
         //resets the dataForGridRows state to an empty array
 
+        if(pruneError === false){
           setDataForGridRows([]);
-        
+        } else {
+           //IF THE IDS ARE NOT PRUNABLE THE GRID WILL NOT BE RESET TO EMPTY
+           await GetAllStorage(CLI, 'data').
+            then(res => {    
+              setDataForGridRows(res.data['unused-images'])
+          })
+        }
           
       }
 

@@ -1,5 +1,5 @@
 import { it, expect, describe } from "vitest";
-import { rowColumnTypeHelper } from "../prune/modules/GetAllStorage/rowColumnTypeHelper";
+import { rowColumnTypeHelper } from "../prune/utilities/GetAllStorage/rowColumnTypeHelper";
 
 it('should return a string', ()=> { 
     //ARRANGE

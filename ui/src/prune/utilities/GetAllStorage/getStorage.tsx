@@ -1,8 +1,8 @@
-import {stringToNumConverter as strToNumb} from '../../utilities/StringToNumConverter'
+import {stringToNumConverter as strToNumb} from '../StringToNumConverter'
 import { totalStorageParser } from '../totalStorageParser';
 import { containerVirtualSizeConverterToString } from '../ContainerVirtualSizeConverterToString';
-import { checkBytesAndConvertToNumber } from '../../utilities/ CheckBytesAndConvertToNumber';
-import { roundTwoDecimalPlaces } from '../../utilities/RoundTwoDecimalPlaces';
+import { checkBytesAndConvertToNumber } from '../ CheckBytesAndConvertToNumber';
+import { roundTwoDecimalPlaces } from '../RoundTwoDecimalPlaces';
 
 import { ImageType, TotalStorageType, ContainerType} from '../../../types';
 
