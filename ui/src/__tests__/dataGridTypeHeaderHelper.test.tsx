@@ -1,5 +1,5 @@
 import { it, expect } from "vitest";
-import { dataGridTypeHeaderHelper } from '../prune/modules/dataGridTypeHeaderHelper'; 
+import { dataGridTypeHeaderHelper } from '../prune/utilities/dataGridTypeHeaderHelper'; 
 
 it('should convert the dataGridButtonType string with a hyphen to a string without hyphen and make first letters uppercase', () => {
 

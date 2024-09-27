@@ -5,8 +5,8 @@ import {CircularProgressbarWithChildren, buildStyles} from 'react-circular-progr
 import 'react-circular-progressbar/dist/styles.css';
 
 //component
-import { ProgressbarChartComponent } from "../ProgressbarChartComponent"
-import { BytesGraph } from '../BytesGraph';
+import { ProgressbarChartComponent } from "../../modules/ProgressbarChartComponent"
+import { BytesGraph } from '../../modules/BytesGraph';
 
 //utility
 import { storageNumToStr } from '../../utilities/StorageNumtoStr';

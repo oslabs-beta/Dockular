@@ -1,5 +1,5 @@
 import { it, expect } from "vitest";
-import { BuiltCascheRowDataParser } from "../prune/modules/builtCascheRowDataParser";
+import { BuiltCascheRowDataParser } from "../prune/utilities/builtCascheRowDataParser";
 
 it('should return a string', ()=>{
     //ARRANGE

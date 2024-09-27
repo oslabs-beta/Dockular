@@ -1,5 +1,5 @@
 import { it, expect } from "vitest";
-import { totalStorageParser } from "../prune/modules/totalStorageParser";
+import { totalStorageParser } from "../prune/utilities/totalStorageParser";
 
 it('should return a number',()=>{
 

@@ -3,12 +3,12 @@ import { blueGrey } from '@mui/material/colors';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import { storageNumToStr } from '../../utilities/StorageNumtoStr';
-import { ImageButtonComponent } from '../ImageButtonComponent';
-import { ContainerButtonComponent } from '../ContainerButtonComponent';
+import { ImageButtonComponent } from '../../modules/ImageButtonComponent';
+import { ContainerButtonComponent } from '../../modules/ContainerButtonComponent';
 
 //modules
-import AllImageAndContainerStorage from '../../modules/AllImageAndContainerStorage';
-import GetAllStorage from '../../modules/GetAllStorage/GetAllStorage';
+import AllImageAndContainerStorage from '../../utilities/AllImageAndContainerStorage';
+import GetAllStorage from '../../utilities/GetAllStorage/GetAllStorage';
 
 //contextApi
 import { CentralizedStateContext } from '../../context/CentralizedStateContext';

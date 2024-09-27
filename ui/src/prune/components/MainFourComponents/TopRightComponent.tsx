@@ -7,17 +7,14 @@ import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { DataGrid, GridRowsProp, GridColDef, GridEventListener} from '@mui/x-data-grid';
 import { GridCellParams } from '@mui/x-data-grid';
 
-//customHooks
-import useHandleCellClickHelper from '../../customHooks/useHandleCellClickHelper';
-import useDataForCircularProgressBar from '../../customHooks/useDataForCircularProgressBar';
 
 //modules
-import { dataGridTypeHeaderHelper } from '../../modules/dataGridTypeHeaderHelper';
-import { containerVirtualSizeConverterToString } from '../../modules/ContainerVirtualSizeConverterToString';
-import { rowColumnTypeHelper } from '../../modules/GetAllStorage/rowColumnTypeHelper';
-import { BuiltCascheRowDataParser } from '../../modules/builtCascheRowDataParser';
-import GetRunningContainers from '../../modules/GetAllStorage/GetRunningContainers';
-import GetAllStorage from '../../modules/GetAllStorage/GetAllStorage';
+import { dataGridTypeHeaderHelper } from '../../utilities/dataGridTypeHeaderHelper';
+import { containerVirtualSizeConverterToString } from '../../utilities/ContainerVirtualSizeConverterToString';
+import { rowColumnTypeHelper } from '../../utilities/GetAllStorage/rowColumnTypeHelper';
+import { BuiltCascheRowDataParser } from '../../utilities/builtCascheRowDataParser';
+import GetRunningContainers from '../../utilities/GetAllStorage/GetRunningContainers';
+import GetAllStorage from '../../utilities/GetAllStorage/GetAllStorage';
 
 //Docker Desktop Client
 const client = createDockerDesktopClient();
@@ -161,8 +158,6 @@ export function TopRightComponent(props:any) {
   //This eventListener helps us keep track of the boxes selected/unselected in the grid by id and the size of each image based off id
   const handleCellClick: GridEventListener<'cellClick'> = (params: GridCellParams<any>) => {
   
-    // useHandleCellClickHelper(params, dataGridBlueButtonType, storageSizeById, setStorageSizeById, setSelectedGridRowStorageSize);
-
       // user has selected row in dangling-images
       const imageStorageSize:string = params.row.size; //storage size
 
@@ -213,8 +208,7 @@ export function TopRightComponent(props:any) {
   useEffect(()=>{
     // we set the totalStorageTypes state with the most updated amount of storage size utilized by each type, ex: unused-containers, dangling images, etc. 
     // this shouldnt be called when we are only selecting but it is because everything is overlapping. Its also called everytime we render in general
-    // useDataForCircularProgressBar(dataGridBlueButtonType, storageSizeById, selectedGridRowStorageSize, setSelectedGridRowStorageSize)
-       
+        
         //if the selected rows are within the images/containers/casche etc.. 
         //we get all the number values from the storageSizeById object in an array format
         const selectedImageCpuSizeArray = Object.values(storageSizeById[dataGridBlueButtonType]); //Example: [14,14,30]

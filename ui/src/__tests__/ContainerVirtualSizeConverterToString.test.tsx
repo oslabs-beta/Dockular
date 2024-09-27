@@ -1,5 +1,5 @@
 import { it, expect } from "vitest";
-import {containerVirtualSizeConverterToString} from '../prune/modules/ContainerVirtualSizeConverterToString';
+import {containerVirtualSizeConverterToString} from '../prune/utilities/ContainerVirtualSizeConverterToString';
 
 it('should convert a virtual size ex: "0B (virtual 761MB)" to "0B"', ()=>{
         //Arrange
