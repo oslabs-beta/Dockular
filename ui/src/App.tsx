@@ -2,15 +2,11 @@ import React from 'react';
 import { Link } from "react-router-dom"
 import { Route, Routes } from "react-router"
 import Button from '@mui/material/Button';
-import { createDockerDesktopClient } from '@docker/extension-api-client';
-import { Divider, Stack, TextField, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import { Metrics } from "./metrics/components/cpu-ram"
 import { Prune } from "./prune/prune"
 import { Home } from './Home';
 import myIcon from './img/icon.png'
-import { Container, Box} from '@mui/material';
-import myImage from './img/logo.png';
-import { RouteProps } from 'react-router-dom'
 import { Navigate } from "react-router-dom";
 
 //types

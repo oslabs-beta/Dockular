@@ -1,20 +1,20 @@
 import { Box, Stack } from "@mui/system"
 import Button from '@mui/material/Button';
-import { PruneAllButtonComponent } from "../../modules/PruneAllButtonComponent";
+import { PruneAllButtonComponent } from "../modules/PruneAllButtonComponent";
 import { blueGrey } from '@mui/material/colors';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 
 //modules
-import GetAllStorage from '../../utilities/GetAllStorage/GetAllStorage';
-import GetRunningContainers from '../../utilities/GetAllStorage/GetRunningContainers';
-import { BuiltCascheRowDataParser } from '../../utilities/builtCascheRowDataParser';
+import GetAllStorage from '../utilities/GetAllStorage/GetAllStorage';
+import GetRunningContainers from '../utilities/GetAllStorage/GetRunningContainers';
+import { BuiltCascheRowDataParser } from '../utilities/builtCascheRowDataParser';
 
 //contextApi
-import { CentralizedStateContext } from '../../context/CentralizedStateContext';
+import { CentralizedStateContext } from '../context/CentralizedStateContext';
 import { useContext } from 'react';
 
 //TYPES
-import { ImageType, StorageSizeType, SelectedRowSizeType, ContainerType, BuildCacheType } from '../../../types';
+import { ImageType, StorageSizeType, SelectedRowSizeType, ContainerType, BuildCacheType } from '../../types';
 
 //Docker Desktop Client
 const client = createDockerDesktopClient();
@@ -332,7 +332,7 @@ export function BottomLeftComponent(props:any) {
 
           <Stack>
 
-            <PruneAllButtonComponent apiRef={props.apiRef} CLI={ddClient} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} dataForGridRows={dataForGridRows} setDataForGridRows={setDataForGridRows} />
+            <PruneAllButtonComponent apiRef={props.apiRef} CLI={ddClient} setDataGridBlueButtonType={setDataGridBlueButtonType} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} dataForGridRows={dataForGridRows} setDataForGridRows={setDataForGridRows} />
             
             { props.matches === true ? 
                 <Button variant="contained" color='error' onClick={ ()=>{pruningFunc('prune-selected')} } sx={{

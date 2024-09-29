@@ -9,12 +9,12 @@ import { GridCellParams } from '@mui/x-data-grid';
 
 
 //modules
-import { dataGridTypeHeaderHelper } from '../../utilities/dataGridTypeHeaderHelper';
-import { containerVirtualSizeConverterToString } from '../../utilities/ContainerVirtualSizeConverterToString';
-import { rowColumnTypeHelper } from '../../utilities/GetAllStorage/rowColumnTypeHelper';
-import { BuiltCascheRowDataParser } from '../../utilities/builtCascheRowDataParser';
-import GetRunningContainers from '../../utilities/GetAllStorage/GetRunningContainers';
-import GetAllStorage from '../../utilities/GetAllStorage/GetAllStorage';
+import { dataGridTypeHeaderHelper } from '../utilities/dataGridTypeHeaderHelper';
+import { containerVirtualSizeConverterToString } from '../utilities/ContainerVirtualSizeConverterToString';
+import { rowColumnTypeHelper } from '../utilities/GetAllStorage/rowColumnTypeHelper';
+import { BuiltCascheRowDataParser } from '../utilities/builtCascheRowDataParser';
+import GetRunningContainers from '../utilities/GetAllStorage/GetRunningContainers';
+import GetAllStorage from '../utilities/GetAllStorage/GetAllStorage';
 
 //Docker Desktop Client
 const client = createDockerDesktopClient();
@@ -23,11 +23,11 @@ function useDockerDesktopClient() {
 }
 
 //contextApi
-import { CentralizedStateContext } from '../../context/CentralizedStateContext';
+import { CentralizedStateContext } from '../context/CentralizedStateContext';
 import { useContext } from 'react';
 
 //TYPES
-import { ImageType, StorageSizeType, SelectedRowSizeType, ContainerType, BuildCacheType } from '../../../types';
+import { ImageType, StorageSizeType, SelectedRowSizeType, ContainerType, BuildCacheType } from '../../types';
 
 
 export function TopRightComponent(props:any) {

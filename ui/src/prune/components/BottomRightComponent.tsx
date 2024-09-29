@@ -5,11 +5,11 @@ import {CircularProgressbarWithChildren, buildStyles} from 'react-circular-progr
 import 'react-circular-progressbar/dist/styles.css';
 
 //component
-import { ProgressbarChartComponent } from "../../modules/ProgressbarChartComponent"
-import { BytesGraph } from '../../modules/BytesGraph';
+import { ProgressbarChartComponent } from "../modules/ProgressbarChartComponent"
+import { BytesGraph } from '../modules/BytesGraph';
 
 //utility
-import { storageNumToStr } from '../../utilities/StorageNumtoStr';
+import { storageNumToStr } from '../utilities/StorageNumtoStr';
 
 type ProgressbarChartComponentProps = {
   selectedTotal: number,
@@ -17,9 +17,9 @@ type ProgressbarChartComponentProps = {
 }
 
 //contextApi
-import { CentralizedStateContext } from '../../context/CentralizedStateContext';
+import { CentralizedStateContext } from '../context/CentralizedStateContext';
 import { useContext } from 'react';
-import { SelectedRowSizeType, TotalStorageType } from '../../../types';
+import { SelectedRowSizeType, TotalStorageType } from '../../types';
 
 
 export function BottomRightComponent() {
