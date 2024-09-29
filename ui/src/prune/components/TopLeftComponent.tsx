@@ -2,20 +2,20 @@ import { Box, Stack } from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
-import { storageNumToStr } from '../../utilities/StorageNumtoStr';
-import { ImageButtonComponent } from '../../modules/ImageButtonComponent';
-import { ContainerButtonComponent } from '../../modules/ContainerButtonComponent';
+import { storageNumToStr } from '../utilities/StorageNumtoStr';
+import { ImageButtonComponent } from '../modules/ImageButtonComponent';
+import { ContainerButtonComponent } from '../modules/ContainerButtonComponent';
 
 //modules
-import AllImageAndContainerStorage from '../../utilities/AllImageAndContainerStorage';
-import GetAllStorage from '../../utilities/GetAllStorage/GetAllStorage';
+import AllImageAndContainerStorage from '../utilities/AllImageAndContainerStorage';
+import GetAllStorage from '../utilities/GetAllStorage/GetAllStorage';
 
 //contextApi
-import { CentralizedStateContext } from '../../context/CentralizedStateContext';
+import { CentralizedStateContext } from '../context/CentralizedStateContext';
 import { useContext, useEffect } from 'react';
 
 //types
-import { TotalStorageType, AllImageAndContainerStorageType, StorageSizeType} from '../../../types';
+import { TotalStorageType, AllImageAndContainerStorageType, StorageSizeType} from '../../types';
 
 //Docker Desktop Client
 import { createDockerDesktopClient } from '@docker/extension-api-client';

@@ -7,10 +7,10 @@ import { createTheme } from '@mui/material';
 import { useGridApiRef } from '@mui/x-data-grid';
 
 //components
-import { BottomLeftComponent } from './components/MainFourComponents/BottomLeftComponent';
-import { BottomRightComponent } from './components/MainFourComponents/BottomRightComponent';
-import { TopLeftComponent } from './components/MainFourComponents/TopLeftComponent';
-import { TopRightComponent } from './components/MainFourComponents/TopRightComponent';
+import { BottomLeftComponent } from './components/BottomLeftComponent';
+import { BottomRightComponent } from './components/BottomRightComponent';
+import { TopLeftComponent } from './components/TopLeftComponent';
+import { TopRightComponent } from './components/TopRightComponent';
  
  
 export function Prune() {

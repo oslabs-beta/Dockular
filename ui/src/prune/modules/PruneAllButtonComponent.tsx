@@ -1,5 +1,5 @@
 import Modal from '@mui/material/Modal';
-import React, { useState} from 'react';
+import React from 'react';
 import Button from '@mui/material/Button';
 import { Box, } from '@mui/material';
 import FormGroup from '@mui/material/FormGroup';
@@ -12,10 +12,8 @@ import { createTheme } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import Popover from '@mui/material/Popover';
-import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
-
+import { pruneAllErrorParser } from '../utilities/pruneAllErrorParser';
 
 import { StorageSizeType, SelectedRowSizeType, ImageType, ContainerType, BuildCacheType} from '../../types';
 type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]
@@ -41,13 +39,15 @@ const style = {
     selectedGridRowStorageSize: SelectedRowSizeType,
     setSelectedGridRowStorageSize: React.Dispatch<React.SetStateAction<SelectedRowSizeType>>,
     dataForGridRows: dataForGridRowType,
-    setDataForGridRows:  React.Dispatch<React.SetStateAction<dataForGridRowType>>
+    setDataForGridRows:  React.Dispatch<React.SetStateAction<dataForGridRowType>>,
+    setDataGridBlueButtonType: React.Dispatch<React.SetStateAction<string>>,
   }
 
-export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, selectedGridRowStorageSize, setSelectedGridRowStorageSize, dataForGridRows, setDataForGridRows}:PruneAllButtonComponentProps) {
+export function PruneAllButtonComponent({apiRef, CLI, setDataGridBlueButtonType, setStorageSizeById, selectedGridRowStorageSize, setSelectedGridRowStorageSize, setDataForGridRows}:PruneAllButtonComponentProps) {
   // PROPS: apiRef={apiRef} CLI={ddClient} setStorageSizeById={setStorageSizeById} selectedGridRowStorageSize ={selectedGridRowStorageSize} setSelectedGridRowStorageSize={setSelectedGridRowStorageSize} setDataForGridRows={setDataForGridRows} 
 
-    const [selectedTypes, SetSelectedTypes] = React.useState<{ [key: string]: boolean }>({
+  type DataGridTypes = { [key: string]: boolean }
+    const [selectedTypes, SetSelectedTypes] = React.useState<DataGridTypes>({
       'built-casche' : false, 
       'running-containers' : false,
       'paused-containers' : false, 
@@ -55,9 +55,7 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
       'in-use-images'  : false, 
       'dangling-images' : false, 
       'unused-images' : false 
-    })
-
-
+    });
 
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
@@ -72,14 +70,14 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
 
    const handleOnClick = async () => {
     
-    for(let key in selectedTypes){
-      if(selectedTypes[key]=== true){
+    for(let key in selectedTypes) {
+      if(selectedTypes[key]=== true) {
 
         //************************************************************************************************************************
 
-        if(key === 'exited-containers'){
-          // console.log('Selected KEY', key)
-          
+        if(key === 'exited-containers') {
+          // console.log('Selected KEY', selectedTypes)
+
           let exitedContainerIdSet = new Set<string>();
 
           await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
@@ -93,12 +91,9 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
             })
           })
 
-          let pruneError = false;
-
            //prune all exited containers
            await CLI.docker.cli.exec('rm', [...exitedContainerIdSet])
            .catch((err:any)=>{
-            pruneError = true;
              //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
             apiRef.current.setRowSelectionModel([])
             alert(`Error in container prune command ${err.stderr}`)});
@@ -107,7 +102,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
             ...storageSize,
             'exited-containers': {},
           }))
-          
        
           //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
           //all types - unused-containers, dangling-images and build-cache
@@ -116,29 +110,24 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
                 'selectedTotal': 0,
               })
        
-          //resets the dataForGridRows state to an empty array
-           
-          if(pruneError === false){
-            setDataForGridRows([]);
-          } else {
-            //IF THE IDS ARE NOT PRUNABLE THE GRID WILL NOT BE RESET TO EMPTY
-            await CLI.docker.cli.exec('ps', ['--all', '--format', '"{{json .}}"', '--filter', "status=exited"])
-            .then((result:any) => {
-              // console.log('psAll',result.parseJsonLines())
-              setDataForGridRows(result.parseJsonLines());
-              
-            })
-          }
-            
-            
+          //the display of the datagrid wont change to the category being pruned if we dont set it. So for example if we are in exitedContainers and we prune unused-images.. the datagrid will populate from teh results of the unused-images within the exited-containers section
+          setDataGridBlueButtonType('exited-containers');
 
+           //resets the dataForGridRows state to an empty array
+          setDataForGridRows([]);
+
+           //after we have pruned the category of data we want to change the state to false so it doesnt continuing to try to prune this category with the selection of another data type category
+           SetSelectedTypes((types:DataGridTypes)=>({
+            ...types,
+            'exited-containers': false
+          }))
         }
         
         //************************************************************************************************************************
 
-      if(key === 'dangling-images'){
-        // console.log('Selected KEY', key)
-        
+      if(key === 'dangling-images') {
+        // console.log('Selected KEY', selectedTypes)
+
         let danglingImageIdSet = new Set<string>();
 
         await GetAllStorage(CLI, 'data').
@@ -149,12 +138,9 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
             })
           })
 
-          let pruneError = false; 
-
          //prune all Dangling Images
          await CLI.docker.cli.exec('rmi', [...danglingImageIdSet])
          .catch((err:any)=>{
-          pruneError=true;
           //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
           apiRef.current.setRowSelectionModel([])
           console.log('Unable to prune... Dangling Image is being utilized by container',
@@ -166,34 +152,31 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
           'dangling-images': {},
         }))
         
-     
         //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
         //all types - unused-containers, dangling-images and build-cache
             setSelectedGridRowStorageSize({
               ...selectedGridRowStorageSize,
               'selectedTotal': 0,
             })
-     
-        //resets the dataForGridRows state to an empty array
-          // setDataForGridRows([]);
 
-          if(pruneError === false){
-            setDataForGridRows([]);
-          } else {
-              //IF THE IDS ARE NOT PRUNABLE THE GRID WILL NOT BE RESET TO EMPTY
-             await GetAllStorage(CLI, 'data').
-              then(res => {    
-                setDataForGridRows(res.data['dangling-images'])
-            })
-          }
-            
+            //the display of the datagrid wont change to the category being pruned if we dont set it. So for example if we are in exitedContainers and we prune unused-images.. the datagrid will populate from teh results of the unused-images within the exited-containers section
+            setDataGridBlueButtonType('dangling-images');
+
+        //resets the dataForGridRows state to an empty array
+          setDataForGridRows([]);    
+          
+          //after we have pruned the category of data we want to change the state to false so it doesnt continuing to try to prune this category with the selection of another data type category
+          SetSelectedTypes((types:DataGridTypes)=>({
+            ...types,
+            'dangling-images': false
+          }))
       }
 
       //************************************************************************************************************************
 
-      if(key === 'unused-images'){
-        // console.log('Selected KEY', key)
-        
+      if(key === 'unused-images') {
+        // console.log('Selected KEY', selectedTypes)
+
         let unusedImageIdSet = new Set<string>();
 
         await GetAllStorage(CLI, 'data').
@@ -201,60 +184,60 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
             res.data['unused-images'].forEach((image:ImageType)=>{
               // console.log('images',image)
               unusedImageIdSet.add(image.ID)
-            })
-          })
+            });
+          });
     
-
-          let pruneError = false;
+        let pruneError = false;
 
          //prune all unused images
          await CLI.docker.cli.exec('rmi', [...unusedImageIdSet])
-         .catch((err:any)=>{
-          // console.log('err.stderr',err.stderr.slice(53, 65));
-          // setPruneErrorArr(unusedImagesPruneErrorUtil(err.stderr))
-          pruneError = true;
-           
-          //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
-          apiRef.current.setRowSelectionModel([])
-          console.log('Unable to prune... Unused Image is being utilized by container',
-          alert(`Error in unused image prune command ${err.stderr}`))});
+          .catch((err:any)=>{
+            pruneError = true;
+            //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
+            apiRef.current.setRowSelectionModel([])
+            const unprunableIds = pruneAllErrorParser(err.stderr);
+            alert(unprunableIds);
+          });
 
          setStorageSizeById((storageSize:StorageSizeType) => ({
             ...storageSize,
             'unused-images': {},
-          }))
+          }));
         
-     
         //after pruning we need to reset the value within the selectedTotal key. This manages all selected rows from
         //all types - unused-containers, dangling-images and build-cache
-            setSelectedGridRowStorageSize({
-              ...selectedGridRowStorageSize,
-              'selectedTotal': 0,
-            })
+          setSelectedGridRowStorageSize({
+            ...selectedGridRowStorageSize,
+            'selectedTotal': 0,
+            });
      
-        //resets the dataForGridRows state to an empty array
+           //the display of the datagrid wont change to the category being pruned if we dont set it. So for example if we are in exitedContainers and we prune unused-images.. the datagrid will populate from teh results of the unused-images within the exited-containers section
+          setDataGridBlueButtonType('unused-images');
 
+        //resets the dataForGridRows state to an empty array
         if(pruneError === false){
           setDataForGridRows([]);
         } else {
            //IF THE IDS ARE NOT PRUNABLE THE GRID WILL NOT BE RESET TO EMPTY
-           await GetAllStorage(CLI, 'data').
+            await GetAllStorage(CLI, 'data').
             then(res => {    
               setDataForGridRows(res.data['unused-images'])
           })
         }
-          
+
+        //after we have pruned the category of data we want to change the state to false so it doesnt continuing to try to prune this category with the selection of another data type category
+        SetSelectedTypes((types:DataGridTypes)=>({
+          ...types,
+          'unused-images': false
+        }));
       }
-
-
+       
       //************************************************************************************************************************
-
       }
     }
 
     //CLOSES MODEL
     setOpen(false);
-    
    }
 
    //THESE WERE IMPORTED AND ARE UTILIZED AS MEDIA QUERIES
@@ -286,9 +269,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
   const openPopover = Boolean(anchorEl);
   const id = openPopover ? 'simple-popover' : undefined;
 
-
-
-
     return (
       <>
       {matches === true ? //IF MATCHES IS EQUAL TO TRUE... MEANING IF THE WIDTH OF THE SCREEN HAS REACHED 875 PX
@@ -297,7 +277,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
                     m:2,
                     p: 1,
                     borderRadius: 2,
-                    
                     }}>
                     Prune All
                 </Button> 
@@ -307,7 +286,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
                   aria-labelledby="modal-modal-title"
                   aria-describedby="modal-modal-description"
 >
- 
                     <Box sx={style}>
                     <FormLabel sx={{color: 'primary.main'}}component="legend">Images</FormLabel>
                     <FormGroup>
@@ -325,7 +303,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
  
                       <IconButton onClick={handlePopoverClick}><DeleteOutlineIcon color='error'/></IconButton> Build Cache - Beta
                           <Popover
-                            
                             id={id}
                             open={openPopover}
                             anchorEl={anchorEl}
@@ -338,7 +315,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
                               vertical: 'center',
                               horizontal: 'left',
                             }}
-                           
                            >
                           <Box sx={{display:'flex', flexDirection:'column', alignItems:'center'}}>
                          <TextField
@@ -356,8 +332,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
                         </Box>
                         </Popover>
                        
-                      
-
                        <Box sx={{ width:'100%', display:'flex', justifyContent:'center'}}>
                           <Button variant="contained" color='error' onClick={handleOnClick} sx={{
                              m:2,
@@ -370,7 +344,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
                        </Box>
                     </Box>
                     </Modal>
-       
           </>
 
           : // ELSE - WE WANT TO UPDATE THE MARGIN BOTTOM TO BE 0
@@ -420,7 +393,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
                               vertical: 'center',
                               horizontal: 'left',
                             }}
-                           
                            >
                          <Box sx={{display:'flex', flexDirection:'column', alignItems:'center'}}>
                          <TextField
@@ -438,8 +410,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
                         </Box>
                         </Popover>
                        
-                       
-  
                          <Box sx={{ width:'100%', display:'flex', justifyContent:'center'}}>
                             <Button variant="contained" color='error' onClick={handleOnClick} sx={{
                                m:2,
@@ -452,7 +422,6 @@ export function PruneAllButtonComponent({apiRef, CLI, setStorageSizeById, select
                          </Box>
                       </Box>
                       </Modal>
-         
             </>
           }
         </>
