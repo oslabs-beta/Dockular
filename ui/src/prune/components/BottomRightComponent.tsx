@@ -39,8 +39,12 @@ export function BottomRightComponent() {
 
       const selectedTotal = selectedGridRowStorageSize['selectedTotal'];
       const combinedTotal = totalStorageTypes['combinedTotal'];
+
+      // console.log('selectedTotal', selectedTotal)
+      // console.log('combinedTotal', combinedTotal)
     
       const val:string = `${storageNumToStr(selectedTotal)} / ${storageNumToStr(combinedTotal)}`
+      // console.log('val', val);
     
       // const mediaQueryForMaxHeight = window.matchMedia("(max-height: 695px)");
       // useEffect(()=>{

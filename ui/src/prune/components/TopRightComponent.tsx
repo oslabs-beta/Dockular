@@ -8,14 +8,14 @@ import { DataGrid, GridRowsProp, GridColDef, GridEventListener} from '@mui/x-dat
 import { GridCellParams } from '@mui/x-data-grid';
 
 
-//modules
+//utilities
 import { dataGridTypeHeaderHelper } from '../utilities/dataGridTypeHeaderHelper';
 import { containerVirtualSizeConverterToString } from '../utilities/ContainerVirtualSizeConverterToString';
 import { rowColumnTypeHelper } from '../utilities/GetAllStorage/rowColumnTypeHelper';
-import { BuiltCascheRowDataParser } from '../utilities/builtCascheRowDataParser';
+import { BuiltCascheRowDataParser } from '../utilities/Parsers/builtCascheRowDataParser';
 import GetRunningContainers from '../utilities/GetAllStorage/GetRunningContainers';
 import GetAllStorage from '../utilities/GetAllStorage/GetAllStorage';
-
+import { checkBytesAndConvertToNumber } from '../utilities/ CheckBytesAndConvertToNumber';
 //Docker Desktop Client
 const client = createDockerDesktopClient();
 function useDockerDesktopClient() {
@@ -160,10 +160,10 @@ export function TopRightComponent(props:any) {
   
       // user has selected row in dangling-images
       const imageStorageSize:string = params.row.size; //storage size
-
+      const currImageSize =  checkBytesAndConvertToNumber(imageStorageSize)
       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
-      const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
-
+      // const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
+      console.log('currImageSize', currImageSize)
        // if image id is NOT in the object
       if(!storageSizeById[dataGridBlueButtonType].hasOwnProperty(params.row.id)){
         

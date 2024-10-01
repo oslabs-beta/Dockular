@@ -62,6 +62,50 @@ const App = () => {
     'all-containers': 0
   });
 
+  const resetPruneSection = () => {
+
+    setDataGridBlueButtonType('dangling-images');
+
+    setDataForGridRows([]);
+
+    setStorageSizeById({
+      'running-containers':{},
+      'exited-containers':{},  
+      'paused-containers':{},
+      'dangling-images': {}, 
+      'in-use-images': {},
+      'unused-images':{},
+      'built-casche': {},
+    });
+
+    setSelectedGridRowStorageSize({
+      'running-containers': 0,
+      'exited-containers': 0, 
+      'paused-containers':0,
+      'dangling-images': 0, 
+      'in-use-images': 0,
+      'unused-images':0,
+      'built-casche': 0,
+      'selectedTotal': 0, 
+    });
+
+    setTotalStorageTypes({
+      'running-containers': 0,
+      'exited-containers': 0,  
+      'paused-containers':0,
+      'dangling-images': 0,
+      'in-use-images': 0,
+      'unused-images':0,
+      'built-casche': 0,
+      'combinedTotal': 0
+    });
+
+    setAllImageAndContainerStorage({
+      'all-images': 0, 
+      'all-containers': 0
+    })
+  }
+
   return (
     <>
       <Stack
@@ -78,7 +122,7 @@ const App = () => {
         </Link>
 
         <Button variant="contained">
-          <Link to = {'/metrics'} style={{color:'white', textDecoration:'none'}} > 
+          <Link onClick={resetPruneSection} to = {'/metrics'} style={{color:'white', textDecoration:'none'}} > 
             {'Metrics'}
           </Link>
         </Button>

@@ -13,7 +13,7 @@ import IconButton from '@mui/material/IconButton';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import Popover from '@mui/material/Popover';
 import TextField from '@mui/material/TextField';
-import { pruneAllErrorParser } from '../utilities/pruneAllErrorParser';
+import { pruneAllErrorParser } from '../utilities/Parsers/pruneAllErrorParser';
 
 import { StorageSizeType, SelectedRowSizeType, ImageType, ContainerType, BuildCacheType} from '../../types';
 type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]
