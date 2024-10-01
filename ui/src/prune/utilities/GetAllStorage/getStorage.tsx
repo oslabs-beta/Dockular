@@ -141,7 +141,8 @@ import { ImageType, TotalStorageType, ContainerType} from '../../../types';
       //that id with the goal of only having a set of ids for unused images. 
       if(allUnusedImagesSet.has(id)) allUnusedImagesSet.delete(id);
       // console.log('idsForallImagesUsedByContainerSet',allImagesObj[id])
-        storage['in-use-images'] += strToNumb(allImagesObj[id].Size)
+        // storage['in-use-images'] += strToNumb(allImagesObj[id].Size)
+        storage['in-use-images'] += checkBytesAndConvertToNumber(allImagesObj[id].Size)
         // allData.data['in-use-images'].push({
         //   ID: allImagesObj[id].ID, 
         //   Size: allImagesObj[id].Size, 
@@ -180,8 +181,10 @@ import { ImageType, TotalStorageType, ContainerType} from '../../../types';
         //    Tag: current.Tag,
         //    Type: 'Image'
         //  })
+        
+        //  storage['dangling-images'] += strToNumb(current.Size);
+         storage['dangling-images'] += checkBytesAndConvertToNumber(current.Size);
 
-         storage['dangling-images'] += strToNumb(current.Size);
        }
       }
    })
