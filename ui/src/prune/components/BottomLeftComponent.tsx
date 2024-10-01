@@ -7,7 +7,7 @@ import { createDockerDesktopClient } from '@docker/extension-api-client';
 //modules
 import GetAllStorage from '../utilities/GetAllStorage/GetAllStorage';
 import GetRunningContainers from '../utilities/GetAllStorage/GetRunningContainers';
-import { BuiltCascheRowDataParser } from '../utilities/builtCascheRowDataParser';
+import { BuiltCascheRowDataParser } from '../utilities/Parsers/builtCascheRowDataParser';
 
 //contextApi
 import { CentralizedStateContext } from '../context/CentralizedStateContext';

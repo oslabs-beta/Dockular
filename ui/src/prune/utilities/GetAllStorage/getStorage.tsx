@@ -1,5 +1,5 @@
 import {stringToNumConverter as strToNumb} from '../StringToNumConverter'
-import { totalStorageParser } from '../totalStorageParser';
+import { totalStorageParser } from '../Parsers/totalStorageParser';
 import { containerVirtualSizeConverterToString } from '../ContainerVirtualSizeConverterToString';
 import { checkBytesAndConvertToNumber } from '../ CheckBytesAndConvertToNumber';
 import { roundTwoDecimalPlaces } from '../RoundTwoDecimalPlaces';
@@ -194,7 +194,9 @@ import { ImageType, TotalStorageType, ContainerType} from '../../../types';
     // const str = allImagesObj[unusedImageID].Size
     // console.log('str',str,'num',num)
     
-    storage['unused-images'] += strToNumb(allImagesObj[unusedImageID].Size)
+    // storage['unused-images'] += strToNumb(allImagesObj[unusedImageID].Size)
+
+    storage['unused-images'] += checkBytesAndConvertToNumber(allImagesObj[unusedImageID].Size) 
 
     // allData.data['unused-images'].push({
     //   ID: allImagesObj[unusedImageID].ID, 

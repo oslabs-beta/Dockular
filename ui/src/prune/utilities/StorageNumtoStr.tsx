@@ -3,7 +3,8 @@ import { roundTwoDecimalPlaces } from "./RoundTwoDecimalPlaces"
 
 
 export function storageNumToStr(number:number):string{
-  // console.log('numb in storageNumToStr', numb)
+  // console.log('numb in storageNumToStr', number);
+
   if(number >= 1000) {
     // console.log(`${roundTwoDecimalPlaces(numb/1000)}GB`)
     return `${roundTwoDecimalPlaces(number/1000)}GB`
