@@ -20,7 +20,9 @@ import { ImageType, ContainerType } from '../../types';
       // console.log('images',allImgs)
       storage['all-images'] = allImgs.reduce((sum:number,current:ImageType)=>{
         // console.log('current image in AllImageStorage module', current)
-        return sum + strToNumb(current.Size);
+        // return sum + strToNumb(current.Size);
+        return sum + checkBytesAndConvertToNumber(current.Size);
+        
       }, 0);
     })
 

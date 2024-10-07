@@ -11,10 +11,10 @@ import { BottomLeftComponent } from './components/BottomLeftComponent';
 import { BottomRightComponent } from './components/BottomRightComponent';
 import { TopLeftComponent } from './components/TopLeftComponent';
 import { TopRightComponent } from './components/TopRightComponent';
- 
- 
+import { ResetButtonComponent } from './modules/ResetButtonComponent';
+
 export function Prune() {
- 
+
 //state for dataGrid
 const apiRef = useGridApiRef();
  
@@ -43,15 +43,27 @@ const theme = createTheme({
                 display: 'flex',
                 flexDirection: 'column',
                 border:2,
+                // borderColor:'red'
                 borderColor:'primary.main'
             }}>
+            <Box sx={{
+               display:'flex',
+               justifyContent:'flex-end',
+              //  border:2,
+              //  borderColor:'red',
+               width: matches === true ? '93vw' : '87vw',
+              }}
+            >
+             <ResetButtonComponent apiRef={apiRef} matches={matches}/> 
+           </Box>
+
           <Box sx={{
             width: matches === true ? '90vw' : '85vw',
             height: '40vh',
             bgcolor: blueGrey[50],
             display: 'flex',
             justifyContent:'space-around',
-            marginTop:4
+            marginTop:0
 
             }}>
               <TopLeftComponent matches={matches}/>

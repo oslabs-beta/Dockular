@@ -16,6 +16,7 @@ import { BuiltCascheRowDataParser } from '../utilities/Parsers/builtCascheRowDat
 import GetRunningContainers from '../utilities/GetAllStorage/GetRunningContainers';
 import GetAllStorage from '../utilities/GetAllStorage/GetAllStorage';
 import { checkBytesAndConvertToNumber } from '../utilities/ CheckBytesAndConvertToNumber';
+
 //Docker Desktop Client
 const client = createDockerDesktopClient();
 function useDockerDesktopClient() {
@@ -163,7 +164,7 @@ export function TopRightComponent(props:any) {
       const currImageSize =  checkBytesAndConvertToNumber(imageStorageSize)
       //assumes images are only in megabytes, may have to consider kb, b or gb? Built casche has these values(mb,kb,b)
       // const currImageSize = Math.trunc(Number(imageStorageSize.slice(0, length-2))); 
-      console.log('currImageSize', currImageSize)
+      // console.log('currImageSize', currImageSize)
        // if image id is NOT in the object
       if(!storageSizeById[dataGridBlueButtonType].hasOwnProperty(params.row.id)){
         
