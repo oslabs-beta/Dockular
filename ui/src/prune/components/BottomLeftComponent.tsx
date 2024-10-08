@@ -16,6 +16,9 @@ import { useContext } from 'react';
 //TYPES
 import { ImageType, StorageSizeType, SelectedRowSizeType, ContainerType, BuildCacheType } from '../../types';
 
+//UTILS
+import { selectedImagePruneParser } from "../utilities/Parsers/selectedImagePruneParser";
+
 //Docker Desktop Client
 const client = createDockerDesktopClient();
 function useDockerDesktopClient() {
@@ -125,9 +128,11 @@ export function BottomLeftComponent(props:any) {
             await ddClient.docker.cli.exec('rmi', [...danglingImageIdsToRemove])
            .catch((err:any)=>{
             //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
-            props.apiRef.current.setRowSelectionModel([])
-            console.log('error in dangling image prune command ... currently in use by container', 
-            alert(`Error in dangling image prune command ${err.stderr}`)) 
+            props.apiRef.current.setRowSelectionModel([]);
+            const unprunableId = selectedImagePruneParser(err.stderr);
+            alert(unprunableId);
+            // console.log('error in dangling image prune command ... currently in use by container', 
+            // alert(`Error in dangling image prune command ${err.stderr}`)) 
             });
             //dangling-images prune
        
@@ -148,9 +153,12 @@ export function BottomLeftComponent(props:any) {
           await ddClient.docker.cli.exec('rmi', [...inUseImageIdsToRemove])
           .catch((err:any)=>{
             //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
-            props.apiRef.current.setRowSelectionModel([])
-            console.log('error in in-use image prune command ... image is in use', 
-            alert(`error in in-use image prune command ${err.stderr}`)) 
+            props.apiRef.current.setRowSelectionModel([]);
+
+            const unprunableId = selectedImagePruneParser(err.stderr);
+            alert(unprunableId);
+             // console.log('error in in-use image prune command ... image is in use', 
+            // alert(`error in in-use image prune command ${err.stderr}`)) 
           });
            
            inUseImageIdsToRemove = [];
@@ -168,9 +176,11 @@ export function BottomLeftComponent(props:any) {
           await ddClient.docker.cli.exec('rmi', [...unusedImageIdsToRemove])
           .catch((err:any)=>{
             //COMMAND BELOW UPDATES THE SELECTED ROWS TO THOSE PASSED TO THE ROWIDS ARG. ANY ROW ALREADY SELECTED WILL BE UNSELECTED
-            props.apiRef.current.setRowSelectionModel([])
-            console.log('error in unused image prune command ... image in use by container',
-             alert(`error in in-use image prune command ${err.stderr}`)) 
+            props.apiRef.current.setRowSelectionModel([]);
+            const unprunableId = selectedImagePruneParser(err.stderr);
+            alert(unprunableId);
+            // console.log('error in unused image prune command ... image in use by container',
+            //  alert(`error in in-use image prune command ${err.stderr}`)) 
           });
            
        
