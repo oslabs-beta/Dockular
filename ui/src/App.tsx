@@ -2,12 +2,14 @@ import React from 'react';
 import { Link } from "react-router-dom"
 import { Route, Routes } from "react-router"
 import Button from '@mui/material/Button';
-import { Stack } from '@mui/material';
 import { Metrics } from "./metrics/components/cpu-ram"
 import { Prune } from "./prune/prune"
 import { Home } from './Home';
 import myIcon from './img/icon.png'
 import { Navigate } from "react-router-dom";
+import { Stack } from '@mui/material';
+import { BackendTest } from './backendTest/BackendTest';
+
 
 //types
 import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from './types';
@@ -18,7 +20,11 @@ import { CentralizedStateContext } from './prune/context/CentralizedStateContext
 // Note: This line relies on Docker Desktop's presence as a host application.
 // If you're running this React app in a browser, it won't work properly.
 
+
+
 const App = () => {
+
+
 
   const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
 
@@ -116,7 +122,6 @@ const App = () => {
         sx= {{ pt: 2, pb : 2}}
       >
        
-
         <Link to="/" style={{ width: '42px', height: 'auto', marginTop: '5px'}}>
           <img src={myIcon} style={{ width: '100%', height: '80%' }} />
         </Link>
@@ -130,6 +135,12 @@ const App = () => {
         <Button variant="contained">
           <Link to = {'/prune'} style={{color:'white', textDecoration:'none'}}> 
             {'Prune'}
+          </Link>
+        </Button>
+
+        <Button variant="contained">
+        <Link to = {'/backendTest'} style={{color:'white', textDecoration:'none'}}> 
+            {'Backend Test'}
           </Link>
         </Button>
       </Stack>
@@ -150,10 +161,10 @@ const App = () => {
             <Prune />
           </CentralizedStateContext.Provider>
         }/>
-      </Routes>
+        <Route path ="/backendTest" element = {<BackendTest />}/>
 
+      </Routes>
     </>
-    
   );
 }
 

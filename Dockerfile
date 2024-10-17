@@ -1,16 +1,13 @@
-FROM golang:1.19-alpine AS builder
-ENV CGO_ENABLED=0
+# build backend service first
+FROM --platform=$BUILDPLATFORM node:20.9.0-alpine3.18 AS builder
 WORKDIR /backend
-COPY backend/go.* .
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go mod download
+COPY backend/package*.json .
+RUN --mount=type=cache,target=/user/src/app/.npm \
+    npm set cache /usr/src/app/.npm && \ 
+    npm ci
 COPY backend/. .
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -ldflags="-s -w" -o bin/service
 
-FROM --platform=$BUILDPLATFORM node:18.12-alpine3.16 AS client-builder
+FROM --platform=$BUILDPLATFORM node:20.9.0-alpine3.18 AS client-builder
 WORKDIR /ui
 # cache packages in layer
 COPY ui/package.json /ui/package.json
@@ -22,7 +19,8 @@ RUN --mount=type=cache,target=/usr/src/app/.npm \
 COPY ui /ui
 RUN npm run build
 
-FROM alpine
+
+FROM --platform=$BUILDPLATFORM node:20.9.0-alpine3.18
 LABEL org.opencontainers.image.title="Dockular" \
     org.opencontainers.image.description="Provides resource metrics and automates pruning capabilities" \
     org.opencontainers.image.vendor="oslabs" \
@@ -35,11 +33,13 @@ LABEL org.opencontainers.image.title="Dockular" \
     com.docker.extension.categories="docker, utility-tools" \
     com.docker.extension.changelog="1.0 Initial Release - 5/18/2024"
 
-COPY --from=builder /backend/bin/service /
+ 
+COPY --from=builder /backend backend
 COPY docker-compose.yaml .
 COPY metadata.json .
 COPY docker.svg .
 COPY --from=client-builder /ui/build ui
 COPY ui/src/img/icon.jpeg /ui/src/img/icon.jpeg
 COPY ui/src/img/prune.png /ui/src/img/prune.png
-CMD /service -socket /run/guest-services/backend.sock
+CMD ["node", "backend/server.js", "/run/guest-services/backend.sock"]
+# CMD ["npm", "start"]
