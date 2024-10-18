@@ -6,10 +6,12 @@
     "@mui/material": "^5.15.17",
     "@mui/x-data-grid": "^6.19.6",
     "chart.js": "^4.4.2",
+    "nodemon": "^3.1.7",
     "react-chartjs-2": "^5.2.0",
     "react-circular-progressbar": "^2.1.0"
   },
   "devDependencies": {
-    "@types/chart.js": "^2.9.41"
+    "@types/chart.js": "^2.9.41",
+    "@vitest/coverage-v8": "^2.0.4"
   }
 }
