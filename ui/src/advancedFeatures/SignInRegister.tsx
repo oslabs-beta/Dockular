@@ -14,11 +14,22 @@ function useDockerDesktopClient() {
   return client;
 }
 
+//contextApi
+import { CentralizedStateContext } from '../prune/context/CentralizedStateContext';
+import { useContext } from 'react';
 
-export function AdvancedFeatures() {
+
+export function SignInRegister() {
 
     const ddClient = useDockerDesktopClient();
     const navigate = useNavigate();
+
+    interface SignedInInterface {
+        signedIn: boolean,
+        setSignedIn: React.Dispatch<React.SetStateAction<boolean>>
+      }
+
+    const {signedIn, setSignedIn} = useContext<SignedInInterface>(CentralizedStateContext)
 
 
     const [username,setUsername] = useState<string>('');
@@ -62,9 +73,9 @@ export function AdvancedFeatures() {
                 newUser
             );
 
-       
-            //redirect to prune page
-          navigate('/prune');
+        
+          setSignedIn(true)
+          navigate('/userSignedIn');
           // toast success message
       ddClient.desktopUI.toast.success('SUCCESS! Welcome to Dockular.');
     }

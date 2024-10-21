@@ -47,7 +47,6 @@ export function BottomLeftComponent(props:any) {
     
       type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]; 
     
-    
       interface dataForGridRowsInterface {
         dataForGridRows: dataForGridRowType,
         setDataForGridRows: React.Dispatch<React.SetStateAction<dataForGridRowType>>
