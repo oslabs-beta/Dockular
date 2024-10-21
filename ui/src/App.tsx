@@ -9,7 +9,7 @@ import myIcon from './img/icon.png'
 import { Navigate } from "react-router-dom";
 import { Stack } from '@mui/material';
 import { BackendTest } from './backendTest/BackendTest';
-
+import { AdvancedFeatures } from './advancedFeatures/AdvancedFeatures';
 
 //types
 import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from './types';
@@ -139,6 +139,12 @@ const App = () => {
         </Button>
 
         <Button variant="contained">
+          <Link to = {'/advancedFeatures'} style={{color:'white', textDecoration:'none'}}> 
+            {'Advanced Features'}
+          </Link>
+        </Button>
+
+        <Button variant="contained">
         <Link to = {'/backendTest'} style={{color:'white', textDecoration:'none'}}> 
             {'Backend Test'}
           </Link>
@@ -161,6 +167,7 @@ const App = () => {
             <Prune />
           </CentralizedStateContext.Provider>
         }/>
+        <Route path ="/advancedFeatures" element = {<AdvancedFeatures />}/>
         <Route path ="/backendTest" element = {<BackendTest />}/>
 
       </Routes>
