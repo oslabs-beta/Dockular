@@ -66,7 +66,7 @@ export function AdvancedFeatures() {
             //redirect to prune page
           navigate('/prune');
           // toast success message
-      ddClient.desktopUI.toast.success('SUCCESS! Welcome to Dockular!!.');
+      ddClient.desktopUI.toast.success('SUCCESS! Welcome to Dockular.');
     }
 
 
