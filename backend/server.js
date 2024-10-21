@@ -6,8 +6,7 @@ const mongoose = require('mongoose');
 const userRouter = require('./routes/userRouter')
 
 const app = express(); 
-// connectMongoDB(); 
-
+ 
  //start the server
  const sock = process.argv[2];
 
