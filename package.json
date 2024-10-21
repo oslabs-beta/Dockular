@@ -6,6 +6,7 @@
     "@mui/material": "^5.15.17",
     "@mui/x-data-grid": "^6.19.6",
     "chart.js": "^4.4.2",
+    "dotenv": "^16.4.5",
     "react-chartjs-2": "^5.2.0",
     "react-circular-progressbar": "^2.1.0"
   },
