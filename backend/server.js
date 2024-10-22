@@ -1,9 +1,9 @@
-const fs = require('fs');
-const http = require('http'); 
-const process = require('process');
-const express = require('express');
-const mongoose = require('mongoose');
-const userRouter = require('./routes/userRouter')
+import fs from 'fs';
+import http from 'http'; 
+import process from 'process';
+import express from 'express';
+import mongoose from 'mongoose';
+import userRouter from './routes/userRouter.js'
 
 const app = express(); 
  
