@@ -3,12 +3,12 @@ import http from 'http';
 import process from 'process';
 import express from 'express';
 import mongoose from 'mongoose';
-import userRouter from './routes/userRouter.js'
+import userRouter from './routes/userRouter'
 
 const app = express(); 
  
  //start the server
- const sock = process.argv[2];
+ const sock =  process.argv[2] || '/run/guest-services/backend.sock'
 
  if (!sock) {
    console.error('Please provide a socket path as an argument.');
@@ -21,6 +21,9 @@ const app = express();
  }
 
  const server = http.createServer(app);
+
+
+/////////////////////////////////////////////////////////////////////////////////////
 
  // USE LOCAL HOST INSTEAD OF CLOUD ATLAS
 const URI = 'mongodb://host.docker.internal:27017'
@@ -36,17 +39,7 @@ mongoose
   .catch((err) => console.log(err));
 
 
-  // mongoose.connect(
-  //   // Mongo URI:
-  //   "mongodb+srv://Dockular123:root123@cluster0.iy4tj.mongodb.net/"
-  // //   process.env.MONGOURI
-  // )
-  // .then(()=>{console.log(`MongoDB Connected: ${conn.connection.host}`)})
-  // .catch((error)=>{
-  // console.error(`Error ${error.message}`);
-  // process.exit(1);
-  // })
-
+/////////////////////////////////////////////////////////////////////////////////////
 
  app.use(express.json());
  app.use(express.urlencoded({ extended: true }));
@@ -60,7 +53,7 @@ mongoose
  app.use('/api/user/', userRouter);
  
   // Catch-All Error Handler
-  app.use('/', (req, res ) => {
+  app.use('/', (req:any, res:any ) => {
     return res
      .status(404)
      .json({ error: 'Endpoint does not exist' });
@@ -68,11 +61,11 @@ mongoose
 
   // Global Error Handler
   app.use(
-    (err, req, res, next) => {
+    (err:any, req:any, res:any, next:any) => {
       const defaultErr = {
         log: {err:'Express error handler caught unknown middleware error'},
         status: 500,
-        message: 'internal server error: HELLLO',
+        message: 'internal server error',
     };
 
       const errorObj = Object.assign({}, defaultErr, err);

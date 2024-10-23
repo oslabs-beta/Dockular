@@ -1,8 +1,8 @@
-import User from "../models/userModel.js";
+import User from "../models/userModel";
  
-const controllerForUsers = {};
+const controllerForUsers:any = {};
 
-controllerForUsers.loginUser = async (req, res, next) => {
+controllerForUsers.loginUser = async (req:any, res:any, next:any) => {
   const { user_name, password } = req.body;
   console.log("entered loginUser middleware");
   console.log("loginUser controller password -->", password);
@@ -11,7 +11,7 @@ controllerForUsers.loginUser = async (req, res, next) => {
 };
 
 
-controllerForUsers.registerUser = async (req, res, next) => {
+controllerForUsers.registerUser = async (req:any, res:any, next:any) => {
 
   // console.log('REQ.BODY in userController file', req.body)
 
@@ -30,12 +30,12 @@ controllerForUsers.registerUser = async (req, res, next) => {
   }
 };
 
-controllerForUsers.authUser = async (req, res, next) => {
+controllerForUsers.authUser = async (req:any, res:any, next:any) => {
     try {
       const { user_name, password } = req.body;
       console.log("entered authUser middleware");
       console.log("addUser controller req.body -->", req.body);
-      const user = await User.findOne({ user_name });
+      const user:any = await User.findOne({ user_name });
       if (password === user.password) {
         // res.locals.user = user;
         return next();
