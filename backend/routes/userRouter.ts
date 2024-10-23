@@ -1,13 +1,13 @@
 import express from 'express';
-import controllerForUsers from '../controllers/userController.js';
+import controllerForUsers from '../controllers/userController';
  
-const userRouter = express.Router();
+const userRouter:any = express.Router();
 
 // router.post('/', controllerForUsers.loginUser, (req, res) => {
 //   res.status(200).json('Success!');
 // });
 
-userRouter.post('/registerUser', controllerForUsers.registerUser, (req, res) => {
+userRouter.post('/registerUser', controllerForUsers.registerUser, (req:any, res:any) => {
   res.status(200).json('New User Added to DB!');
 });
 
