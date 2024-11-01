@@ -1,53 +1,108 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = __importDefault(require("fs"));
-const http_1 = __importDefault(require("http"));
-const process_1 = __importDefault(require("process"));
-const express_1 = __importDefault(require("express"));
-const mongoose_1 = __importDefault(require("mongoose"));
-const userRouter_1 = __importDefault(require("./routes/userRouter"));
-const app = (0, express_1.default)();
+import fs from 'fs';
+import http from 'http';
+import process from 'process';
+import express from 'express';
+import mongoose from 'mongoose';
+import userRouter from './routes/userRouter.js';
+// import { Pool } from 'pg';
+const app = express();
 //start the server
-//  const sock = process.argv[2] ;
-const sock = '/run/guest-services/backend.sock';
+const sock = process.argv[2] || '/run/guest-services/backend.sock';
 if (!sock) {
     console.error('Please provide a socket path as an argument.');
-    process_1.default.exit(1);
+    process.exit(1);
 }
-fs_1.default.stat(sock, function (err) {
+fs.stat(sock, function (err) {
     if (!err) {
-        fs_1.default.unlinkSync(sock);
+        fs.unlinkSync(sock);
     }
-    const server = http_1.default.createServer(app);
+    const server = http.createServer(app);
+    ////////////////////////////////////////////////////////////////////////////////////
+    //PostgresSql backend
+    // Create a PostgreSQL connection pool
+    // const pool = new Pool({
+    //   "host": 'mahmud.db.elephantsql.com ',
+    //   "port": 5432,
+    //   "database": "zpwhipig",
+    //   "user": "zpwhipig",
+    //   "password": "nCEImo1UXY4rRo8oqzBAbb_knG477_Zi",
+    // });
+    // async function main(){
+    //   const client = await pool.connect();
+    //   try {
+    //    const response = await client.query(`CREATE TABLE IF NOT EXISTS public.user_info (
+    //     pk_user_id BIGSERIAL NOT NULL PRIMARY KEY,
+    //     user_name VARCHAR(55) NOT NULL,
+    //     password VARCHAR(255) NOT NULL
+    // );`);
+    //    const {rows}:any = response; 
+    //    console.log(rows)
+    //   } catch (err) {
+    //     console.error('Error creating the users table', err);
+    //   } finally {
+    //     client.release();
+    //   }
+    // }
+    // main()
+    // .then(()=>{console.log('connected to postgres')})
+    // .catch((err)=>{console.log(`Error connecting to postgres, ${err}`)});
+    // async function main(){
+    //   const client = await pool.connect();
+    //   try {
+    //    const response = await client.query(`SELECT * FROM user_info`);
+    //    const {rows}:any = response; 
+    //    console.log(rows)
+    //   } catch (err) {
+    //     console.error('Error creating the users table', err);
+    //   } finally {
+    //     client.release();
+    //   }
+    // }
+    // main()
+    // .then(()=>{console.log('connected to postgres')})
+    // .catch((err)=>{console.log(`Error connecting to postgres, ${err}`)});
+    /////////////////////////////////////////////////////////////////////////////////////
     // USE LOCAL HOST INSTEAD OF CLOUD ATLAS
     const URI = 'mongodb://host.docker.internal:27017';
-    mongoose_1.default
+    mongoose
         .connect(URI, {
         dbName: 'dockular'
     })
         .then(() => console.log("Connected to Mongo DB."))
         .catch((err) => console.log(err));
-    // mongoose.connect(
-    //   // Mongo URI:
-    //   "mongodb+srv://Dockular123:root123@cluster0.iy4tj.mongodb.net/"
-    // //   process.env.MONGOURI
-    // )
-    // .then(()=>{console.log(`MongoDB Connected: ${conn.connection.host}`)})
-    // .catch((error)=>{
-    // console.error(`Error ${error.message}`);
-    // process.exit(1);
-    // })
-    app.use(express_1.default.json());
-    app.use(express_1.default.urlencoded({ extended: true }));
+    /////////////////////////////////////////////////////////////////////////////////////
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
     // Get //hello endpoint
     app.get('/hello', function (req, res) {
-        res.send({ message: 'hello' });
+        res.send({ message: 'Hello World' });
     });
+    //  app.get('/hello', async function(req, res){
+    //   let message;
+    //     try {
+    //         const client = await pool.connect();
+    //         const response = await client.query(`SELECT * FROM user_info`);
+    //         message = response; // Get the rows from the response
+    //         // message = response.rows; // Get the rows from the response
+    //     } catch (err) {
+    //         message = err; 
+    //     }
+    //     res.send({ message: message });
+    //  });
+    //  app.get('/postgresTest', function(req, res) {
+    //   let message = 'hello';
+    //   // try {
+    //   //     const client = await pool.connect();
+    //   //     const response = await client.query(`SELECT * FROM user_info`);
+    //   //     message = response.rows; // Get the rows from the response
+    //   //     client.release(); // Release the client back to the pool
+    //   // } catch (err) {
+    //   //     message = err; 
+    //   // }
+    //   res.send({ message: message });
+    // });
     //Routes
-    app.use('/api/user/', userRouter_1.default);
+    app.use('/api/user/', userRouter);
     // Catch-All Error Handler
     app.use('/', (req, res) => {
         return res
@@ -59,14 +114,36 @@ fs_1.default.stat(sock, function (err) {
         const defaultErr = {
             log: { err: 'Express error handler caught unknown middleware error' },
             status: 500,
-            message: 'internal server error: HELLLO',
+            message: 'internal server error',
         };
         const errorObj = Object.assign({}, defaultErr, err);
         console.log(errorObj.log);
         return res.status(errorObj.status).json(errorObj.message);
     });
     server.listen(sock, function () {
-        // fs.chmodSync(sock, '777'); // Change permissions
+        fs.chmodSync(sock, '777'); // Change permissions
         console.log('Express server listening on ' + sock);
     });
 });
+//////////////////////////////////////////////////////////////
+// import fs from 'fs'; 
+// import http from 'http';
+// import process from 'process';
+// import express from 'express'; 
+// const app = express(); 
+// // Get //hello endpoint
+// app.get('/hello', function(req, res){
+//     res.send({message:'Goodbye'})
+// });
+// //start the server
+// const sock = process.argv[2];
+// fs.stat(sock, function(err){
+//     if(!err){
+//         fs.unlinkSync(sock)
+//     }
+//   const server = http.createServer(app);
+//     server.listen(sock, function() {
+//         fs.chmodSync(sock, '777'); // Change permissions
+//         console.log('Express server listening on ' + sock);
+//     });
+// })

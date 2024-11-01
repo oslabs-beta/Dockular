@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,11 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const userModel_1 = __importDefault(require("../models/userModel"));
+import User from "../models/userModel.js";
 const controllerForUsers = {};
 controllerForUsers.loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { user_name, password } = req.body;
@@ -27,7 +22,7 @@ controllerForUsers.registerUser = (req, res, next) => __awaiter(void 0, void 0, 
         const { user_name, password } = req.body;
         console.log("entered registerUser middleware", user_name);
         console.log("addUser controller req.body -->", req.body);
-        const newUser = yield userModel_1.default.create({
+        const newUser = yield User.create({
             user_name,
             password,
         });
@@ -43,7 +38,7 @@ controllerForUsers.authUser = (req, res, next) => __awaiter(void 0, void 0, void
         const { user_name, password } = req.body;
         console.log("entered authUser middleware");
         console.log("addUser controller req.body -->", req.body);
-        const user = yield userModel_1.default.findOne({ user_name });
+        const user = yield User.findOne({ user_name });
         if (password === user.password) {
             // res.locals.user = user;
             return next();
@@ -57,4 +52,4 @@ controllerForUsers.authUser = (req, res, next) => __awaiter(void 0, void 0, void
     }
 });
 // module.exports = controllerForUsers;
-exports.default = controllerForUsers;
+export default controllerForUsers;

@@ -44,5 +44,6 @@ COPY ui/src/img/prune.png /ui/src/img/prune.png
  
 
 WORKDIR /backend
-CMD ["npm", "start"]
+# CMD ["npm", "start"]
+CMD [ "node", "dist/server.js", "/run/guest-services/backend.sock" ]
  
