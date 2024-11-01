@@ -1,10 +1,21 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import fs from 'fs';
 import http from 'http';
 import process from 'process';
 import express from 'express';
 import mongoose from 'mongoose';
 import userRouter from './routes/userRouter.js';
-// import { Pool } from 'pg';
+import pool from './database/db.js';
+import * as dotenv from 'dotenv';
+dotenv.config();
 const app = express();
 //start the server
 const sock = process.argv[2] || '/run/guest-services/backend.sock';
@@ -20,13 +31,6 @@ fs.stat(sock, function (err) {
     ////////////////////////////////////////////////////////////////////////////////////
     //PostgresSql backend
     // Create a PostgreSQL connection pool
-    // const pool = new Pool({
-    //   "host": 'mahmud.db.elephantsql.com ',
-    //   "port": 5432,
-    //   "database": "zpwhipig",
-    //   "user": "zpwhipig",
-    //   "password": "nCEImo1UXY4rRo8oqzBAbb_knG477_Zi",
-    // });
     // async function main(){
     //   const client = await pool.connect();
     //   try {
@@ -63,10 +67,11 @@ fs.stat(sock, function (err) {
     // .catch((err)=>{console.log(`Error connecting to postgres, ${err}`)});
     /////////////////////////////////////////////////////////////////////////////////////
     // USE LOCAL HOST INSTEAD OF CLOUD ATLAS
-    const URI = 'mongodb://host.docker.internal:27017';
+    const URI = process.env.MONGO_HOST;
+    // 'mongodb://host.docker.internal:27017'
     mongoose
         .connect(URI, {
-        dbName: 'dockular'
+        dbName: process.env.MONGO_DB_NAME
     })
         .then(() => console.log("Connected to Mongo DB."))
         .catch((err) => console.log(err));
@@ -77,30 +82,21 @@ fs.stat(sock, function (err) {
     app.get('/hello', function (req, res) {
         res.send({ message: 'Hello World' });
     });
-    //  app.get('/hello', async function(req, res){
-    //   let message;
-    //     try {
-    //         const client = await pool.connect();
-    //         const response = await client.query(`SELECT * FROM user_info`);
-    //         message = response; // Get the rows from the response
-    //         // message = response.rows; // Get the rows from the response
-    //     } catch (err) {
-    //         message = err; 
-    //     }
-    //     res.send({ message: message });
-    //  });
-    //  app.get('/postgresTest', function(req, res) {
-    //   let message = 'hello';
-    //   // try {
-    //   //     const client = await pool.connect();
-    //   //     const response = await client.query(`SELECT * FROM user_info`);
-    //   //     message = response.rows; // Get the rows from the response
-    //   //     client.release(); // Release the client back to the pool
-    //   // } catch (err) {
-    //   //     message = err; 
-    //   // }
-    //   res.send({ message: message });
-    // });
+    app.get('/postgresTest', function (req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let message;
+            try {
+                const client = yield pool.connect();
+                const response = yield client.query(`SELECT * FROM user_info`);
+                message = response; // Get the rows from the response
+                message = response.rows; // Get the rows from the response
+            }
+            catch (err) {
+                message = err;
+            }
+            res.send({ message: message });
+        });
+    });
     //Routes
     app.use('/api/user/', userRouter);
     // Catch-All Error Handler
