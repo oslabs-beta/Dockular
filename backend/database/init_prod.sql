@@ -5,4 +5,10 @@ CREATE TABLE IF NOT EXISTS public.user_info (
 );
 
 INSERT INTO public.user_info (user_name, password) VALUES
-('hello', 'goodbye')
+('hello', 'goodbye');
+
+INSERT INTO public.user_info (user_name, password) VALUES
+('John', 'Doe');
+
+INSERT INTO public.user_info (user_name, password) VALUES
+('Jane', 'Doe');

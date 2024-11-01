@@ -1,3 +1,5 @@
 .DS_Store
 node_modules
 ui/node_modules
+backend/node_modules
+.env
