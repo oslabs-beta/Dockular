@@ -11,6 +11,8 @@ import { Stack } from '@mui/material';
 import { BackendTest } from './backendTest/BackendTest';
 import { SignInRegister } from './advancedFeatures/SignInRegister';
 import { UserSignedIn } from './advancedFeatures/UserSignedIn';
+import { useEffect } from 'react';
+import { createDockerDesktopClient } from '@docker/extension-api-client';
 
 //types
 import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from './types';
@@ -19,11 +21,30 @@ import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllI
 import { CentralizedStateContext } from './prune/context/CentralizedStateContext';
 import { useContext } from 'react';
 
-// Note: This line relies on Docker Desktop's presence as a host application.
-// If you're running this React app in a browser, it won't work properly.
+//Docker Desktop Client
+const client = createDockerDesktopClient();
+function useDockerDesktopClient() {
+  return client;
+}
 
 
 const App = () => {
+  
+  const ddClient = useDockerDesktopClient();
+
+   //setup DB
+ useEffect(()=>{
+  const setupPostgresTable:any = async () => {
+    console.log('useEffect within App.tsx file ran within')
+    try {
+      await ddClient.extension.vm?.service?.get('/api/setupDB/tableSetup');
+    } catch (err) {
+      console.error('Error from within app.tsx useEffect. Get request attempting to setup DB:', err);
+    }
+  };
+  setupPostgresTable()
+ }, [])
+
 
   // const [signedIn, setSignedIn] = React.useState<boolean>(false); 
 

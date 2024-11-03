@@ -27,6 +27,7 @@ controllerForUsers.registerUser = async (req:any, res:any, next:any) => {
     return next();
   } catch (err) {
     console.log(err);
+    next(`ERROR within userController: ${err}`);
   }
 };
 
@@ -44,6 +45,7 @@ controllerForUsers.authUser = async (req:any, res:any, next:any) => {
       }
     } catch (err) {
       console.log(err);
+      next(`ERROR within userController: ${err}`);
     }
   };
 

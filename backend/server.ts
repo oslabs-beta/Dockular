@@ -3,8 +3,11 @@ import http from 'http';
 import process from 'process';
 import express from 'express';
 import mongoose from 'mongoose';
-import userRouter from './routes/userRouter.js'
 import pool from './database/db.js';
+
+//ROUTES
+import setupDbRouter from './routes/setupPostgresDbRouter.js'; 
+import userRouter from './routes/userRouter.js'
 
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -27,58 +30,10 @@ const app = express();
  const server = http.createServer(app);
 
 
-////////////////////////////////////////////////////////////////////////////////////
-//PostgresSql backend
-
-// Create a PostgreSQL connection pool
-
-
-
-// async function main(){
-//   const client = await pool.connect();
-//   try {
-//    const response = await client.query(`CREATE TABLE IF NOT EXISTS public.user_info (
-//     pk_user_id BIGSERIAL NOT NULL PRIMARY KEY,
-//     user_name VARCHAR(55) NOT NULL,
-//     password VARCHAR(255) NOT NULL
-// );`);
-//    const {rows}:any = response; 
-//    console.log(rows)
-//   } catch (err) {
-//     console.error('Error creating the users table', err);
-//   } finally {
-//     client.release();
-//   }
-// }
-
-// main()
-// .then(()=>{console.log('connected to postgres')})
-// .catch((err)=>{console.log(`Error connecting to postgres, ${err}`)});
-
-
-// async function main(){
-//   const client = await pool.connect();
-//   try {
-//    const response = await client.query(`SELECT * FROM user_info`);
-//    const {rows}:any = response; 
-//    console.log(rows)
-//   } catch (err) {
-//     console.error('Error creating the users table', err);
-//   } finally {
-//     client.release();
-//   }
-// }
-
-// main()
-// .then(()=>{console.log('connected to postgres')})
-// .catch((err)=>{console.log(`Error connecting to postgres, ${err}`)});
-
-
 /////////////////////////////////////////////////////////////////////////////////////
 
  // USE LOCAL HOST INSTEAD OF CLOUD ATLAS
 const URI:any = process.env.MONGO_HOST;
-// 'mongodb://host.docker.internal:27017'
 
 mongoose
   .connect(
@@ -96,35 +51,36 @@ mongoose
  app.use(express.json());
  app.use(express.urlencoded({ extended: true }));
 
- // Get //hello endpoint
+ // TEST SOCKETS BACKEND: /////////////////////////////////////////////////////////////////////////////
  app.get('/hello', function(req, res){
   res.send({message:'Hello World'})
 });
 
- app.get('/postgresTest', async function(req, res){
-  let message;
 
-    try {  
-        const client = await pool.connect();
-        const response = await client.query(`SELECT * FROM user_info`);
-        message = response; // Get the rows from the response
-        message = response.rows; // Get the rows from the response
-    } catch (err) {
-        message = err; 
-    }
-    
-    res.send({ message: message });
- });
+app.get('/postgresTest', async function(req, res){
+  const client = await pool.connect();
+  try {  
+      await client.query(`CREATE TABLE IF NOT EXISTS public.user_info (
+            pk_user_id BIGSERIAL NOT NULL PRIMARY KEY,
+            user_name VARCHAR(55) NOT NULL,
+            password VARCHAR(255) NOT NULL
+        );`);
+       res.status(200).send({message:'Connected to DB and created Table'})
+  } catch (err) {
+    console.log(err);
+    res.sendStatus(500)
+  } finally {
+    client.release(); 
+  }
+});
 
 
-
- 
-
-
- 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
  //Routes
+ app.use('/api/setupDB', setupDbRouter);
  app.use('/api/user/', userRouter);
+
  
   // Catch-All Error Handler
   app.use('/', (req:any, res:any ) => {
