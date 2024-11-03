@@ -31,6 +31,7 @@ controllerForUsers.registerUser = (req, res, next) => __awaiter(void 0, void 0, 
     }
     catch (err) {
         console.log(err);
+        next(`ERROR within userController: ${err}`);
     }
 });
 controllerForUsers.authUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
@@ -49,6 +50,7 @@ controllerForUsers.authUser = (req, res, next) => __awaiter(void 0, void 0, void
     }
     catch (err) {
         console.log(err);
+        next(`ERROR within userController: ${err}`);
     }
 });
 // module.exports = controllerForUsers;

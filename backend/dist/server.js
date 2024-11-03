@@ -12,8 +12,10 @@ import http from 'http';
 import process from 'process';
 import express from 'express';
 import mongoose from 'mongoose';
-import userRouter from './routes/userRouter.js';
 import pool from './database/db.js';
+//ROUTES
+import setupDbRouter from './routes/setupPostgresDbRouter.js';
+import userRouter from './routes/userRouter.js';
 import * as dotenv from 'dotenv';
 dotenv.config();
 const app = express();
@@ -28,47 +30,9 @@ fs.stat(sock, function (err) {
         fs.unlinkSync(sock);
     }
     const server = http.createServer(app);
-    ////////////////////////////////////////////////////////////////////////////////////
-    //PostgresSql backend
-    // Create a PostgreSQL connection pool
-    // async function main(){
-    //   const client = await pool.connect();
-    //   try {
-    //    const response = await client.query(`CREATE TABLE IF NOT EXISTS public.user_info (
-    //     pk_user_id BIGSERIAL NOT NULL PRIMARY KEY,
-    //     user_name VARCHAR(55) NOT NULL,
-    //     password VARCHAR(255) NOT NULL
-    // );`);
-    //    const {rows}:any = response; 
-    //    console.log(rows)
-    //   } catch (err) {
-    //     console.error('Error creating the users table', err);
-    //   } finally {
-    //     client.release();
-    //   }
-    // }
-    // main()
-    // .then(()=>{console.log('connected to postgres')})
-    // .catch((err)=>{console.log(`Error connecting to postgres, ${err}`)});
-    // async function main(){
-    //   const client = await pool.connect();
-    //   try {
-    //    const response = await client.query(`SELECT * FROM user_info`);
-    //    const {rows}:any = response; 
-    //    console.log(rows)
-    //   } catch (err) {
-    //     console.error('Error creating the users table', err);
-    //   } finally {
-    //     client.release();
-    //   }
-    // }
-    // main()
-    // .then(()=>{console.log('connected to postgres')})
-    // .catch((err)=>{console.log(`Error connecting to postgres, ${err}`)});
     /////////////////////////////////////////////////////////////////////////////////////
     // USE LOCAL HOST INSTEAD OF CLOUD ATLAS
     const URI = process.env.MONGO_HOST;
-    // 'mongodb://host.docker.internal:27017'
     mongoose
         .connect(URI, {
         dbName: process.env.MONGO_DB_NAME
@@ -78,26 +42,33 @@ fs.stat(sock, function (err) {
     /////////////////////////////////////////////////////////////////////////////////////
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    // Get //hello endpoint
+    // TEST SOCKETS BACKEND: /////////////////////////////////////////////////////////////////////////////
     app.get('/hello', function (req, res) {
         res.send({ message: 'Hello World' });
     });
     app.get('/postgresTest', function (req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            let message;
+            const client = yield pool.connect();
             try {
-                const client = yield pool.connect();
-                const response = yield client.query(`SELECT * FROM user_info`);
-                message = response; // Get the rows from the response
-                message = response.rows; // Get the rows from the response
+                yield client.query(`CREATE TABLE IF NOT EXISTS public.user_info (
+            pk_user_id BIGSERIAL NOT NULL PRIMARY KEY,
+            user_name VARCHAR(55) NOT NULL,
+            password VARCHAR(255) NOT NULL
+        );`);
+                res.status(200).send({ message: 'Connected to DB and created Table' });
             }
             catch (err) {
-                message = err;
+                console.log(err);
+                res.sendStatus(500);
             }
-            res.send({ message: message });
+            finally {
+                client.release();
+            }
         });
     });
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Routes
+    app.use('/api/setupDB', setupDbRouter);
     app.use('/api/user/', userRouter);
     // Catch-All Error Handler
     app.use('/', (req, res) => {

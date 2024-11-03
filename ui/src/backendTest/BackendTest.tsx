@@ -16,22 +16,21 @@ export function BackendTest() {
 
     const ddClient = useDockerDesktopClient();
   
-    // const fetchAndDisplayResponse = async () => {
-    //   console.log('fetchAndDisplayResponse')
-    //   const result = await ddClient.extension.vm?.service?.get("/hello");
-    //   console.log('result', result)
-    //   setResponse(JSON.stringify(result));
-    // }
-
     const fetchAndDisplayResponse = async () => {
       console.log('fetchAndDisplayResponse')
-      const result = await ddClient.extension.vm?.service?.get('/postgresTest');
+      const result = await ddClient.extension.vm?.service?.get("/hello");
       console.log('result', result)
       setResponse(JSON.stringify(result));
     }
 
-    
-    
+    // const fetchAndDisplayResponse = async () => {
+    //   console.log('fetchAndDisplayResponse')
+    //   const result = await ddClient.extension.vm?.service?.get('/postgresTest');
+    //   console.log('result', result)
+    //   setResponse(JSON.stringify(result));
+    // }
+
+   
   return (
     <>
      <Typography variant="h3">Docker extension demo</Typography>
