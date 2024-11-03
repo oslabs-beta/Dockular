@@ -43,7 +43,7 @@ const App = () => {
     }
   };
   setupPostgresTable()
- }, [])
+ }, []);
 
 
   // const [signedIn, setSignedIn] = React.useState<boolean>(false); 
