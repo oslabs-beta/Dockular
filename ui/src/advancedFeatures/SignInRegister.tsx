@@ -5,7 +5,8 @@ import { blueGrey } from '@mui/material/colors';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { useNavigate } from 'react-router-dom';
-
+import AuthProvider from '../advancedFeatures/authProvider';
+ 
 //Docker Desktop Client
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 
@@ -83,7 +84,8 @@ export function SignInRegister() {
 
   return (
     <>
-        <Container sx={{
+        <AuthProvider></AuthProvider>
+        {/* <Container sx={{
             height: '85vh',
             bgcolor: blueGrey[50],
             display: 'flex',
@@ -129,7 +131,7 @@ export function SignInRegister() {
                Submit
             </Button>
             </Box>
-        </Container>
+        </Container> */}
      
     </>
   );
