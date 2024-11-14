@@ -14,6 +14,7 @@ import { UserSignedIn } from './advancedFeatures/UserSignedIn';
 import { useEffect } from 'react';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 
+
 //types
 import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from './types';
 
@@ -43,7 +44,7 @@ const App = () => {
     }
   };
   setupPostgresTable()
- }, [])
+ }, []);
 
 
   // const [signedIn, setSignedIn] = React.useState<boolean>(false); 
@@ -244,15 +245,17 @@ const App = () => {
         </Button>
 
         <Button variant="contained">
-            { signedIn === false ? 
-              <Link to = {'/signInRegister'} style={{color:'white', textDecoration:'none'}}> 
-                {'Advanced Features'}
-              </Link>
-              :
-              <Link to = {'/userSignedIn'} style={{color:'white', textDecoration:'none'}}> 
-                {'Advanced Features'}
-              </Link>
-            }
+          
+             { signedIn === false ? 
+                <Link to = {'/signInRegister'} style={{color:'white', textDecoration:'none'}}> 
+                 {'Advanced Features'}
+                </Link>
+               :
+               <Link to = {'/userSignedIn'} style={{color:'white', textDecoration:'none'}}> 
+                 {'Advanced Features'}
+                </Link>
+             }
+           
         </Button>
 
         <Button variant="contained">
