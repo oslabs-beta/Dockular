@@ -16,12 +16,12 @@ export function BackendTest() {
 
     const ddClient = useDockerDesktopClient();
   
-    const fetchAndDisplayResponse = async () => {
-      console.log('fetchAndDisplayResponse')
-      const result = await ddClient.extension.vm?.service?.get("/hello");
-      console.log('result', result)
-      setResponse(JSON.stringify(result));
-    }
+    // const fetchAndDisplayResponse = async () => {
+    //   console.log('fetchAndDisplayResponse')
+    //   const result = await ddClient.extension.vm?.service?.get("/hello");
+    //   console.log('result', result)
+    //   setResponse(JSON.stringify(result));
+    // }
 
     // const fetchAndDisplayResponse = async () => {
     //   console.log('fetchAndDisplayResponse')
@@ -29,6 +29,12 @@ export function BackendTest() {
     //   console.log('result', result)
     //   setResponse(JSON.stringify(result));
     // }
+
+    const fetchAndDisplayResponse = async () => {
+        console.log('get request for the api gateway')
+          const results:any = await ddClient.extension.vm?.service?.get('/get-user')
+          setResponse(JSON.stringify(results));
+    }
 
    
   return (

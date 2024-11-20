@@ -16,6 +16,7 @@
     "@toast-ui/chart": "^4.6.1",
     "@toast-ui/react-chart": "^4.7.1",
     "aws-amplify": "^6.8.2",
+    "axios": "^1.7.7",
     "chart.js": "^4.4.2",
     "dotenv": "^16.4.5",
     "lodash": "^4.17.21",

@@ -1,9 +1,11 @@
 import fs from 'fs';
 import http from 'http'; 
 import process from 'process';
-import express from 'express';
+import express, {Request, Response} from 'express';
 import mongoose from 'mongoose';
 import pool from './database/db.js';
+import axios from 'axios';
+ 
 
 //ROUTES
 import setupDbRouter from './routes/setupPostgresDbRouter.js'; 
@@ -74,14 +76,38 @@ app.get('/postgresTest', async function(req, res){
   }
 });
 
+app.get("/get-user", async (req: Request, res: Response) => {
+  axios.get(process.env.API_URL_USERS_GET_REQUEST || "")
+    .then((response:any) => {
+      const result = response.data.body
+      res.status(200).send(result)
+     })
+      .catch(error => {
+      // Handle errors
+     console.log(`Error in axios GET request: ${error}`)
+  });
+
+ })
+
+ //  app.post("/api/create-user", async (req: Request, res: Response) => {
+
+//   try{
+//     const {
+//       username,
+//       cognitoId
+//     } = req.body;
+
+//   } catch (err:any) {
+//     res.status(500).json({message: `Error retrieving users: ${err.message}` })
+//   }
+//  })
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
  //Routes
  app.use('/api/setupDB', setupDbRouter);
- app.use('/api/user/', userRouter);
+ app.use('/api/user/', userRouter); 
 
- 
   // Catch-All Error Handler
   app.use('/', (req:any, res:any ) => {
     return res
@@ -111,34 +137,3 @@ app.get('/postgresTest', async function(req, res){
 
 
 
-
-
-
-//////////////////////////////////////////////////////////////
-
-
-// import fs from 'fs'; 
-// import http from 'http';
-// import process from 'process';
-// import express from 'express'; 
-// const app = express(); 
-
-// // Get //hello endpoint
-// app.get('/hello', function(req, res){
-//     res.send({message:'Goodbye'})
-// });
-// //start the server
-// const sock = process.argv[2];
-
- 
-// fs.stat(sock, function(err){
-//     if(!err){
-//         fs.unlinkSync(sock)
-//     }
-//   const server = http.createServer(app);
-    
-//     server.listen(sock, function() {
-//         fs.chmodSync(sock, '777'); // Change permissions
-//         console.log('Express server listening on ' + sock);
-//     });
-// })
