@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@aws-amplify/ui-react": "^6.5.5",
     "@docker/docker-mui-theme": "<0.1.0",
     "@docker/extension-api-client": "^0.3.4",
     "@emotion/react": "^11.10.4",
@@ -14,7 +15,10 @@
     "@nivo/line": "^0.84.0",
     "@toast-ui/chart": "^4.6.1",
     "@toast-ui/react-chart": "^4.7.1",
+    "aws-amplify": "^6.8.2",
+    "axios": "^1.7.7",
     "chart.js": "^4.4.2",
+    "dotenv": "^16.4.5",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",

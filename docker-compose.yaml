@@ -1,3 +1,32 @@
+version: '3.8'
 services:
   dockular:
     image: ${DESKTOP_PLUGIN_IMAGE}
+#     container_name: dockular
+#     volumes:
+#     - dockular-ext-initsql:/extension
+
+
+  # postgres:
+  #   image: postgres:16.0-alpine3.18
+  #   container_name: dockular-ext-postgres
+  #   build: 
+  #     context: ./database
+  #     dockerfile: Dockerfile
+  #   expose:
+  #     - 5432
+  #   ports:
+  #     - 5432:5432
+  #   volumes:
+  #     - postgres_volume:/var/lib/postgresql/data
+  #     - dockular-ext-initsql:/docker-entrypoint-initdb.d/
+  #   environment:
+  #     POSTGRES_PASSWORD: 
+  #     POSTGRES_USER: 
+  #     POSTGRES_DB: 
+  #   depends_on:
+  #     - dockular
+
+# volumes:
+#   dockular-ext-initsql:
+#   postgres_volume:

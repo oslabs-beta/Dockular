@@ -9,64 +9,171 @@ import myIcon from './img/icon.png'
 import { Navigate } from "react-router-dom";
 import { Stack } from '@mui/material';
 import { BackendTest } from './backendTest/BackendTest';
-
+import { SignInRegister } from './advancedFeatures/SignInRegister';
+import { UserSignedIn } from './advancedFeatures/UserSignedIn';
+import { useEffect } from 'react';
+import { createDockerDesktopClient } from '@docker/extension-api-client';
+import axios from 'axios';
 
 //types
 import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from './types';
 
 //contextApi
 import { CentralizedStateContext } from './prune/context/CentralizedStateContext';
+import { useContext } from 'react';
 
-// Note: This line relies on Docker Desktop's presence as a host application.
-// If you're running this React app in a browser, it won't work properly.
-
+//Docker Desktop Client
+const client = createDockerDesktopClient();
+function useDockerDesktopClient() {
+  return client;
+}
 
 
 const App = () => {
+  
+  const ddClient = useDockerDesktopClient();
+
+   //setup DB
+ useEffect(()=>{
+  const setupPostgresTable:any = async () => {
+    console.log('useEffect within App.tsx file ran within')
+    try {
+      await ddClient.extension.vm?.service?.get('/api/setupDB/tableSetup');
+    } catch (err) {
+      console.error('Error from within app.tsx useEffect. Get request attempting to setup DB:', err);
+    }
+  };
+  setupPostgresTable()
+ }, []);
+
+ 
+
+  // const [signedIn, setSignedIn] = React.useState<boolean>(false); 
+
+  interface SignedInInterface {
+    signedIn: boolean,
+    setSignedIn: React.Dispatch<React.SetStateAction<boolean>>
+  };
+
+  const {signedIn, setSignedIn} = useContext<SignedInInterface>(CentralizedStateContext);
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+  // const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
 
-  const [dataGridBlueButtonType, setDataGridBlueButtonType] = React.useState<string>('dangling-images');
+  type BlueButtonType = 
+  'running-containers' |
+  'exited-containers' |
+  'paused-containers'| 
+  'dangling-images'| 
+  'in-use-images'|
+  'unused-images' |
+  'built-casche' ;
 
-  type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]
-  const [dataForGridRows, setDataForGridRows] = React.useState<dataForGridRowType>([]);
+  interface dataGridBlueButtonTypeInterface {
+    dataGridBlueButtonType: BlueButtonType,
+    setDataGridBlueButtonType :React.Dispatch<React.SetStateAction<string>>
+  }
+  const {dataGridBlueButtonType, setDataGridBlueButtonType} = useContext<dataGridBlueButtonTypeInterface>(CentralizedStateContext)
 
-  const [storageSizeById, setStorageSizeById] = React.useState<StorageSizeType>({
-    'running-containers':{},
-    'exited-containers':{},  
-    'paused-containers':{},
-    'dangling-images': {}, 
-    'in-use-images': {},
-    'unused-images':{},
-    'built-casche': {},
-  })
 
-  const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState<SelectedRowSizeType>({
-    'running-containers': 0,
-    'exited-containers': 0, 
-    'paused-containers':0,
-    'dangling-images': 0, 
-    'in-use-images': 0,
-    'unused-images':0,
-    'built-casche': 0,
-    'selectedTotal': 0, 
-  })
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  const [totalStorageTypes, setTotalStorageTypes] = React.useState<TotalStorageType>({
-    'running-containers': 0,
-    'exited-containers': 0,  
-    'paused-containers':0,
-    'dangling-images': 0,
-    'in-use-images': 0,
-    'unused-images':0,
-    'built-casche': 0,
-    'combinedTotal': 0
-  });
 
-  const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState<AllImageAndContainerStorageType>({
-    'all-images': 0, 
-    'all-containers': 0
-  });
+  // type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]
+  // const [dataForGridRows, setDataForGridRows] = React.useState<dataForGridRowType>([]);
+
+  type dataForGridRowType = ImageType[] | ContainerType[] | BuildCacheType[]; 
+    
+  interface dataForGridRowsInterface {
+    dataForGridRows: dataForGridRowType,
+    setDataForGridRows: React.Dispatch<React.SetStateAction<dataForGridRowType>>
+  }
+
+  const {dataForGridRows, setDataForGridRows} = useContext<dataForGridRowsInterface>(CentralizedStateContext)
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  // const [storageSizeById, setStorageSizeById] = React.useState<StorageSizeType>({
+  //   'running-containers':{},
+  //   'exited-containers':{},  
+  //   'paused-containers':{},
+  //   'dangling-images': {}, 
+  //   'in-use-images': {},
+  //   'unused-images':{},
+  //   'built-casche': {},
+  // })
+
+  interface storageSizeByIdInterface { 
+    storageSizeById: StorageSizeType
+    setStorageSizeById :  (value: React.SetStateAction<StorageSizeType>) => void
+  };
+
+  const { storageSizeById, setStorageSizeById} = useContext<storageSizeByIdInterface>(CentralizedStateContext); 
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // const [selectedGridRowStorageSize, setSelectedGridRowStorageSize] =  React.useState<SelectedRowSizeType>({
+  //   'running-containers': 0,
+  //   'exited-containers': 0, 
+  //   'paused-containers':0,
+  //   'dangling-images': 0, 
+  //   'in-use-images': 0,
+  //   'unused-images':0,
+  //   'built-casche': 0,
+  //   'selectedTotal': 0, 
+  // })
+  
+  interface selectedGridRowStorageSizeInterface {
+    selectedGridRowStorageSize: SelectedRowSizeType,
+    setSelectedGridRowStorageSize :React.Dispatch<React.SetStateAction<SelectedRowSizeType>>
+  }
+  const { selectedGridRowStorageSize, setSelectedGridRowStorageSize} = useContext<selectedGridRowStorageSizeInterface>(CentralizedStateContext); 
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  // const [totalStorageTypes, setTotalStorageTypes] = React.useState<TotalStorageType>({
+  //   'running-containers': 0,
+  //   'exited-containers': 0,  
+  //   'paused-containers':0,
+  //   'dangling-images': 0,
+  //   'in-use-images': 0,
+  //   'unused-images':0,
+  //   'built-casche': 0,
+  //   'combinedTotal': 0
+  // });
+  
+  interface totalStorageTypesInterface {
+    totalStorageTypes :  TotalStorageType,
+    setTotalStorageTypes: React.Dispatch<React.SetStateAction<TotalStorageType>>
+  }
+
+  const {totalStorageTypes, setTotalStorageTypes} = useContext<totalStorageTypesInterface>(CentralizedStateContext); 
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  // const [allImageAndContainerStorage, setAllImageAndContainerStorage] = React.useState<AllImageAndContainerStorageType>({
+  //   'all-images': 0, 
+  //   'all-containers': 0
+  // });
+
+  interface allImageAndContainerStorageInterface {
+    allImageAndContainerStorage: AllImageAndContainerStorageType,
+    setAllImageAndContainerStorage: React.Dispatch<React.SetStateAction<AllImageAndContainerStorageType>>
+  }
+  const {allImageAndContainerStorage, setAllImageAndContainerStorage} = useContext<allImageAndContainerStorageInterface>(CentralizedStateContext); 
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
   const resetPruneSection = () => {
 
@@ -139,6 +246,20 @@ const App = () => {
         </Button>
 
         <Button variant="contained">
+          
+             { signedIn === false ? 
+                <Link to = {'/signInRegister'} style={{color:'white', textDecoration:'none'}}> 
+                 {'Advanced Features'}
+                </Link>
+               :
+               <Link to = {'/userSignedIn'} style={{color:'white', textDecoration:'none'}}> 
+                 {'Advanced Features'}
+                </Link>
+             }
+           
+        </Button>
+
+        <Button variant="contained">
         <Link to = {'/backendTest'} style={{color:'white', textDecoration:'none'}}> 
             {'Backend Test'}
           </Link>
@@ -157,12 +278,18 @@ const App = () => {
             selectedGridRowStorageSize, setSelectedGridRowStorageSize,
             totalStorageTypes, setTotalStorageTypes,
             allImageAndContainerStorage, setAllImageAndContainerStorage,
+            signedIn, setSignedIn
            }}>
             <Prune />
           </CentralizedStateContext.Provider>
         }/>
+        <Route path ="/signInRegister" element = {<SignInRegister />}/>
+        <Route path ="/userSignedIn" element = {
+          <CentralizedStateContext.Provider value = {{signedIn, setSignedIn}}>
+            <UserSignedIn />
+          </CentralizedStateContext.Provider>
+        }/>
         <Route path ="/backendTest" element = {<BackendTest />}/>
-
       </Routes>
     </>
   );

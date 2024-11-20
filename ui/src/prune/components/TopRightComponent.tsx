@@ -35,7 +35,6 @@ export function TopRightComponent(props:any) {
 
  const ddClient = useDockerDesktopClient();
 
-
  type BlueButtonType = 
     'running-containers' |
     'exited-containers' |

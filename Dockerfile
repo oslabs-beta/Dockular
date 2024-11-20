@@ -41,9 +41,9 @@ COPY docker.svg .
 COPY --from=client-builder /ui/build ui
 COPY ui/src/img/icon.jpeg /ui/src/img/icon.jpeg
 COPY ui/src/img/prune.png /ui/src/img/prune.png
-CMD ["node", "backend/server/server.js", "/run/guest-services/backend.sock"]
+ 
 
-
-# EXPOSE 3000
-# WORKDIR /backend
+WORKDIR /backend
 # CMD ["npm", "start"]
+CMD [ "node", "dist/server.js", "/run/guest-services/backend.sock" ]
+ 
