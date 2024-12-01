@@ -34,17 +34,17 @@ const App = () => {
   const ddClient = useDockerDesktopClient();
 
    //setup DB
- useEffect(()=>{
-  const setupPostgresTable:any = async () => {
-    console.log('useEffect within App.tsx file ran within')
-    try {
-      await ddClient.extension.vm?.service?.get('/api/setupDB/tableSetup');
-    } catch (err) {
-      console.error('Error from within app.tsx useEffect. Get request attempting to setup DB:', err);
-    }
-  };
-  setupPostgresTable()
- }, []);
+//  useEffect(()=>{
+//   const setupPostgresTable:any = async () => {
+//     console.log('useEffect within App.tsx file ran within')
+//     try {
+//       await ddClient.extension.vm?.service?.get('/api/setupDB/tableSetup');
+//     } catch (err) {
+//       console.error('Error from within app.tsx useEffect. Get request attempting to setup DB:', err);
+//     }
+//   };
+//   setupPostgresTable()
+//  }, []);
 
  
 
@@ -284,11 +284,11 @@ const App = () => {
           </CentralizedStateContext.Provider>
         }/>
         <Route path ="/signInRegister" element = {<SignInRegister />}/>
-        <Route path ="/userSignedIn" element = {
+        {/* <Route path ="/userSignedIn" element = {
           <CentralizedStateContext.Provider value = {{signedIn, setSignedIn}}>
             <UserSignedIn />
           </CentralizedStateContext.Provider>
-        }/>
+        }/> */}
         <Route path ="/backendTest" element = {<BackendTest />}/>
       </Routes>
     </>

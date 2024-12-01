@@ -76,7 +76,7 @@ app.get('/postgresTest', async function(req, res){
   }
 });
 
-app.get("/get-user", async (req: Request, res: Response) => {
+app.get("/get-users", async (req: Request, res: Response) => {
   axios.get(process.env.API_URL_USERS_GET_REQUEST || "")
     .then((response:any) => {
       const result = response.data.body
@@ -89,18 +89,6 @@ app.get("/get-user", async (req: Request, res: Response) => {
 
  })
 
- //  app.post("/api/create-user", async (req: Request, res: Response) => {
-
-//   try{
-//     const {
-//       username,
-//       cognitoId
-//     } = req.body;
-
-//   } catch (err:any) {
-//     res.status(500).json({message: `Error retrieving users: ${err.message}` })
-//   }
-//  })
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 

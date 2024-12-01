@@ -32,7 +32,7 @@ export function BackendTest() {
 
     const fetchAndDisplayResponse = async () => {
         console.log('get request for the api gateway')
-          const results:any = await ddClient.extension.vm?.service?.get('/get-user')
+          const results:any = await ddClient.extension.vm?.service?.get('/get-users')
           setResponse(JSON.stringify(results));
     }
 

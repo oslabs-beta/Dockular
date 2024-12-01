@@ -67,7 +67,7 @@ fs.stat(sock, function (err) {
             }
         });
     });
-    app.get("/get-user", (req, res) => __awaiter(this, void 0, void 0, function* () {
+    app.get("/get-users", (req, res) => __awaiter(this, void 0, void 0, function* () {
         axios.get(process.env.API_URL_USERS_GET_REQUEST || "")
             .then((response) => {
             const result = response.data.body;
@@ -78,16 +78,6 @@ fs.stat(sock, function (err) {
             console.log(`Error in axios GET request: ${error}`);
         });
     }));
-    //  app.post("/api/create-user", async (req: Request, res: Response) => {
-    //   try{
-    //     const {
-    //       username,
-    //       cognitoId
-    //     } = req.body;
-    //   } catch (err:any) {
-    //     res.status(500).json({message: `Error retrieving users: ${err.message}` })
-    //   }
-    //  })
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Routes
     app.use('/api/setupDB', setupDbRouter);
