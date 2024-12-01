@@ -13,7 +13,7 @@ import { SignInRegister } from './advancedFeatures/SignInRegister';
 import { UserSignedIn } from './advancedFeatures/UserSignedIn';
 import { useEffect } from 'react';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
-
+import axios from 'axios';
 
 //types
 import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from './types';
@@ -34,18 +34,19 @@ const App = () => {
   const ddClient = useDockerDesktopClient();
 
    //setup DB
- useEffect(()=>{
-  const setupPostgresTable:any = async () => {
-    console.log('useEffect within App.tsx file ran within')
-    try {
-      await ddClient.extension.vm?.service?.get('/api/setupDB/tableSetup');
-    } catch (err) {
-      console.error('Error from within app.tsx useEffect. Get request attempting to setup DB:', err);
-    }
-  };
-  setupPostgresTable()
- }, []);
+//  useEffect(()=>{
+//   const setupPostgresTable:any = async () => {
+//     console.log('useEffect within App.tsx file ran within')
+//     try {
+//       await ddClient.extension.vm?.service?.get('/api/setupDB/tableSetup');
+//     } catch (err) {
+//       console.error('Error from within app.tsx useEffect. Get request attempting to setup DB:', err);
+//     }
+//   };
+//   setupPostgresTable()
+//  }, []);
 
+ 
 
   // const [signedIn, setSignedIn] = React.useState<boolean>(false); 
 
@@ -283,11 +284,11 @@ const App = () => {
           </CentralizedStateContext.Provider>
         }/>
         <Route path ="/signInRegister" element = {<SignInRegister />}/>
-        <Route path ="/userSignedIn" element = {
+        {/* <Route path ="/userSignedIn" element = {
           <CentralizedStateContext.Provider value = {{signedIn, setSignedIn}}>
             <UserSignedIn />
           </CentralizedStateContext.Provider>
-        }/>
+        }/> */}
         <Route path ="/backendTest" element = {<BackendTest />}/>
       </Routes>
     </>

@@ -25,9 +25,6 @@ function useDockerDesktopClient() {
   return client;
 }
 
-
-
-
 export function TopLeftComponent(props:any) {
 
   const ddClient = useDockerDesktopClient();

@@ -13,6 +13,7 @@ import process from 'process';
 import express from 'express';
 import mongoose from 'mongoose';
 import pool from './database/db.js';
+import axios from 'axios';
 //ROUTES
 import setupDbRouter from './routes/setupPostgresDbRouter.js';
 import userRouter from './routes/userRouter.js';
@@ -66,6 +67,17 @@ fs.stat(sock, function (err) {
             }
         });
     });
+    app.get("/get-users", (req, res) => __awaiter(this, void 0, void 0, function* () {
+        axios.get(process.env.API_URL_USERS_GET_REQUEST || "")
+            .then((response) => {
+            const result = response.data.body;
+            res.status(200).send(result);
+        })
+            .catch(error => {
+            // Handle errors
+            console.log(`Error in axios GET request: ${error}`);
+        });
+    }));
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Routes
     app.use('/api/setupDB', setupDbRouter);
@@ -92,25 +104,3 @@ fs.stat(sock, function (err) {
         console.log('Express server listening on ' + sock);
     });
 });
-//////////////////////////////////////////////////////////////
-// import fs from 'fs'; 
-// import http from 'http';
-// import process from 'process';
-// import express from 'express'; 
-// const app = express(); 
-// // Get //hello endpoint
-// app.get('/hello', function(req, res){
-//     res.send({message:'Goodbye'})
-// });
-// //start the server
-// const sock = process.argv[2];
-// fs.stat(sock, function(err){
-//     if(!err){
-//         fs.unlinkSync(sock)
-//     }
-//   const server = http.createServer(app);
-//     server.listen(sock, function() {
-//         fs.chmodSync(sock, '777'); // Change permissions
-//         console.log('Express server listening on ' + sock);
-//     });
-// })

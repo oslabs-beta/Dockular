@@ -8,14 +8,49 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import User from "../models/userModel.js";
+import axios from 'axios';
 const controllerForUsers = {};
-controllerForUsers.loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { user_name, password } = req.body;
-    console.log("entered loginUser middleware");
-    console.log("loginUser controller password -->", password);
-    console.log("loginUser controller req.body -->", req.body);
-    return next();
+/*We are going to create a request to get a specific user from our rds database.*/
+controllerForUsers.getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { cognitoId } = req.params;
+        yield axios.get(process.env.API_URL_CREATE_USER_POST_REQUEST || "", { params: { cognito_id: cognitoId } })
+            .then((response) => {
+            res.locals.specificUser = response;
+            return next();
+        })
+            .catch(error => {
+            // Handle errors
+            console.log(`Error in axios GET request: ${error}`);
+        });
+    }
+    catch (err) {
+        next(`Error retrieving user: ${err.message}`);
+    }
 });
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+controllerForUsers.createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { username, cognitoId } = req.body;
+        const userData = {
+            user_name: username,
+            cognito_id: cognitoId
+        };
+        yield axios.post(process.env.API_URL_CREATE_USER_POST_REQUEST || "", userData)
+            .then((response) => {
+            res.locals.newUser = response;
+            return next();
+        })
+            .catch(error => {
+            // Handle errors
+            console.log(`Error in axios POST request: ${error}`);
+        });
+    }
+    catch (err) {
+        next(`Error creating user: ${err.message}`);
+    }
+});
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 controllerForUsers.registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // console.log('REQ.BODY in userController file', req.body)
     try {
@@ -34,24 +69,12 @@ controllerForUsers.registerUser = (req, res, next) => __awaiter(void 0, void 0, 
         next(`ERROR within userController: ${err}`);
     }
 });
-controllerForUsers.authUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { user_name, password } = req.body;
-        console.log("entered authUser middleware");
-        console.log("addUser controller req.body -->", req.body);
-        const user = yield User.findOne({ user_name });
-        if (password === user.password) {
-            // res.locals.user = user;
-            return next();
-        }
-        else {
-            throw Error("Please check credentials and try again");
-        }
-    }
-    catch (err) {
-        console.log(err);
-        next(`ERROR within userController: ${err}`);
-    }
+controllerForUsers.loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { user_name, password } = req.body;
+    console.log("entered loginUser middleware");
+    console.log("loginUser controller password -->", password);
+    console.log("loginUser controller req.body -->", req.body);
+    return next();
 });
 // module.exports = controllerForUsers;
 export default controllerForUsers;

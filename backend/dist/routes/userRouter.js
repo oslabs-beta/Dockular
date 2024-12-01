@@ -4,6 +4,12 @@ const userRouter = express.Router();
 // router.post('/', controllerForUsers.loginUser, (req, res) => {
 //   res.status(200).json('Success!');
 // });
+userRouter.get("/get-user/:cognitoId", controllerForUsers.getUser, (req, res) => {
+    res.status(200).json(res.locals.specificUser);
+});
+userRouter.post('/create-user', controllerForUsers.createUser, (req, res) => {
+    res.status(200).json(res.locals.newUser);
+});
 userRouter.post('/registerUser', controllerForUsers.registerUser, (req, res) => {
     res.status(200).json('New User Added to DB!');
 });
