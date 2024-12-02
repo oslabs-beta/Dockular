@@ -89,12 +89,23 @@ app.get("/get-users", async (req: Request, res: Response) => {
 
  })
 
+ app.post("/get-user", async (req: Request, res: Response) => {
+  const { cognito_id } = req.body;
+  await axios.post(process.env.API_URL_GET_SPECIFIC_USER_REQUEST || "", {cognito_id})
+    .then((response:any) => {
+      const result = response.data.body;
+      res.status(200).send(result)
+     }).catch(error => {
+      // Handle errors
+      console.log(`Error in axios GET request: ${error}`)
+  });
+ });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
  //Routes
  app.use('/api/setupDB', setupDbRouter);
- app.use('/api/user/', userRouter); 
+ app.use('/api/user', userRouter); 
 
   // Catch-All Error Handler
   app.use('/', (req:any, res:any ) => {
