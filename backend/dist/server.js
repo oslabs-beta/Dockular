@@ -78,10 +78,21 @@ fs.stat(sock, function (err) {
             console.log(`Error in axios GET request: ${error}`);
         });
     }));
+    app.post("/get-user", (req, res) => __awaiter(this, void 0, void 0, function* () {
+        const { cognito_id } = req.body;
+        yield axios.post(process.env.API_URL_GET_SPECIFIC_USER_REQUEST || "", { cognito_id })
+            .then((response) => {
+            const result = response.data.body;
+            res.status(200).send(result);
+        }).catch(error => {
+            // Handle errors
+            console.log(`Error in axios GET request: ${error}`);
+        });
+    }));
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Routes
     app.use('/api/setupDB', setupDbRouter);
-    app.use('/api/user/', userRouter);
+    app.use('/api/user', userRouter);
     // Catch-All Error Handler
     app.use('/', (req, res) => {
         return res

@@ -5,12 +5,12 @@ import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
 import { Typography } from "@mui/material";
 import { Button } from "@mui/material";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Stack, TextField } from '@mui/material';
-import { signOut } from 'aws-amplify/auth';
-import { getCurrentUser } from 'aws-amplify/auth';
 import { Container } from '@mui/system';
 import { blueGrey } from '@mui/material/colors';
+import { signOut } from 'aws-amplify/auth';
+import { cognitoUserSessionInfo } from './utilities/api'
 
 //Docker Desktop Client
 import { createDockerDesktopClient } from '@docker/extension-api-client';
@@ -24,31 +24,47 @@ function useDockerDesktopClient() {
 import { CentralizedStateContext } from '../prune/context/CentralizedStateContext';
 import { useContext } from 'react';
 
-
-export  function UserSignedIn() {
+export function UserSignedIn() {
 
     const ddClient = useDockerDesktopClient();
-    const [response,setResponse] = useState<string>();
+    const [response, setResponse] = useState<string>();
+    const [userData, setUserData] = useState<any>()
 
-   getCurrentUser()
-   .then(res => console.log('res', res))
-
-    
+    useEffect(()=>{
+      async function fetchCognitoData(){
+        const data = await cognitoUserSessionInfo();
+        setUserData(data)
+      }
+      fetchCognitoData();
+    }, [])
 
     const fetchAndDisplayResponse = async () => {
       console.log('get request for the api gateway');
-      // await ddClient.extension.vm?.service?.get('/api/setupDB/tableSetup');
-        const results:any = await ddClient.extension.vm?.service?.get('/api/user/get-user')
+      console.log('cognitoId', userData.data.userSub)
+      const cognitoId = {cognito_id : userData.data.userSub}
+      try{
+        // const results:any = await ddClient.extension.vm?.service?.get(`/get-user/:${userData.data.userSub}`)
+        const results:any = await ddClient.extension.vm?.service?.post(`/api/user/get-user`, cognitoId)
+        // const results:any = await ddClient.extension.vm?.service?.post(`/get-user`, cognitoId)
+
+        console.log('results in userSignedIn.tsx', results)
         setResponse(JSON.stringify(results));
-  }
+      } catch(error){
+        setResponse(`Error in get request in UserSignedIn.tsx: ${JSON.stringify(error)}`);  
+      }
+    }
 
-  const signOutHelper = async () => {
-      await signOut()
-  }
+    const signOutHelper = async () => {
+      try{
+        await signOut()
+      } catch (error) {
+        console.error('Error signing out: ', error)
+      }
+    }
    
-
   return (
     <>
+
         <Container sx={{
             height: '85vh',
             bgcolor: blueGrey[50],
@@ -58,15 +74,6 @@ export  function UserSignedIn() {
             // borderColor:'red'
             borderColor:'primary.main'
         }}>
-            <Box sx={{
-                border:2,
-                borderColor:'red',
-                backgroundColor:'red',
-                width: '33vw',
-                display: 'flex',
-                flexDirection: 'column',
-                
-             }}>
 
               <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 4 }}>
                 <Button variant="contained" onClick={fetchAndDisplayResponse}>
@@ -84,14 +91,14 @@ export  function UserSignedIn() {
                  />
 
                     <Button onClick={signOutHelper}>Sign out</Button>
+
                 </Stack>
 
-
-            </Box>
-
+           
         </Container>
      
     </>
+
   );
 } 
 

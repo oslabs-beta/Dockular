@@ -9,11 +9,12 @@ controllerForUsers.getUser = async (req:any, res:any, next:any) => {
 
   try {
 
-    const {cognitoId} = req.params; 
+    const { cognito_id } = req.body;
     
-   await axios.get(process.env.API_URL_CREATE_USER_POST_REQUEST || "", {params: {cognito_id: cognitoId}})
+   await axios.post(process.env.API_URL_GET_SPECIFIC_USER_REQUEST || "", {cognito_id})
     .then((response:any) => {
-      res.locals.specificUser = response;
+      const result = response.data.body;
+      res.locals.specificUser = result;
       return next();
      })
       .catch(error => {

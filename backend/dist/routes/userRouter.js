@@ -1,12 +1,12 @@
 import express from 'express';
 import controllerForUsers from '../controllers/userController.js';
 const userRouter = express.Router();
-// router.post('/', controllerForUsers.loginUser, (req, res) => {
-//   res.status(200).json('Success!');
-// });
-userRouter.get("/get-user/:cognitoId", controllerForUsers.getUser, (req, res) => {
+userRouter.post("/get-user", controllerForUsers.getUser, (req, res) => {
     res.status(200).json(res.locals.specificUser);
 });
+// userRouter.get("/get-user/:cognitoId", controllerForUsers.getUser, (req:Request, res:Response) => {
+//   res.status(200).json(res.locals.specificUser);
+// });
 userRouter.post('/create-user', controllerForUsers.createUser, (req, res) => {
     res.status(200).json(res.locals.newUser);
 });

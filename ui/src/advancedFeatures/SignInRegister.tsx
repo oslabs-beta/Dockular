@@ -1,16 +1,4 @@
-import { useState, useEffect } from 'react';
-import { Box } from '@mui/system';
-import { Container } from '@mui/system';
-import { blueGrey } from '@mui/material/colors';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import { useNavigate } from 'react-router-dom';
 import AuthProvider from '../advancedFeatures/authProvider';
- 
-
-//contextApi
-import { CentralizedStateContext } from '../prune/context/CentralizedStateContext';
-import { useContext } from 'react';
 
 export function SignInRegister() {
   return (
@@ -22,7 +10,18 @@ export function SignInRegister() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// import { useState, useEffect } from 'react';
+// import { Box } from '@mui/system';
+// import { Container } from '@mui/system';
+// import { blueGrey } from '@mui/material/colors';
+// import Button from '@mui/material/Button';
+// import TextField from '@mui/material/TextField';
+// import { useNavigate } from 'react-router-dom';
+// import AuthProvider from '../advancedFeatures/authProvider';
 
+//contextApi
+// import { CentralizedStateContext } from '../prune/context/CentralizedStateContext';
+// import { useContext } from 'react';
 
 // export function SignInRegister() {
 

@@ -13,10 +13,11 @@ const controllerForUsers = {};
 /*We are going to create a request to get a specific user from our rds database.*/
 controllerForUsers.getUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { cognitoId } = req.params;
-        yield axios.get(process.env.API_URL_CREATE_USER_POST_REQUEST || "", { params: { cognito_id: cognitoId } })
+        const { cognito_id } = req.body;
+        yield axios.post(process.env.API_URL_GET_SPECIFIC_USER_REQUEST || "", { cognito_id })
             .then((response) => {
-            res.locals.specificUser = response;
+            const result = response.data.body;
+            res.locals.specificUser = result;
             return next();
         })
             .catch(error => {
