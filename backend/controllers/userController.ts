@@ -6,26 +6,20 @@ const controllerForUsers:any = {};
 
 /*We are going to create a request to get a specific user from our rds database.*/
 controllerForUsers.getUser = async (req:any, res:any, next:any) => {
-
   try {
-
     const { cognito_id } = req.body;
-    
-   await axios.post(process.env.API_URL_GET_SPECIFIC_USER_REQUEST || "", {cognito_id})
-    .then((response:any) => {
-      const result = response.data.body;
-      res.locals.specificUser = result;
-      return next();
+    await axios.post(process.env.API_URL_GET_SPECIFIC_USER_REQUEST || "", {cognito_id})
+     .then((response:any) => {
+       const result = response.data.body;
+       res.locals.specificUser = result;
+       return next();
      })
-      .catch(error => {
-      // Handle errors
-     console.log(`Error in axios GET request: ${error}`)
-  });
-
+    .catch(error => {
+       console.log(`Error in axios GET request: ${error}`)
+     });
   } catch (err:any) {
     next(`Error retrieving user: ${err.message}`)
   }
- 
 }
 
 

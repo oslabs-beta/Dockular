@@ -11,6 +11,7 @@ import { Container } from '@mui/system';
 import { blueGrey } from '@mui/material/colors';
 import { signOut } from 'aws-amplify/auth';
 import { cognitoUserSessionInfo } from './utilities/api'
+import { MetricsSection } from "./metrics/metrics";
 
 //Docker Desktop Client
 import { createDockerDesktopClient } from '@docker/extension-api-client';
@@ -64,7 +65,7 @@ export function UserSignedIn() {
    
   return (
     <>
-
+      <MetricsSection/>
         <Container sx={{
             height: '85vh',
             bgcolor: blueGrey[50],
@@ -72,15 +73,15 @@ export function UserSignedIn() {
             flexDirection: 'row',
             border:2,
             // borderColor:'red'
-            borderColor:'primary.main'
+            borderColor:'primary.main',
+            marginTop: 5
         }}>
-
               <Stack direction="row" alignItems="start" spacing={2} sx={{ mt: 4 }}>
                 <Button variant="contained" onClick={fetchAndDisplayResponse}>
                   Call backend
                 </Button>
 
-              <TextField
+                 <TextField
                   label="Backend response"
                   sx={{ width: 480 }}
                   disabled
@@ -89,12 +90,10 @@ export function UserSignedIn() {
                   minRows={5}
                   value={response ?? ''}
                  />
-
                     <Button onClick={signOutHelper}>Sign out</Button>
-
                 </Stack>
 
-           
+
         </Container>
      
     </>
