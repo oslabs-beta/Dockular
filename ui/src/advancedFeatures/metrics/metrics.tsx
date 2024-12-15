@@ -18,7 +18,7 @@ import Modal from '@mui/material/Modal';
 
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { createTheme } from '@mui/material';
-
+import GetRunningContainers2 from '../utilities/GetRunningContainers2';
 
 // Create Docker client
 const client = createDockerDesktopClient();
@@ -73,10 +73,13 @@ export function MetricsSection() {
     // console.log('containerList', containerList)
 
     if (!containerList[0]) {
-      ddClient.docker.cli.exec("ps", ["--all", "--format", '"{{json .}}"']).then((result) => {
-        const statsContainerData = result.parseJsonLines();
+      // ddClient.docker.cli.exec("ps", ["--all", "--format", '"{{json .}}"'])
+      GetRunningContainers2(ddClient)
+      .then((result) => {
+        const statsContainerData = result;
+        // const statsContainerData = result.parseJsonLines();
         const containerArray = [];
-        const namesList = [];
+        const namesList:any = [];
         const imageList = [];
         for (const key in statsContainerData) {
           const value = statsContainerData[key];
@@ -171,10 +174,12 @@ const [refreshTrigger, setRefreshTrigger] = useState(false);
 
 useEffect(() => {
   const fetchContainerList = async () => {
-    const result = await ddClient.docker.cli.exec("ps", ["--all", "--format", '"{{json .}}"']);
-    const statsContainerData = result.parseJsonLines();
+    // const result = await ddClient.docker.cli.exec("ps", ["--all", "--format", '"{{json .}}"']);
+    // const statsContainerData = result.parseJsonLines();
+    const result = await GetRunningContainers2(ddClient)
+    const statsContainerData = result
     const containerArray = [];
-    const namesList = [];
+    const namesList:any = [];
     const imageList = [];
     for (const key in statsContainerData) {
       const value = statsContainerData[key];
@@ -296,7 +301,7 @@ const theme = createTheme({
                   textAlign: 'center',
                   marginTop: 1,
                    
-                }}>Container List</Box>
+                }}>Running Container List</Box>
           {containerNamesList.map((container, index) => (
             <Button key={index} onClick={() => handleContainerClick(index)} sx={{ mb: 2 }}>{container}</Button>
           ))}
@@ -371,50 +376,50 @@ const theme = createTheme({
            
             <Button  onClick={()=>{handleModelOpen()}} variant="contained" color='error' sx={{width:'90%', height:'20px'}} style={{marginTop:1, marginBottom:10}}>Set Memory Limit</Button>
             
-<Modal
- open={modelOpen}
- onClose={()=>{handleModelClose()}}
- aria-labelledby="modal-modal-title"
- aria-describedby="modal-modal-description"
->
- <Box sx={style}>
- <div>
-<h4>{`${selectedMemory} MB`}</h4>
-<Slider
- // could replace some of these vqriables with ones retrieved from commands, should work hopefully
- value={selectedMemory}
- onChange={handleMemoryChange}
- min={128} // Minimum memory value (in MB)
- max={8192} // Maximum memory value (in MB)
- step={128} // Memory increment step (in MB)
- aria-labelledby="memory-slider" 
- />
- <Button onClick={handleOpen}>
-   Set Memory Limit - β
- </Button>
- {/* <Button onClick={()=> testingfunction}>
-       testing
-     </Button> */}
- <Dialog open={open} onClose={handleClose}>
-   <DialogTitle>Are you sure?</DialogTitle>
-     <DialogContent>
-       <DialogContentText>
-         This action will pause the visual graphs, terminate, and prune the selected container/image. A new container/image will be pulled with the chosen memory limit.
-       </DialogContentText>
-     </DialogContent>
-   <DialogActions>
-     <Button onClick={handleClose}>
-       Cancel
-     </Button>
-     
-     <Button onClick={()=> {updateContainerMemoryLimit(selectedMemory), handleModelClose()}} autoFocus>
-       Confirm
-     </Button>
-   </DialogActions>
- </Dialog>
-</div>
- </Box>
-</Modal>
+                <Modal
+                open={modelOpen}
+                onClose={()=>{handleModelClose()}}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+                >
+                <Box sx={style}>
+                <div>
+                <h4>{`${selectedMemory} MB`}</h4>
+                <Slider
+                // could replace some of these vqriables with ones retrieved from commands, should work hopefully
+                value={selectedMemory}
+                onChange={handleMemoryChange}
+                min={128} // Minimum memory value (in MB)
+                max={8192} // Maximum memory value (in MB)
+                step={128} // Memory increment step (in MB)
+                aria-labelledby="memory-slider" 
+                />
+                <Button onClick={handleOpen}>
+                  Set Memory Limit - β
+                </Button>
+                {/* <Button onClick={()=> testingfunction}>
+                      testing
+                    </Button> */}
+                <Dialog open={open} onClose={handleClose}>
+                  <DialogTitle>Are you sure?</DialogTitle>
+                    <DialogContent>
+                      <DialogContentText>
+                        This action will pause the visual graphs, terminate, and prune the selected container/image. A new container/image will be pulled with the chosen memory limit.
+                      </DialogContentText>
+                    </DialogContent>
+                  <DialogActions>
+                    <Button onClick={handleClose}>
+                      Cancel
+                    </Button>
+                    
+                    <Button onClick={()=> {updateContainerMemoryLimit(selectedMemory), handleModelClose()}} autoFocus>
+                      Confirm
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+                </div>
+                </Box>
+                </Modal>
 
           </Container> 
           </Box>
