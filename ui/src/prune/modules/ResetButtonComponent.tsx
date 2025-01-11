@@ -5,7 +5,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 //contextApi
 import { CentralizedStateContext } from '../context/CentralizedStateContext';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 //types
 import { TotalStorageType, AllImageAndContainerStorageType, StorageSizeType} from '../../types';
 import { ImageType, SelectedRowSizeType, ContainerType, BuildCacheType } from '../../types';

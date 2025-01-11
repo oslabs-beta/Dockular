@@ -6,7 +6,7 @@
 
 import Slider from '@mui/material/Slider';
 import React, { useState, useEffect } from 'react';
-import { Paper, Button, Container, Stack, Box, Typography } from '@mui/material';
+import { Button, Container, Box } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
 import { blueGrey } from '@mui/material/colors';

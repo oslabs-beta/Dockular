@@ -21,7 +21,6 @@ controllerForUsers.getUser = (req, res, next) => __awaiter(void 0, void 0, void 
             return next();
         })
             .catch(error => {
-            // Handle errors
             console.log(`Error in axios GET request: ${error}`);
         });
     }
