@@ -1,5 +1,3 @@
-import {stringToNumConverter as strToNumb} from './StringToNumConverter'
-import { totalStorageParser } from './Parsers/totalStorageParser';
 import { containerVirtualSizeConverterToString } from './ContainerVirtualSizeConverterToString';
 import { checkBytesAndConvertToNumber } from './ CheckBytesAndConvertToNumber';
 import { roundTwoDecimalPlaces } from './RoundTwoDecimalPlaces';

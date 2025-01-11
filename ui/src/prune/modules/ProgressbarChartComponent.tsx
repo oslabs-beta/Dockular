@@ -5,7 +5,7 @@ import { storageNumToStr } from '../utilities/StorageNumtoStr';
 import { BytesGraph } from './BytesGraph';
 import { Box} from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { useEffect } from 'react';
+ 
 
 type ProgressbarChartComponentProps = {
   selectedTotal: number,

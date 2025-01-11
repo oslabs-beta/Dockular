@@ -10,10 +10,7 @@ import { Navigate } from "react-router-dom";
 import { Stack } from '@mui/material';
 import { BackendTest } from './backendTest/BackendTest';
 import { SignInRegister } from './advancedFeatures/SignInRegister';
-import { UserSignedIn } from './advancedFeatures/UserSignedIn';
-import { useEffect } from 'react';
 import { createDockerDesktopClient } from '@docker/extension-api-client';
-import axios from 'axios';
 
 //types
 import { ImageType, StorageSizeType, SelectedRowSizeType, TotalStorageType, AllImageAndContainerStorageType, ContainerType, BuildCacheType } from './types';

@@ -1,9 +1,4 @@
-import React from "react";
-import { Box } from "@mui/system";
-import { Authenticator } from "@aws-amplify/ui-react";
-import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
-import { Typography } from "@mui/material";
 import { Button } from "@mui/material";
 import { useState, useEffect } from 'react';
 import { Stack, TextField } from '@mui/material';
